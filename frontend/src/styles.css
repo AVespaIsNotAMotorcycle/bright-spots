@@ -172,6 +172,7 @@ select {
 }
 
 .link-btn {
+  white-space: nowrap;
   background: none;
   border: 0;
   padding: 0;
@@ -262,6 +263,20 @@ select {
 }
 .chart {
   min-width: 0;
+}
+.trend-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.trend-list li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 .empty {
   margin: 24px 0;
