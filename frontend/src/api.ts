@@ -74,12 +74,15 @@ export interface LandCoverYear {
   year: number;
   code: number;
   name: string;
+  group: string | null;
 }
 
 export interface LandCover {
   first: LandCoverYear | null;
   latest: LandCoverYear | null;
   changed: boolean | null;
+  /** "MCD12Q1" (ORNL), or "ESA CCI / C3S" when the bundled fallback answered. */
+  source: string;
 }
 
 export interface GraceResult {

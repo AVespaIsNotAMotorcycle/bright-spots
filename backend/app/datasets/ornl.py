@@ -71,6 +71,14 @@ IGBP: dict[int, str] = {
     15: "Permanent snow and ice", 16: "Barren", 17: "Water",
 }  # fmt: skip
 
+# IGBP code -> spec 7.6 group, shared with the CCI fallback so `changed` compares groups.
+IGBP_GROUPS: dict[int, str] = {
+    1: "Forest", 2: "Forest", 3: "Forest", 4: "Forest", 5: "Forest",
+    6: "Shrub and savanna", 7: "Shrub and savanna", 8: "Shrub and savanna",
+    9: "Shrub and savanna", 10: "Grassland", 11: "Wetland", 12: "Cropland",
+    13: "Built-up", 14: "Cropland", 15: "Snow and ice", 16: "Bare", 17: "Water",
+}  # fmt: skip
+
 
 class Obs(BaseModel):
     date: str
@@ -92,6 +100,7 @@ class LandCoverYear(BaseModel):
     year: int
     code: int
     name: str
+    group: str | None = None  # spec 7.6 group
 
 
 class LandCover(BaseModel):
@@ -99,7 +108,8 @@ class LandCover(BaseModel):
     lon: float
     first: LandCoverYear | None
     latest: LandCoverYear | None
-    changed: bool | None
+    changed: bool | None  # True when the spec 7.6 group differs
+    source: str = "MCD12Q1"
 
 
 def modis_date(d: date) -> str:
@@ -204,7 +214,11 @@ def parse_landcover(body: dict[str, Any]) -> list[LandCoverYear]:
             code = int(row["data"][0])
             if code in IGBP:
                 year = int(row["calendar_date"][:4])
-                out.append(LandCoverYear(year=year, code=code, name=IGBP[code]))
+                out.append(
+                    LandCoverYear(
+                        year=year, code=code, name=IGBP[code], group=IGBP_GROUPS[code]
+                    )
+                )
     return sorted(out, key=lambda r: r.year)
 
 
@@ -234,5 +248,5 @@ async def get_landcover(
         lon=lon,
         first=first,
         latest=latest,
-        changed=None if not (first and latest) else first.code != latest.code,
+        changed=None if not (first and latest) else first.group != latest.group,
     )

@@ -24,6 +24,8 @@ export default function ModisPanel({ place, dataset }: { place: Place; dataset: 
     `${place.lat},${place.lon},${product},${start}`,
   );
   const landcover = useAsync(() => api.landcover(place.lat, place.lon), `${place.lat},${place.lon}`);
+  const landcoverSource =
+    landcover.status !== "ok" ? null : landcover.data.source === "MCD12Q1" ? "MCD12Q1, IGBP" : landcover.data.source;
 
   const rows = useMemo(
     () =>
@@ -47,25 +49,32 @@ export default function ModisPanel({ place, dataset }: { place: Place; dataset: 
 
       <section className="card">
         <header className="card-head">
-          <h3 className="section-title">Land cover (MCD12Q1, IGBP)</h3>
+          <h3 className="section-title">Land cover{landcoverSource ? ` (${landcoverSource})` : ""}</h3>
           <span className="tag tag-measured">Measured</span>
         </header>
-        <Status state={landcover} loading="Fetching land cover…">
+        <Status state={landcover} loading="Fetching land cover (falls back to bundled ESA CCI if ORNL fails)…">
           {(lc) => (
-            <div className="kv-grid">
-              <div>
-                <div className="micro muted">First ({lc.first?.year ?? "–"})</div>
-                <div>{lc.first?.name ?? "No data"}</div>
+            <>
+              {lc.source !== "MCD12Q1" && (
+                <p className="small muted">ORNL did not answer, so this uses the bundled ESA CCI / C3S 300 m maps.</p>
+              )}
+              <div className="kv-grid">
+                <div>
+                  <div className="micro muted">First ({lc.first?.year ?? "–"})</div>
+                  <div>{lc.first?.name ?? "No data"}</div>
+                  {lc.first?.group && <div className="micro muted">{lc.first.group}</div>}
+                </div>
+                <div>
+                  <div className="micro muted">Latest ({lc.latest?.year ?? "–"})</div>
+                  <div>{lc.latest?.name ?? "No data"}</div>
+                  {lc.latest?.group && <div className="micro muted">{lc.latest.group}</div>}
+                </div>
+                <div>
+                  <div className="micro muted">Changed group</div>
+                  <div>{lc.changed == null ? "Unknown" : lc.changed ? "Yes" : "No"}</div>
+                </div>
               </div>
-              <div>
-                <div className="micro muted">Latest ({lc.latest?.year ?? "–"})</div>
-                <div>{lc.latest?.name ?? "No data"}</div>
-              </div>
-              <div>
-                <div className="micro muted">Changed</div>
-                <div>{lc.changed == null ? "Unknown" : lc.changed ? "Yes" : "No"}</div>
-              </div>
-            </div>
+            </>
           )}
         </Status>
       </section>

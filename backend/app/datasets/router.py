@@ -8,7 +8,7 @@ from typing import Annotated, Any
 import httpx
 from fastapi import APIRouter, HTTPException, Query, Request
 
-from app.datasets import bundled, noaa_gsom, nominatim, ornl, power
+from app.datasets import bundled, cci_landcover, noaa_gsom, nominatim, ornl, power
 
 router = APIRouter(prefix="/api", tags=["datasets"])
 
@@ -82,6 +82,14 @@ DATASETS: list[dict[str, Any]] = [
                 "first_date": "2000-02-24",
             },
         },
+    },
+    {
+        "id": "cci_landcover",
+        "name": "ESA CCI / C3S land cover",
+        "gives": "Land cover class, 300 m, first (1992) and latest year; fallback for MCD12Q1",
+        "source": "ESA CCI v2.0.7 / C3S v2.1.1 via Copernicus CDS",
+        "url": "https://cds.climate.copernicus.eu/datasets/satellite-land-cover",
+        "access": "bundled",
     },
     {
         "id": "gsom",
@@ -176,12 +184,30 @@ async def modis_series(
 
 @router.get("/datasets/modis/landcover")
 async def modis_landcover(request: Request, lat: Lat, lon: Lon) -> ornl.LandCover:
+    """MCD12Q1 from ORNL; bundled CCI when ORNL fails or lacks a year (spec 5.1)."""
     try:
-        return await ornl.get_landcover(
+        result = await ornl.get_landcover(
             _client(request), request.app.state.ornl_sem, lat, lon
         )
+        if result.first and result.latest:
+            return result
+        ornl_error: Exception | None = None
     except httpx.HTTPError as e:
-        raise _upstream("ORNL DAAC", e) from e
+        ornl_error = e
+    try:
+        return await asyncio.to_thread(cci_landcover.lookup, lat, lon)
+    except bundled.MissingDataFile as e:
+        if ornl_error is not None:
+            raise _upstream("ORNL DAAC (CCI fallback missing)", ornl_error) from e
+        return result
+
+
+@router.get("/datasets/cci/landcover")
+async def cci_lookup(lat: Lat, lon: Lon) -> ornl.LandCover:
+    try:
+        return await asyncio.to_thread(cci_landcover.lookup, lat, lon)
+    except bundled.MissingDataFile as e:
+        raise HTTPException(503, str(e)) from e
 
 
 # ---------- Bundled files ----------

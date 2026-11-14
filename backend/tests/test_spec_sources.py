@@ -220,9 +220,14 @@ def test_landcover_first_and_latest():
     respx.get(f"{ornl.BASE}/MCD12Q1/subset").mock(side_effect=handler)
     with TestClient(app) as c:
         r = c.get("/api/datasets/modis/landcover", params={"lat": 1, "lon": 2}).json()
-    assert r["first"]["name"] == "Cropland"
-    assert r["latest"] == {"year": 2023, "code": 13, "name": "Urban and built-up"}
-    assert r["changed"] is True
+    assert r["first"]["name"] == "Cropland" and r["first"]["group"] == "Cropland"
+    assert r["latest"] == {
+        "year": 2023,
+        "code": 13,
+        "name": "Urban and built-up",
+        "group": "Built-up",
+    }
+    assert r["changed"] is True and r["source"] == "MCD12Q1"
 
 
 # ---------- bundled files ----------
@@ -295,10 +300,12 @@ def test_bundled_missing_file_is_503(tmp_path, monkeypatch):
     assert r.status_code == 503 and "prepare_grace" in r.json()["detail"]
 
 
-def test_datasets_lists_six_spec_sources_plus_gsom():
+def test_datasets_lists_spec_sources_plus_gsom():
     with TestClient(app) as c:
         ids = [d["id"] for d in c.get("/api/datasets").json()]
-    assert ids == ["power", "modis", "grace", "koppen", "raindiv", "gibs", "gsom"]
+    assert ids == [
+        "power", "modis", "grace", "koppen", "raindiv", "gibs", "cci_landcover", "gsom",
+    ]  # fmt: skip
 
 
 # ---------- rainfall divergence ----------
