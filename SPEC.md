@@ -54,3 +54,36 @@ Each thing a visitor cares about has one authoritative open feed for "now", one 
 ## What this file does not claim
 
 The NPS API documentation subpage (the developer index did render: photos, visitor centres, campgrounds, events, alerts and articles, an API key from Get Started), the NOAA data-access service, the MODIS product page at Goddard, the NEX-GDDP pages at NASA, LOCA, the NOAA Climate Explorer and NSIDC Snow Today did not render for us on the day; NEX-GDDP is described from its data paper. USDA SNOTEL was not opened and is not listed; it is the other snow record a team should look for. The OpenAlex query for wildflower superbloom prediction returned nothing, so the bloom-prediction evidence here is the phenology literature and DesertUSA's practice, not a validated superbloom model. Citation counts are OpenAlex's on 14 Nov 2026. Nothing here was run against a park; the first measurement is yours.
+
+## MVP as built (14 Nov 2026)
+
+What runs today, and where it departs from the research above. Open decisions are listed at the end.
+
+**Parks.** The 63 national parks, parsed from Wikipedia's "List of national parks of the United States" (name, state, coordinates, 2025 visitors, nps.gov code), because the NPS API timed out on the day (503, then no answer in 110 s). Ids are slugs of the short name, since Sequoia and Kings Canyon share the NPS code `seki`.
+
+**Data per park and calendar month** (`backend/scripts/prepare_parks.py` → `backend/data/parks/park_climate.json`, about 1 minute for all parks):
+
+| horizon | source | what it is |
+|---|---|---|
+| this year, measured | NASA POWER monthly (daytime high, mean temperature, humidity, rain, cloud amount, snow depth) | the month's measured value; months not yet published (POWER monthly ran to September 2026) fall back to the 1991–2020 normal and say so |
+| next year, forecast | the same POWER record, 1991 to last year | that month's linear trend extended one year, window ±1 residual standard deviation; labelled "forecast from the record, not a weather forecast" |
+| 2050, projected | WorldClim 2.1 CMIP6 downscaled monthly normals, 2041–2060, 10 arc-minutes, six models (ACCESS-CM2, EC-Earth3-Veg, MIROC6, MPI-ESM1-2-HR, MRI-ESM2-0, UKESM1-0-LL), SSP2-4.5 and SSP5-8.5 | per model, future minus WorldClim's 1970–2000 baseline added to the POWER normal (rain as a ratio); median and model range; temperature and rain only |
+
+NEX-GDDP-CMIP6 (Part 1) was not used: point extraction across models needs large global daily files. The Open-Meteo Climate API was tried as a stand-in and dropped: one 10-year, 5-variable, 7-model request used the whole free 600-per-minute allowance (measured), so 63 parks would take hours and exceed the daily limit.
+
+**Scoring** (`backend/app/parks/scoring.py`). Each preference is a factor in [0, 1]; the park score is their mean × 100.
+
+- Daytime high against the user's ideal range: 1 inside, falling to 0 at 8 °C outside.
+- Humidity (optional maximum): 0 at 20 points above it. Rain (optional monthly maximum): 0 at twice it.
+- Bugs (optional): 1 minus a weather proxy, warmth (0 below 10 °C mean, full at 22 °C) × (half humidity ramp 40–80 %, half rain ramp 0–100 mm).
+- Stargazing: 1 minus cloud amount.
+- Snowmelt season: the month's share of the year's snow-depth decline, relative to the peak melt month; 0 where the normal peak snow depth is under 5 cm.
+- Next year and 2050 also report a score range from the low and high ends of their windows.
+
+All falloffs and thresholds above are provisional choices, not from a source.
+
+**API.** `GET /api/parks`, `GET /api/parks/plan?month&t_lo&t_hi[&rh_max&rain_max&avoid_bugs&stars&snowmelt&scenario]`.
+
+**Front end.** One screen: preferences (°F or °C, inches or mm), a ranked list with three scores per park labelled Measured, Forecast and Projected, ranked by any of the three; a row expands to the values, the factor scores and the notes on each horizon.
+
+**Not yet built from Parts 1–4.** USGS gauges and day-of-year medians for waterfalls; USA-NPN growing degree days and bloom data; MCD12Q2 foliage dates; caves as the constant; NPS visitation as a crowding layer; seasonal outlooks; moon phase and light pollution for stargazing.
