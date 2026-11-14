@@ -20,6 +20,7 @@ export interface DatasetInfo {
   variables?: Record<string, VariableInfo>;
   products?: Record<string, { name: string; unit: string; first_year: number }>;
   layers?: Record<string, GibsLayer>;
+  resolutions?: Record<string, string>;
 }
 
 export interface Place {
@@ -101,6 +102,38 @@ export interface KoppenResult {
   changed: boolean | null;
 }
 
+export interface RainDivGrid {
+  res: number;
+  lat0: number;
+  lon0: number;
+  nlat: number;
+  nlon: number;
+  base_start: number;
+  base_end: number;
+  post_start: number;
+  post_end: number;
+  pct: (number | null)[];
+  mm: (number | null)[];
+  z: (number | null)[];
+}
+
+export interface RainDivPoint {
+  res: number;
+  cell_lat: number;
+  cell_lon: number;
+  land: boolean;
+  base_start: number;
+  base_end: number;
+  post_start: number;
+  post_end: number;
+  pct: number | null;
+  mm: number | null;
+  z: number | null;
+  base_mean: number | null;
+  slope_pre: number | null;
+  years: { year: number; actual: number | null; fit: number | null }[];
+}
+
 type Params = Record<string, string | number>;
 
 // Session cache so switching dataset tabs doesn't refetch.
@@ -148,6 +181,9 @@ export const api = {
   grace: (lat: number, lon: number) => getJson<GraceResult>("/api/datasets/grace/series", { lat: r4(lat), lon: r4(lon) }),
   koppen: (lat: number, lon: number) =>
     getJson<KoppenResult>("/api/datasets/koppen/lookup", { lat: r4(lat), lon: r4(lon) }),
+  raindivGrid: (res: string) => getJson<RainDivGrid>("/api/datasets/raindiv/grid", { res }),
+  raindivPoint: (lat: number, lon: number, res: string) =>
+    getJson<RainDivPoint>("/api/datasets/raindiv/point", { lat: r4(lat), lon: r4(lon), res }),
   gsomStations: (lat: number, lon: number, radiusKm: number) =>
     getJson<Station[]>("/api/datasets/gsom/stations", { lat: r4(lat), lon: r4(lon), radius_km: radiusKm }),
   gsomSeries: (station: string, variables: string[], start: string, end: string) =>

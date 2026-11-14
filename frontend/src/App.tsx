@@ -75,7 +75,7 @@ export default function App() {
             </p>
           </div>
           {Panel ? (
-            <Panel key={active.id} dataset={active} place={place} />
+            <Panel key={active.id} dataset={active} place={place} onPlace={setPlace} />
           ) : (
             <p className="muted">No panel registered for “{active.id}”.</p>
           )}

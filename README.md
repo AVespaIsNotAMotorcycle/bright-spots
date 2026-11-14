@@ -43,6 +43,7 @@ listed by `GET /api/datasets`; each has a panel in
 | ORNL DAAC MODIS/VIIRS | `/api/datasets/modis/series`, `/api/datasets/modis/landcover` | live |
 | GRACE / GRACE-FO | `/api/datasets/grace/series` | bundled file |
 | Köppen-Geiger | `/api/datasets/koppen/lookup` | bundled file |
+| Rainfall vs pre-2000 trend | `/api/datasets/raindiv/grid`, `/api/datasets/raindiv/point` | bundled file |
 | NASA GIBS | tile URLs from `/api/datasets`, loaded by the browser | browser |
 | NOAA GSOM | `/api/datasets/gsom/stations`, `/api/datasets/gsom/series` | live |
 
@@ -70,6 +71,23 @@ curl -L -o data/raw/koppen/koppen_geiger_tif.zip https://ndownloader.figshare.co
 (cd data/raw/koppen && unzip -o koppen_geiger_tif.zip 1991_2020/koppen_geiger_0p5.tif 2041_2070/ssp245/koppen_geiger_0p5.tif legend.txt)
 uv run python scripts/prepare_koppen.py
 ```
+
+Rainfall divergence map (GPCC Full v2025 via NOAA PSL). The two small map
+layers are committed; the annual series used by the cell chart are gitignored:
+
+```sh
+cd backend
+mkdir -p data/raw/gpcc data/raw/gpcc25
+P=https://downloads.psl.noaa.gov/Datasets/gpcc/full_v2025
+curl -L -o data/raw/gpcc/precip.mon.total.1x1.v2025.nc $P/precip.mon.total.1x1.v2025.nc
+curl -L -o data/raw/gpcc25/precip.mon.total.2.5x2.5.v2025.nc $P/precip.mon.total.2.5x2.5.v2025.nc
+uv run python scripts/prepare_rain_divergence.py --res 1
+uv run python scripts/prepare_rain_divergence.py --res 2.5
+```
+
+The PSL 1° file has 2020–2024 as fill placeholders and a Dec 2019 slice
+identical to Jan 1891; the script drops both, so the 1° layer covers
+2000–2018. The 2.5° layer runs to 2025.
 
 Live smoke tests: `cd backend && uv run python scripts/try_sources.py [lat lon]`
 (all sources in parallel) and `uv run python scripts/try_gsom.py [lat lon]`.
