@@ -48,11 +48,9 @@ select {
 
 .topbar {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   gap: 16px;
-  margin-bottom: 12px;
+  margin-bottom: 24px;
 }
 
 .title {
@@ -105,6 +103,12 @@ select {
 .gap-8 {
   gap: 8px;
 }
+.gap-12 {
+  gap: 12px;
+}
+.gap-16 {
+  gap: 16px;
+}
 
 .card {
   background: var(--surface-2);
@@ -129,6 +133,9 @@ select {
 }
 .tag-measured {
   color: var(--accent);
+}
+.tag-illustration {
+  color: var(--warning);
 }
 
 .chip {
@@ -181,7 +188,8 @@ select {
   gap: 4px;
 }
 .field input,
-.field select {
+.field select,
+.search input {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -190,15 +198,6 @@ select {
   font-size: 14px;
 }
 
-.controls {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-.controls form {
-  align-items: flex-end;
-}
 
 .layout {
   display: grid;
@@ -294,6 +293,127 @@ th {
   background: var(--surface-2);
   color: var(--text-muted);
   font-weight: 500;
+}
+
+/* Place search */
+.place {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.place-row {
+  display: flex;
+  gap: 8px;
+}
+.search {
+  position: relative;
+  flex: 1;
+  max-width: 560px;
+}
+.search input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 9px 14px;
+}
+.results-pop {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.results-pop button {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.results-pop button:hover,
+.results-pop button:focus-visible {
+  background: var(--surface-2);
+}
+.here {
+  margin: 0;
+}
+.here-name {
+  color: var(--text);
+}
+
+/* Dataset tabs */
+.tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: none;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 8px 12px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.tab:hover {
+  color: var(--text);
+}
+.tab.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+.panel-intro {
+  margin-bottom: 16px;
+}
+.panel-intro p {
+  margin: 0 0 4px;
+}
+.panel-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.panel-stack > p {
+  margin: 0;
+}
+.kv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+.swatch {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  flex: none;
+}
+.map {
+  height: min(65vh, 560px);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  overflow: hidden;
 }
 
 @media (max-width: 800px) {

@@ -1,91 +1,55 @@
 import { useEffect, useMemo, useState } from "react";
-import { api, type DatasetInfo, type Series, type Station } from "../../api";
+import { api, type DatasetInfo, type Place, type Station } from "../../api";
 import LineChartCard, { type ChartSeries } from "../../components/LineChartCard";
-
-// Dark-mode categorical slots (validated against --surface-2 with the dataviz validator).
-const SERIES_COLORS = ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181"];
-
-const PRESETS = [
-  { name: "New York", lat: 40.78, lon: -73.97 },
-  { name: "London", lat: 51.48, lon: -0.45 },
-  { name: "Tokyo", lat: 35.69, lon: 139.69 },
-  { name: "Nairobi", lat: -1.29, lon: 36.82 },
-  { name: "Sydney", lat: -33.87, lon: 151.21 },
-];
+import { Chips, Status } from "../../components/Status";
+import { useAsync } from "../../hooks";
+import { SERIES_COLORS } from "../../palette";
 
 const RANGES = [
-  { label: "10 y", years: 10 },
-  { label: "30 y", years: 30 },
-  { label: "All", years: 0 },
+  { value: 10, label: "10 y" },
+  { value: 30, label: "30 y" },
+  { value: 0, label: "All" },
 ];
-
+const RADII = [10, 25, 50, 100, 200].map((r) => ({ value: r, label: `${r} km` }));
 const DEFAULT_VARS = ["TAVG", "TMAX", "TMIN", "PRCP"];
 
-type Async<T> = { status: "idle" } | { status: "loading" } | { status: "error"; error: string } | { status: "ok"; data: T };
-
-export default function GsomPanel({ dataset }: { dataset: DatasetInfo }) {
-  const catalog = dataset.variables;
-
-  const [lat, setLat] = useState(PRESETS[0].lat);
-  const [lon, setLon] = useState(PRESETS[0].lon);
+export default function GsomPanel({ place, dataset }: { place: Place; dataset: DatasetInfo }) {
+  const catalog = useMemo(() => dataset.variables ?? {}, [dataset]);
   const [radius, setRadius] = useState(50);
-  const [stations, setStations] = useState<Async<Station[]>>({ status: "idle" });
   const [station, setStation] = useState<Station | null>(null);
   const [vars, setVars] = useState<string[]>(DEFAULT_VARS);
   const [rangeYears, setRangeYears] = useState(10);
-  const [series, setSeries] = useState<Async<Series>>({ status: "idle" });
 
-  async function search(la = lat, lo = lon) {
-    setStations({ status: "loading" });
-    setStation(null);
-    setSeries({ status: "idle" });
-    try {
-      const data = await api.gsomStations(la, lo, radius);
-      setStations({ status: "ok", data });
-      // Prefer the nearest station that reports temperature and has recent data.
-      const best = data.find((s) => s.variables.includes("TAVG") && s.end_date >= "2020") ?? data[0];
-      if (best) setStation(best);
-    } catch (e) {
-      setStations({ status: "error", error: String(e) });
-    }
-  }
-
-  // Initial load.
-  useEffect(() => {
-    void search();
-  }, []);
-
-  const available = useMemo(
-    () => Object.keys(catalog).filter((v) => station?.variables.includes(v)),
-    [catalog, station],
+  const stations = useAsync(
+    () => api.gsomStations(place.lat, place.lon, radius),
+    `${place.lat},${place.lon},${radius}`,
   );
+
+  // Auto-pick the nearest station with temperature and recent data.
+  useEffect(() => {
+    if (stations.status !== "ok") {
+      setStation(null);
+      return;
+    }
+    const d = stations.data;
+    setStation(d.find((s) => s.variables.includes("TAVG") && s.end_date >= "2020") ?? d[0] ?? null);
+  }, [stations]);
+
+  const available = useMemo(() => Object.keys(catalog).filter((v) => station?.variables.includes(v)), [catalog, station]);
   const activeVars = vars.filter((v) => available.includes(v));
 
   const [start, end] = useMemo(() => {
     if (!station) return ["", ""];
     const endDate = station.end_date;
     if (rangeYears === 0) return [station.start_date, endDate];
-    const y = Number(endDate.slice(0, 4)) - rangeYears;
-    const startDate = `${y}${endDate.slice(4, 7)}-01`;
+    const startDate = `${Number(endDate.slice(0, 4)) - rangeYears}${endDate.slice(4, 7)}-01`;
     return [startDate < station.start_date ? station.start_date : startDate, endDate];
   }, [station, rangeYears]);
 
-  useEffect(() => {
-    if (!station || activeVars.length === 0) {
-      setSeries({ status: "idle" });
-      return;
-    }
-    let cancelled = false;
-    setSeries({ status: "loading" });
-    api
-      .gsomSeries(station.id, activeVars, start, end)
-      .then((data) => !cancelled && setSeries({ status: "ok", data }))
-      .catch((e) => !cancelled && setSeries({ status: "error", error: String(e) }));
-    return () => {
-      cancelled = true;
-    };
-    // activeVars identity changes each render; key on its contents.
-  }, [station, activeVars.join(","), start, end]);
+  const series = useAsync(
+    () => api.gsomSeries(station!.id, activeVars, start, end),
+    station && activeVars.length ? `${station.id},${activeVars.join(",")},${start},${end}` : null,
+  );
 
   // One chart per unit. Colour slot is fixed by the variable's position in its
   // unit group of the catalog, so toggling variables never repaints the others.
@@ -108,93 +72,33 @@ export default function GsomPanel({ dataset }: { dataset: DatasetInfo }) {
       .filter((c) => c.series.length > 0);
   }, [series, catalog]);
 
-  function useMyLocation() {
-    navigator.geolocation?.getCurrentPosition((pos) => {
-      const la = +pos.coords.latitude.toFixed(3);
-      const lo = +pos.coords.longitude.toFixed(3);
-      setLat(la);
-      setLon(lo);
-      void search(la, lo);
-    });
-  }
-
   return (
-    <div className="panel-body">
-      <div className="controls">
-        <form
-          className="row gap-8 wrap"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void search();
-          }}
-        >
-          <label className="field">
-            <span>Lat</span>
-            <input type="number" step="any" min={-90} max={90} value={lat} onChange={(e) => setLat(+e.target.value)} />
-          </label>
-          <label className="field">
-            <span>Lon</span>
-            <input type="number" step="any" min={-180} max={180} value={lon} onChange={(e) => setLon(+e.target.value)} />
-          </label>
-          <label className="field">
-            <span>Radius</span>
-            <select value={radius} onChange={(e) => setRadius(+e.target.value)}>
-              {[10, 25, 50, 100, 200].map((r) => (
-                <option key={r} value={r}>
-                  {r} km
-                </option>
-              ))}
-            </select>
-          </label>
-          <button type="submit" className="btn">
-            Find stations
-          </button>
-          <button type="button" className="btn btn-ghost" onClick={useMyLocation}>
-            My location
-          </button>
-        </form>
-        <div className="row gap-8 wrap">
-          {PRESETS.map((p) => (
-            <button
-              key={p.name}
-              className="chip"
-              onClick={() => {
-                setLat(p.lat);
-                setLon(p.lon);
-                void search(p.lat, p.lon);
-              }}
-            >
-              {p.name}
-            </button>
-          ))}
-        </div>
-      </div>
-
+    <div className="panel-stack">
+      <Chips label="Search radius" options={RADII} value={radius} onChange={setRadius} />
       <div className="layout">
         <aside className="stations card">
           <h3 className="section-title">Stations</h3>
-          {stations.status === "loading" && <p className="muted small">Searching NOAA…</p>}
-          {stations.status === "error" && <p className="error small">{stations.error}</p>}
-          {stations.status === "ok" && stations.data.length === 0 && (
-            <p className="muted small">No GSOM stations within {radius} km. Try a wider radius.</p>
-          )}
-          {stations.status === "ok" && (
-            <ul className="station-list">
-              {stations.data.map((s) => (
-                <li key={s.id}>
-                  <button
-                    className={`station ${station?.id === s.id ? "active" : ""}`}
-                    onClick={() => setStation(s)}
-                  >
-                    <span className="station-name">{s.name}</span>
-                    <span className="micro muted num">
-                      {s.distance_km} km · {s.start_date.slice(0, 4)}–{s.end_date.slice(0, 4)} · {s.variables.length} vars
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+          <Status state={stations} loading="Searching NOAA…">
+            {(d) =>
+              d.length === 0 ? (
+                <p className="muted small">No GSOM stations within {radius} km. Try a wider radius.</p>
+              ) : (
+                <ul className="station-list">
+                  {d.map((s) => (
+                    <li key={s.id}>
+                      <button className={`station ${station?.id === s.id ? "active" : ""}`} onClick={() => setStation(s)}>
+                        <span className="station-name">{s.name}</span>
+                        <span className="micro muted num">
+                          {s.distance_km} km · {s.start_date.slice(0, 4)}–{s.end_date.slice(0, 4)} · {s.variables.length}{" "}
+                          vars
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )
+            }
+          </Status>
         </aside>
 
         <div className="results">
@@ -203,27 +107,18 @@ export default function GsomPanel({ dataset }: { dataset: DatasetInfo }) {
               <div>
                 <h2 className="headline">{station.name}</h2>
                 <p className="small muted num">
-                  {station.id} · {station.lat.toFixed(3)}, {station.lon.toFixed(3)} · record{" "}
-                  {station.start_date} to {station.end_date}
+                  {station.id} · {station.lat.toFixed(3)}, {station.lon.toFixed(3)} · record {station.start_date} to{" "}
+                  {station.end_date}
                 </p>
               </div>
-              <div className="row gap-8 wrap">
-                {RANGES.map((r) => (
-                  <button
-                    key={r.label}
-                    className={`chip ${rangeYears === r.years ? "active" : ""}`}
-                    onClick={() => setRangeYears(r.years)}
-                  >
-                    {r.label}
-                  </button>
-                ))}
-              </div>
-              <div className="row gap-8 wrap">
+              <Chips label="Time range" options={RANGES} value={rangeYears} onChange={setRangeYears} />
+              <div className="row gap-8 wrap" role="group" aria-label="Variables">
                 {available.map((v) => (
                   <button
                     key={v}
                     title={catalog[v].name}
                     className={`chip ${vars.includes(v) ? "active" : ""}`}
+                    aria-pressed={vars.includes(v)}
                     onClick={() => setVars((cur) => (cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]))}
                   >
                     {v}
@@ -232,25 +127,27 @@ export default function GsomPanel({ dataset }: { dataset: DatasetInfo }) {
               </div>
             </div>
           )}
-
-          {series.status === "loading" && <p className="muted small">Loading monthly data…</p>}
-          {series.status === "error" && <p className="error small">{series.error}</p>}
           {station && activeVars.length === 0 && <p className="muted small">Pick at least one variable.</p>}
-          {series.status === "ok" && series.data.points.length === 0 && (
-            <p className="muted small">NOAA returned no rows for this range.</p>
-          )}
-          <div className="chart-grid">
-            {charts.map((c) => (
-              <LineChartCard
-                key={`${c.group}|${c.unit}`}
-                title={c.group}
-                unit={c.unit}
-                series={c.series}
-                rows={c.rows}
-                xKey="date"
-              />
-            ))}
-          </div>
+          <Status state={series} loading="Loading monthly data…">
+            {(d) =>
+              d.points.length === 0 ? (
+                <p className="muted small">NOAA returned no rows for this range.</p>
+              ) : (
+                <div className="chart-grid">
+                  {charts.map((c) => (
+                    <LineChartCard
+                      key={`${c.group}|${c.unit}`}
+                      title={c.group}
+                      unit={c.unit}
+                      series={c.series}
+                      rows={c.rows}
+                      xKey="date"
+                    />
+                  ))}
+                </div>
+              )
+            }
+          </Status>
         </div>
       </div>
     </div>
