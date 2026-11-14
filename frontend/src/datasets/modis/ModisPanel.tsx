@@ -4,6 +4,7 @@ import LineChartCard from "../../components/LineChartCard";
 import { Chips, Status } from "../../components/Status";
 import { useAsync } from "../../hooks";
 import { SERIES_COLORS } from "../../palette";
+import { pickLandcover } from "./landcover";
 
 const THIS_YEAR = new Date().getFullYear();
 const RANGES = [
@@ -23,9 +24,12 @@ export default function ModisPanel({ place, dataset }: { place: Place; dataset: 
     () => api.modisSeries(place.lat, place.lon, product, start, THIS_YEAR),
     `${place.lat},${place.lon},${product},${start}`,
   );
-  const landcover = useAsync(() => api.landcover(place.lat, place.lon), `${place.lat},${place.lon}`);
+  // CCI answers in milliseconds; ORNL (often a minute or a timeout) replaces it if it answers.
+  const cciLandcover = useAsync(() => api.cciLandcover(place.lat, place.lon), `${place.lat},${place.lon}`);
+  const ornlLandcover = useAsync(() => api.landcover(place.lat, place.lon), `${place.lat},${place.lon}`);
+  const landcover = pickLandcover(cciLandcover, ornlLandcover);
   const landcoverSource =
-    landcover.status !== "ok" ? null : landcover.data.source === "MCD12Q1" ? "MCD12Q1, IGBP" : landcover.data.source;
+    landcover.status !== "ok" ? null : landcover.data.lc.source === "MCD12Q1" ? "MCD12Q1, IGBP" : landcover.data.lc.source;
 
   const rows = useMemo(
     () =>
@@ -52,12 +56,10 @@ export default function ModisPanel({ place, dataset }: { place: Place; dataset: 
           <h3 className="section-title">Land cover{landcoverSource ? ` (${landcoverSource})` : ""}</h3>
           <span className="tag tag-measured">Measured</span>
         </header>
-        <Status state={landcover} loading="Fetching land cover (falls back to bundled ESA CCI if ORNL fails)…">
-          {(lc) => (
+        <Status state={landcover} loading="Fetching land cover…">
+          {({ lc, note }) => (
             <>
-              {lc.source !== "MCD12Q1" && (
-                <p className="small muted">ORNL did not answer, so this uses the bundled ESA CCI / C3S 300 m maps.</p>
-              )}
+              {note && <p className="small muted">{note}</p>}
               <div className="kv-grid">
                 <div>
                   <div className="micro muted">First ({lc.first?.year ?? "–"})</div>

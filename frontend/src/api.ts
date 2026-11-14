@@ -81,7 +81,7 @@ export interface LandCover {
   first: LandCoverYear | null;
   latest: LandCoverYear | null;
   changed: boolean | null;
-  /** "MCD12Q1" (ORNL), or "ESA CCI / C3S" when the bundled fallback answered. */
+  /** "MCD12Q1" (ORNL) or "ESA CCI / C3S" (bundled). */
   source: string;
 }
 
@@ -181,6 +181,8 @@ export const api = {
     getJson<ProductSeries>("/api/datasets/modis/series", { lat: r4(lat), lon: r4(lon), product, start, end }),
   landcover: (lat: number, lon: number) =>
     getJson<LandCover>("/api/datasets/modis/landcover", { lat: r4(lat), lon: r4(lon) }),
+  cciLandcover: (lat: number, lon: number) =>
+    getJson<LandCover>("/api/datasets/cci/landcover", { lat: r4(lat), lon: r4(lon) }),
   grace: (lat: number, lon: number) => getJson<GraceResult>("/api/datasets/grace/series", { lat: r4(lat), lon: r4(lon) }),
   koppen: (lat: number, lon: number) =>
     getJson<KoppenResult>("/api/datasets/koppen/lookup", { lat: r4(lat), lon: r4(lon) }),

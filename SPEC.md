@@ -288,7 +288,7 @@ Fill values to drop: NDVI `-3000`; LST `0`.
 
 **Call plan for surface heat.** From POWER data (5.2), find the warmest calendar month at the point. For each year request only the four 8-day composites centred on that month. That is about 100 dates, so about 10 to 25 requests depending on how the dates group.
 
-**Call plan for land cover.** Request the first available year (2001) and the latest available year. Two requests. If either fails after retries, use the bundled ESA CCI / C3S maps instead, comparing 1992 (the first CCI year) with the latest year (section 5.7). ORNL has proved unreliable, so the fallback is required, not optional.
+**Call plan for land cover.** Request the first available year (2001) and the latest available year. Two requests. Show the bundled ESA CCI / C3S answer first (1992, the first CCI year, against the latest year; section 5.7), requested in parallel, and replace it with MCD12Q1 when ORNL answers with both years. If ORNL fails or has no data, the CCI answer stays. ORNL has proved unreliable, so the fallback is required, not optional.
 
 **Robustness.** Timeout 20 seconds per request. Retry twice with backoff of 1 and 3 seconds. If more than 20% of greenness chunks fail, report greenness as unavailable and try `VNP13A1`.
 
@@ -377,9 +377,9 @@ Bundle 1992 (the first CCI year) and the latest year (2025): about 0.57 GB. The 
 
 At run time `app/datasets/cci_landcover.py` uses the first and latest `lccs_{year}.tif` present, opens each file and reads the pixel containing the point with a windowed read (0.8 ms median, 1.7 ms p95 per read, 200 random points; a full two-year lookup measured 4 to 23 ms). Code 0 is no data. Codes map to the section 7.6 groups and `changed` compares groups, for both sources.
 
-The land-cover endpoint tries ORNL first and uses the CCI result when ORNL raises after its retries or returns no first or latest year. The response carries `source` (`MCD12Q1` or `ESA CCI / C3S`) so the UI and methods note can name it. `/api/datasets/cci/landcover` serves the bundled maps directly.
+Two endpoints, one per source, both returning the same shape with `source` (`MCD12Q1` or `ESA CCI / C3S`): `/api/datasets/cci/landcover` (bundled) and `/api/datasets/modis/landcover` (ORNL only; 502 when ORNL fails). The client requests both at once, shows CCI as soon as it arrives, and swaps in MCD12Q1 if it comes back with both years (`frontend/src/datasets/modis/landcover.ts`, `pickLandcover`). A note under the card says which source is shown and why. In the check-up pipeline (section 6) the same rule applies: emit `partial` for `landcover` from CCI, then update it if ORNL answers.
 
-Measured live on 2026-11-14 (Paris): ORNL timed out (`ReadTimeout` after 68.8 s: 20 s timeout, three attempts, 1 s and 3 s backoff), and the endpoint returned the CCI answer after 61.5 s. The fallback is correct but slow, because it waits for every ORNL retry first.
+Measured live on 2026-11-14 (Paris), both requests sent together: CCI 200 in 0.031 s; ORNL 502 (`ReadTimeout`) after 66.1 s (20 s timeout, three attempts, 1 s and 3 s backoff). An earlier version that waited for ORNL before falling back took 61.5 s to show anything.
 
 ## 6. Backend
 
@@ -1242,7 +1242,7 @@ These were not confirmed when this spec was written. Check them in Stage 0 and u
 - [ ] **Nominatim limits.** Read the current usage policy. If it is too strict for a live demo, switch to Photon (`photon.komoot.io`) with the same response mapping.
 - [ ] **Hackathon rules.** Confirm that preparing bundled data files before the event is allowed, and the rule on use of AI tools.
 - [ ] **CCI land cover groups.** Check the LCCS-to-group mapping in section 7.6 against the CCI land cover product user guide, especially where sparse vegetation (140, 150-153) and mosaic classes (30, 40, 100) go.
-- [ ] **Land-cover fallback latency.** The CCI answer arrives only after ORNL's full retry cycle (61.5 s measured). Decide whether to use a shorter ORNL timeout for land cover, or to return CCI at once and replace it with MCD12Q1 if ORNL answers later.
+- [x] **Land-cover fallback latency.** Decided 2026-11-14: return CCI at once and replace it with MCD12Q1 if ORNL answers (section 5.7).
 - [x] **CDS cache for 1992 and 2025.** Done 2026-11-14; times in section 5.7.
 - [ ] **Citations.** Before presenting, open each reference in section 7.0 and confirm the wording used on the methods page.
 

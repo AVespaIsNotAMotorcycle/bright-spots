@@ -102,44 +102,16 @@ def test_cci_endpoint_and_missing_files_503(fake_cci, tmp_path_factory, monkeypa
 
 
 @respx.mock
-def test_landcover_falls_back_to_cci_when_ornl_fails(fake_cci):
-    route = respx.get(f"{ornl.BASE}/MCD12Q1/subset").mock(
-        return_value=httpx.Response(503)
-    )
-    with TestClient(app) as c:
-        r = c.get("/api/datasets/modis/landcover", params=PARIS)
-    assert route.called
-    assert r.status_code == 200
-    body = r.json()
-    assert body["source"] == "ESA CCI / C3S" and body["changed"] is True
-    assert (body["first"]["year"], body["latest"]["year"]) == (1992, 2025)
-
-
-@respx.mock
-def test_landcover_falls_back_when_ornl_returns_no_rows(fake_cci):
-    respx.get(f"{ornl.BASE}/MCD12Q1/subset").mock(
-        return_value=httpx.Response(200, json={"subset": []})
-    )
-    with TestClient(app) as c:
-        body = c.get("/api/datasets/modis/landcover", params=PARIS).json()
-    assert body["source"] == "ESA CCI / C3S"
-
-
-@respx.mock
-def test_landcover_ornl_down_and_no_cci_files_is_502(tmp_path, monkeypatch):
-    monkeypatch.setattr(cci_landcover, "LANDCOVER_DIR", tmp_path)
+def test_modis_landcover_is_ornl_only(fake_cci):
+    """No server-side fallback: the client shows CCI first and swaps ORNL in."""
     respx.get(f"{ornl.BASE}/MCD12Q1/subset").mock(return_value=httpx.Response(503))
     with TestClient(app) as c:
-        r = c.get("/api/datasets/modis/landcover", params=PARIS)
-    assert r.status_code == 502
-
-
-@respx.mock
-def test_landcover_ornl_empty_and_no_cci_files_returns_ornl(tmp_path, monkeypatch):
-    monkeypatch.setattr(cci_landcover, "LANDCOVER_DIR", tmp_path)
+        down = c.get("/api/datasets/modis/landcover", params=PARIS)
+    assert down.status_code == 502
+    http.clear_cache()
     respx.get(f"{ornl.BASE}/MCD12Q1/subset").mock(
         return_value=httpx.Response(200, json={"subset": []})
     )
     with TestClient(app) as c:
-        body = c.get("/api/datasets/modis/landcover", params=PARIS).json()
-    assert body["source"] == "MCD12Q1" and body["first"] is None
+        empty = c.get("/api/datasets/modis/landcover", params=PARIS).json()
+    assert empty["source"] == "MCD12Q1" and empty["first"] is None

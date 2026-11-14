@@ -184,26 +184,19 @@ async def modis_series(
 
 @router.get("/datasets/modis/landcover")
 async def modis_landcover(request: Request, lat: Lat, lon: Lon) -> ornl.LandCover:
-    """MCD12Q1 from ORNL; bundled CCI when ORNL fails or lacks a year (spec 5.1)."""
+    """MCD12Q1 from ORNL only. Clients show /datasets/cci/landcover first and swap
+    this in when it answers with both years (spec 5.1, 5.7)."""
     try:
-        result = await ornl.get_landcover(
+        return await ornl.get_landcover(
             _client(request), request.app.state.ornl_sem, lat, lon
         )
-        if result.first and result.latest:
-            return result
-        ornl_error: Exception | None = None
     except httpx.HTTPError as e:
-        ornl_error = e
-    try:
-        return await asyncio.to_thread(cci_landcover.lookup, lat, lon)
-    except bundled.MissingDataFile as e:
-        if ornl_error is not None:
-            raise _upstream("ORNL DAAC (CCI fallback missing)", ornl_error) from e
-        return result
+        raise _upstream("ORNL DAAC", e) from e
 
 
 @router.get("/datasets/cci/landcover")
 async def cci_lookup(lat: Lat, lon: Lon) -> ornl.LandCover:
+    """Bundled ESA CCI / C3S, 1992 and latest year: answers in milliseconds."""
     try:
         return await asyncio.to_thread(cci_landcover.lookup, lat, lon)
     except bundled.MissingDataFile as e:
