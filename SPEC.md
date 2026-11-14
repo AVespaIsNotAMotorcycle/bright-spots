@@ -129,6 +129,7 @@ The app is a React single-page front end talking to one Python service. The Pyth
    |-- fetch_power.py -> NASA POWER API              (rain, air temperature, soil wetness)
    |-- grace.py       -> bundled GRACE file on disk  (regional water storage)
    |-- koppen.py      -> bundled climate-class files (now and 2041-2070)
+   |-- landcover.py   -> bundled ESA CCI / C3S land cover (fallback when ORNL fails)
    |-- science/*.py   -> trends, rain adjustment, score, verdict
    |-- cache.py       -> SQLite (results keyed by rounded coordinates)
    v
@@ -209,8 +210,10 @@ bright-spots/
       koppen_now_0p5.npy     # prepared by scripts/prepare_koppen.py
       koppen_future_0p5.npy
       koppen_legend.json
+      landcover/lccs_{year}.tif  # prepared by scripts/prepare_landcover.py
+      landcover/legend.json
     scripts/
-      prepare_grace.py  prepare_koppen.py  prewarm.py
+      prepare_grace.py  prepare_koppen.py  prepare_landcover.py  prewarm.py
     tests/
   frontend/
     package.json  vite.config.ts  tailwind.config.ts
@@ -236,7 +239,7 @@ bright-spots/
 
 ## 5. Data sources
 
-Six sources feed the app. Two are live NASA web services with no login, two are files bundled with the backend, one is a place-name lookup, and one is imagery tiles loaded by the map.
+Seven sources feed the app. Two are live NASA web services with no login, three are files bundled with the backend, one is a place-name lookup, and one is imagery tiles loaded by the map.
 
 | # | Source | Gives | Scale | Access |
 | --- | --- | --- | --- | --- |
@@ -246,6 +249,7 @@ Six sources feed the app. Two are live NASA web services with no login, two are 
 | 4 | Koppen-Geiger maps (Beck et al. 2023) | Climate type now and 2041 to 2070 | 0.5 degree | Bundled file |
 | 5 | OpenStreetMap Nominatim | Place name to coordinates | n/a | Live, rate limited |
 | 6 | NASA GIBS | Satellite imagery tiles | n/a | Live, from the browser |
+| 7 | ESA CCI / C3S land cover | Land cover (fallback for source 1) | 300 m | Bundled file |
 
 ### 5.1 NASA ORNL DAAC subset API (greenness, heat, land cover)
 
@@ -284,7 +288,7 @@ Fill values to drop: NDVI `-3000`; LST `0`.
 
 **Call plan for surface heat.** From POWER data (5.2), find the warmest calendar month at the point. For each year request only the four 8-day composites centred on that month. That is about 100 dates, so about 10 to 25 requests depending on how the dates group.
 
-**Call plan for land cover.** Request the first available year (2001) and the latest available year. Two requests.
+**Call plan for land cover.** Request the first available year (2001) and the latest available year. Two requests. If either fails after retries, use the bundled ESA CCI / C3S maps for the same two years instead (section 5.7). ORNL has proved unreliable, so the fallback is required, not optional.
 
 **Robustness.** Timeout 20 seconds per request. Retry twice with backoff of 1 and 3 seconds. If more than 20% of greenness chunks fail, report greenness as unavailable and try `VNP13A1`.
 
@@ -349,6 +353,27 @@ https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/{Layer}/default/{Time}/{TileM
 | Time machine | `MODIS_Terra_CorrectedReflectance_TrueColor` | a date, for example `2003-07-15` | `GoogleMapsCompatible_Level9` | jpg |
 
 Set `maxzoom` on each source to the level in its TileMatrixSet name so MapLibre over-zooms instead of requesting missing tiles. Show the credit line "Imagery: NASA GIBS" on the map.
+
+### 5.7 ESA CCI / C3S land cover (bundled fallback)
+
+Used only when the ORNL `MCD12Q1` requests fail. The live CDS API cannot serve a check-up: measured on 2026-11-14, a one-year request clipped to a small area took 192 s (15 s queued, about 174 s processing), and a ten-year clipped request ran for minutes more. Only identical repeat requests return quickly (3.6 s, from the CDS cache). So the maps are prepared once and bundled.
+
+Source: the CDS dataset `satellite-land-cover` (API key in `.env` as `CDSAPI_URL` / `CDSAPI_KEY`). Version `v2_0_7cds` covers 1992 to 2015 (ESA CCI v2.0.7) and `v2_1_1` covers 2016 to 2025 (C3S). One global netCDF per year, 300 m (1/360 degree), 129600 by 64800 pixels, variable `lccs_class` (`uint8`, 38 LCCS class codes; legend read from the file's `flag_values` / `flag_meanings`). The CEDA THREDDS copy of v2.0.7 needs no login but downloaded at 161 KB/s, about 4 hours per year, so it is not used.
+
+`scripts/prepare_landcover.py YEAR [YEAR ...]` handles one year at a time: request the whole globe from CDS, download, keep only `lccs_class`, write `data/landcover/lccs_{year}.tif` (ZSTD-compressed, 512 by 512 tiles, row 0 = north) in 2048-row strips, check a known pixel (central Paris = 190, urban), then delete the raw file.
+
+Measured for two years:
+
+| Year | Version | Request + download | Convert | Peak memory | Output |
+| --- | --- | --- | --- | --- | --- |
+| 2020 | `v2_1_1` | 1.7 s (cached) + 282 s for 2.34 GB | 66 s | 707 MB | 0.290 GB |
+| 2015 | `v2_0_7cds` | 442 s in total | 66 s | 711 MB | 0.282 GB |
+
+Whole-globe years were already in the CDS cache. A year that is not cached may wait longer; that has not been measured.
+
+Bundle 2001 and the latest year (2025), matching the call plan in 5.1: about 0.57 GB. **Decide:** whether to bundle all 34 years (about 10 GB if every year compresses like 2015 and 2020) for a land-cover history view.
+
+At run time `landcover.py` opens the file for each year and reads the pixel containing the point with a windowed read: 0.8 ms median, 1.7 ms p95 (200 random points). The groups in section 7.6 map from LCCS codes as listed there.
 
 ## 6. Backend
 
@@ -593,8 +618,8 @@ Plain wording: "Greener than the rain explains." / "Less green than the rain wou
 
 ### 7.6 Land-cover guard
 
-1. Read MCD12Q1 `LC_Type1` for the first and latest year.
-2. Map the 17 IGBP codes to groups: Forest (1-5), Shrub and savanna (6-9), Grassland (10), Wetland (11), Cropland (12, 14), Built-up (13), Snow and ice (15), Bare (16), Water (17).
+1. Read MCD12Q1 `LC_Type1` for the first and latest year. If ORNL fails, read the bundled ESA CCI / C3S `lccs_class` for the same years instead (section 5.7) and say so in the methods note.
+2. Map the 17 IGBP codes to groups: Forest (1-5), Shrub and savanna (6-9), Grassland (10), Wetland (11), Cropland (12, 14), Built-up (13), Snow and ice (15), Bare (16), Water (17). For the CCI fallback, map LCCS codes following the IPCC aggregation in the CCI land cover user guide: Cropland (10-40), Forest (50-100, 160, 170), Grassland (110, 130), Wetland (180), Built-up (190), Shrub and savanna (120-122), Bare (140, 150-153, 200-202), Water (210), Snow and ice (220). Never compare an MCD12Q1 year with a CCI year; both years come from the same source.
 3. Answer `changed` if the group differs, else `stable`. Report both names.
 4. Tone is `neutral` for stable. For changed, tone is `unknown` and a warning is added to the verdict: "Land use changed from X to Y, so greenness changes may reflect a different kind of land, not healthier land."
 5. If the latest group is Built-up, add the warning "Mostly built-up land. Greenness here mainly reflects construction and parks."
@@ -1210,6 +1235,8 @@ These were not confirmed when this spec was written. Check them in Stage 0 and u
 - [ ] **MapLibre globe.** Confirm the installed version supports `setProjection({type: 'globe'})` with raster sources.
 - [ ] **Nominatim limits.** Read the current usage policy. If it is too strict for a live demo, switch to Photon (`photon.komoot.io`) with the same response mapping.
 - [ ] **Hackathon rules.** Confirm that preparing bundled data files before the event is allowed, and the rule on use of AI tools.
+- [ ] **CCI land cover groups.** Check the LCCS-to-group mapping in section 7.6 against the CCI land cover product user guide, especially where sparse vegetation (140, 150-153) and mosaic classes (30, 40, 100) go.
+- [ ] **CDS cache for 2001 and 2025.** Run `prepare_landcover.py 2001 2025` and record the request and download times.
 - [ ] **Citations.** Before presenting, open each reference in section 7.0 and confirm the wording used on the methods page.
 
 ### Known scientific limits to state openly
