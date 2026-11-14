@@ -29,3 +29,6 @@ prep = [
 testpaths = ["tests"]
 pythonpath = ["."]
 asyncio_mode = "auto"
+
+[tool.uv]
+default-groups = ["dev", "prep"]
