@@ -513,3 +513,140 @@ th {
     max-height: 280px;
   }
 }
+
+/* ---------- Park planner ---------- */
+.planner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.prefs {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.prefs input[type="number"],
+.prefs select {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 8px;
+  width: 6.5em;
+}
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+.tag-forecast {
+  color: var(--warning);
+}
+.tag-projected {
+  color: #c9a7ff;
+}
+.park-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.park-list > li {
+  border-top: 1px solid var(--border);
+}
+.park-row {
+  display: grid;
+  grid-template-columns: 2.2em minmax(10em, 1.4fr) repeat(3, minmax(7em, 1fr));
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 8px 4px;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+}
+.park-row:hover {
+  background: var(--surface-2);
+}
+.park-head {
+  cursor: default;
+}
+.park-head:hover {
+  background: transparent;
+}
+.park-name {
+  font-weight: 500;
+}
+.meter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.meter-track {
+  position: relative;
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--grid);
+}
+.meter-range {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 3px;
+  background: rgba(124, 196, 255, 0.35);
+}
+.meter-dot {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+.meter-value {
+  min-width: 4.5em;
+  font-size: 14px;
+}
+.details {
+  padding: 4px 8px 14px 3.2em;
+}
+.detail-table {
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.detail-table th,
+.detail-table td {
+  padding: 3px 14px 3px 0;
+  text-align: left;
+  font-weight: 400;
+}
+.detail-table thead th {
+  color: var(--text-muted);
+}
+.detail-table tbody th {
+  color: var(--text-muted);
+}
+.notes {
+  margin: 8px 0;
+  padding-left: 1.2em;
+}
+.sources {
+  max-width: 70em;
+}
+@media (max-width: 640px) {
+  .park-row {
+    grid-template-columns: 1.6em 1fr;
+  }
+  .park-row .meter {
+    grid-column: 2;
+  }
+  .park-head > span:nth-child(n + 3) {
+    display: none;
+  }
+  .details {
+    padding-left: 8px;
+  }
+}
