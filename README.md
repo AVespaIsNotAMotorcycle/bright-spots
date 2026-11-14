@@ -74,10 +74,15 @@ uv run python scripts/prepare_koppen.py
 Live smoke tests: `cd backend && uv run python scripts/try_sources.py [lat lon]`
 (all sources in parallel) and `uv run python scripts/try_gsom.py [lat lon]`.
 
+Charts draw a dashed linear least-squares trend per series (toggle per card).
+Sub-annual series are deseasonalized first (calendar-month means removed), so
+the seasonal cycle doesn't leak into the slope; see `frontend/src/trend.ts`.
+
 Tests:
 
 ```sh
 cd backend && uv run pytest
+cd ../frontend && npm test
 ```
 
 ## Licence
