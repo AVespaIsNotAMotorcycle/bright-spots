@@ -362,14 +362,16 @@ Source: the CDS dataset `satellite-land-cover` (API key in `.env` as `CDSAPI_URL
 
 `scripts/prepare_landcover.py YEAR [YEAR ...]` handles one year at a time: request the whole globe from CDS, download, keep only `lccs_class`, write `data/landcover/lccs_{year}.tif` (ZSTD-compressed, 512 by 512 tiles, row 0 = north) in 2048-row strips, check a known pixel (central Paris = 190, urban), then delete the raw file.
 
-Measured for two years:
+Measured on 2026-11-14:
 
 | Year | Version | Request + download | Convert | Peak memory | Output |
 | --- | --- | --- | --- | --- | --- |
 | 2020 | `v2_1_1` | 1.7 s (cached) + 282 s for 2.34 GB | 66 s | 707 MB | 0.290 GB |
 | 2015 | `v2_0_7cds` | 442 s in total | 66 s | 711 MB | 0.282 GB |
+| 1992 | `v2_0_7cds` | 312 s in total | 68 s | 714 MB | 0.279 GB |
+| 2025 | `v2_1_1` | 251 s in total | 70 s | 714 MB | 0.295 GB |
 
-Whole-globe years were already in the CDS cache. A year that is not cached may wait longer; that has not been measured.
+All four whole-globe years were already in the CDS cache. A year that is not cached may wait longer; that has not been measured. The two bundled years (1992, 2025) total 0.573 GB.
 
 Bundle 1992 (the first CCI year) and the latest year (2025): about 0.57 GB. The fallback therefore covers a longer span than ORNL (1992 vs 2001 start), so a change between 1992 and 2001 can trip the guard even though it predates the greenness record. **Decide:** whether to bundle all 34 years (about 10 GB if every year compresses like 2015 and 2020) for a land-cover history view.
 
@@ -1236,7 +1238,7 @@ These were not confirmed when this spec was written. Check them in Stage 0 and u
 - [ ] **Nominatim limits.** Read the current usage policy. If it is too strict for a live demo, switch to Photon (`photon.komoot.io`) with the same response mapping.
 - [ ] **Hackathon rules.** Confirm that preparing bundled data files before the event is allowed, and the rule on use of AI tools.
 - [ ] **CCI land cover groups.** Check the LCCS-to-group mapping in section 7.6 against the CCI land cover product user guide, especially where sparse vegetation (140, 150-153) and mosaic classes (30, 40, 100) go.
-- [ ] **CDS cache for 1992 and 2025.** Run `prepare_landcover.py 1992 2025` and record the request and download times.
+- [x] **CDS cache for 1992 and 2025.** Done 2026-11-14; times in section 5.7.
 - [ ] **Citations.** Before presenting, open each reference in section 7.0 and confirm the wording used on the methods page.
 
 ### Known scientific limits to state openly
