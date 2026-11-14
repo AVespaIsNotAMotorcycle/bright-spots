@@ -1,16 +1,25 @@
 /* Tokens from SPEC.md section 9. Plain CSS until Tailwind lands. */
 :root {
-  color-scheme: dark;
-  --bg: #070b14;
-  --surface: #0f1626;
-  --surface-2: #172033;
-  --border: #26324a;
-  --grid: #1f2a40;
-  --text: #e9eef7;
-  --text-muted: #9aa8c0;
-  --accent: #7cc4ff;
-  --warning: #f2c94c;
-  --error: #f5b36b;
+  /* Off-white neutrals with dark green (primary) and dark brown (secondary)
+     accents. Text colours checked for WCAG contrast on bg, surface and
+     surface-2: text 11.9-14.1, muted 4.8-5.7, green 6.2-7.3, brown 6.8-8.1. */
+  color-scheme: light;
+  accent-color: var(--accent); /* checkboxes, native sliders */
+  --bg: #f4f1ea;
+  --surface: #fbf9f4;
+  --surface-2: #ece6da;
+  --border: #d6cdbb;
+  --grid: #e2dbcc;
+  --text: #2b2721;
+  --text-muted: #6a6356;
+  --accent: #2f5d3a; /* dark green */
+  --accent-2: #6b4423; /* dark brown */
+  --accent-tint: rgba(47, 93, 58, 0.1);
+  --accent-band: rgba(47, 93, 58, 0.28);
+  --neutral-ink: #4b5563;
+  --on-accent: #fbf9f4;
+  --warning: var(--accent-2);
+  --error: #9c3b1b;
 }
 
 * {
@@ -57,6 +66,7 @@ select {
   font-size: 24px;
   font-weight: 600;
   margin: 0;
+  color: var(--accent);
 }
 
 .headline {
@@ -70,7 +80,7 @@ select {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-muted);
+  color: var(--accent-2);
   margin: 0;
 }
 
@@ -111,7 +121,7 @@ select {
 }
 
 .card {
-  background: var(--surface-2);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 20px;
@@ -153,12 +163,12 @@ select {
 .chip.active {
   color: var(--accent);
   border-color: var(--accent);
-  background: rgba(124, 196, 255, 0.12);
+  background: var(--accent-tint);
 }
 
 .btn {
   background: var(--accent);
-  color: var(--bg);
+  color: var(--on-accent);
   border: 0;
   border-radius: 12px;
   padding: 8px 16px;
@@ -305,7 +315,7 @@ td:first-child {
 th {
   position: sticky;
   top: 0;
-  background: var(--surface-2);
+  background: var(--surface);
   color: var(--text-muted);
   font-weight: 500;
 }
@@ -527,10 +537,10 @@ th {
   font-size: 14px;
 }
 .tag-forecast {
-  color: var(--warning);
+  color: var(--accent-2);
 }
 .tag-projected {
-  color: #c9a7ff;
+  color: var(--neutral-ink);
 }
 .park-list {
   list-style: none;
@@ -581,7 +591,7 @@ th {
   top: 0;
   bottom: 0;
   border-radius: 3px;
-  background: rgba(124, 196, 255, 0.35);
+  background: var(--accent-band);
 }
 .meter-dot {
   position: absolute;
@@ -802,7 +812,7 @@ th {
 .suggestion.selected,
 .park-row.selected {
   border-color: var(--accent);
-  background: rgba(124, 196, 255, 0.08);
+  background: var(--accent-tint);
 }
 .suggestion-name {
   font-weight: 500;
@@ -880,6 +890,7 @@ label.park-row {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
+  color: var(--accent-2);
 }
 .park-card-score {
   display: flex;
