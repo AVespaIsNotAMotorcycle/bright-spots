@@ -53,6 +53,18 @@ DATASETS: list[dict[str, Any]] = [
         "access": "bundled",
     },
     {
+        "id": "raindiv",
+        "name": "Rainfall vs pre-2000 trend",
+        "gives": "World map: post-2000 rainfall compared with the 1951–1999 linear trend extended forward",
+        "source": "GPCC Full Data v2025 via NOAA PSL",
+        "url": "https://psl.noaa.gov/data/gridded/data.gpcc.html",
+        "access": "bundled",
+        "resolutions": {
+            "1": "1° · post-2000 = 2000–2018 (file gap after 2018)",
+            "2.5": "2.5° · post-2000 = 2000–2025",
+        },
+    },
+    {
         "id": "gibs",
         "name": "NASA GIBS imagery",
         "gives": "Satellite imagery tiles (loaded directly by the browser)",
@@ -187,6 +199,26 @@ async def grace_series(lat: Lat, lon: Lon) -> bundled.GraceResult:
 async def koppen_lookup(lat: Lat, lon: Lon) -> bundled.KoppenResult:
     try:
         return await asyncio.to_thread(bundled.koppen_lookup, lat, lon)
+    except bundled.MissingDataFile as e:
+        raise HTTPException(503, str(e)) from e
+
+
+@router.get("/datasets/raindiv/grid")
+async def raindiv_grid(
+    res: Annotated[str, Query(pattern=r"^(1|2\.5)$")] = "1",
+) -> bundled.RainDivGrid:
+    try:
+        return await asyncio.to_thread(bundled.raindiv_grid, res)
+    except bundled.MissingDataFile as e:
+        raise HTTPException(503, str(e)) from e
+
+
+@router.get("/datasets/raindiv/point")
+async def raindiv_point(
+    lat: Lat, lon: Lon, res: Annotated[str, Query(pattern=r"^(1|2\.5)$")] = "1"
+) -> bundled.RainDivPoint:
+    try:
+        return await asyncio.to_thread(bundled.raindiv_point, res, lat, lon)
     except bundled.MissingDataFile as e:
         raise HTTPException(503, str(e)) from e
 
