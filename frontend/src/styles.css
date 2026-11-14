@@ -606,6 +606,10 @@ th {
   background: var(--accent);
   box-shadow: 0 0 0 2px var(--surface);
 }
+.meter-label {
+  display: none;
+  min-width: 2.6em;
+}
 .meter-value {
   min-width: 4.5em;
   font-size: 14px;
@@ -642,6 +646,9 @@ th {
   }
   .park-row .meter {
     grid-column: 2;
+  }
+  .meter-label {
+    display: inline;
   }
   .park-head > span:nth-child(n + 3) {
     display: none;

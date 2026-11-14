@@ -30,12 +30,20 @@ function horizonTitle(key: HorizonKey, plan: Plan | null): string {
   return "2050";
 }
 
-function Meter({ h }: { h: Horizon }) {
-  if (h.score == null) return <span className="muted small">n/a</span>;
+function Meter({ h, label }: { h: Horizon; label: string }) {
+  const tag = <span className="micro muted meter-label">{label}</span>;
+  if (h.score == null)
+    return (
+      <div className="meter">
+        {tag}
+        <span className="muted small">n/a</span>
+      </div>
+    );
   const lo = h.low ?? h.score,
     hi = h.high ?? h.score;
   return (
     <div className="meter" title={lo !== hi ? `range ${lo}–${hi}` : undefined}>
+      {tag}
       <div className="meter-track">
         {lo !== hi && <div className="meter-range" style={{ left: `${lo}%`, width: `${hi - lo}%` }} />}
         <div className="meter-dot" style={{ left: `${h.score}%` }} />
@@ -369,7 +377,7 @@ export default function Planner() {
                       <span className="micro muted"> {p.park.states.join(", ")}</span>
                     </span>
                     {HORIZONS.map((hz) => (
-                      <Meter key={hz.key} h={p[hz.key]} />
+                      <Meter key={hz.key} h={p[hz.key]} label={horizonTitle(hz.key, plan)} />
                     ))}
                   </button>
                   {isOpen && <Details p={p} plan={plan} unit={unit} />}
