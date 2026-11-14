@@ -7,5 +7,8 @@ class Settings(BaseSettings):
     # Front-end origin allowed by CORS (spec: allow the front-end origin only).
     frontend_origin: str = "http://localhost:5173"
 
+    # Per-request timeout for outbound HTTP (spec 6.7: HTTP_TIMEOUT_S).
+    http_timeout_s: float = 20
+
 
 settings = Settings()
