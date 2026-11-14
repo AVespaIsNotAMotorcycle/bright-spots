@@ -114,6 +114,8 @@ export interface Place {
   name: string;
   lat: number;
   lon: number;
+  /** "device" = browser geolocation; "search" = a place the user typed. */
+  source?: "device" | "search";
 }
 
 /** Great-circle distance in km (haversine, mean Earth radius 6371 km). */
