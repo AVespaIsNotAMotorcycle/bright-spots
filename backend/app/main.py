@@ -9,6 +9,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 
 from app.config import settings
 from app.datasets.router import router as datasets_router
+from app.parks.router import router as parks_router
 
 
 @asynccontextmanager
@@ -20,7 +21,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         yield
 
 
-app = FastAPI(title="Bright Spots", lifespan=lifespan)
+app = FastAPI(title="Park visit planner", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -32,6 +33,7 @@ app.add_middleware(
 app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 app.include_router(datasets_router)
+app.include_router(parks_router)
 
 
 @app.get("/hello")
