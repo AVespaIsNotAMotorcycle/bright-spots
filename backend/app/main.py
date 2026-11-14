@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -14,6 +15,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     # One shared client and connection pool (spec: backend stack).
     async with httpx.AsyncClient(timeout=settings.http_timeout_s) as client:
         app.state.http = client
+        app.state.ornl_sem = asyncio.Semaphore(settings.ornl_concurrency)
         yield
 
 

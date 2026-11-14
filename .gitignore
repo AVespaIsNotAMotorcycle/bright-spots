@@ -13,3 +13,5 @@ dist/
 # Env
 .env
 *.tsbuildinfo
+backend/data/raw/
+backend/data/grace_1deg.npz

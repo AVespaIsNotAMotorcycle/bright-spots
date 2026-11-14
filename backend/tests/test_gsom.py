@@ -3,6 +3,7 @@ import pytest
 import respx
 from fastapi.testclient import TestClient
 
+from app import http
 from app.datasets import noaa_gsom
 from app.main import app
 
@@ -32,8 +33,9 @@ DATA_BODY = [
 
 
 @pytest.fixture(autouse=True)
-def clear_cache():
-    noaa_gsom._cache.clear()
+def clear_cache(monkeypatch):
+    http.clear_cache()
+    monkeypatch.setattr(http, "RETRY_BACKOFF_S", (0.0, 0.0))
 
 
 def test_bbox_order_is_north_west_south_east():
@@ -108,4 +110,4 @@ def test_upstream_failure_is_502():
 def test_datasets_listing():
     with TestClient(app) as client:
         r = client.get("/api/datasets")
-    assert r.json()[0]["id"] == "gsom"
+    assert "gsom" in [d["id"] for d in r.json()]

@@ -8,16 +8,16 @@ Uses NCEI's token-free services:
 from __future__ import annotations
 
 import math
-import time
 from typing import Any
 
 import httpx
 from pydantic import BaseModel
 
+from app.http import get_json
+
 SEARCH_URL = "https://www.ncei.noaa.gov/access/services/search/v1/data"
 DATA_URL = "https://www.ncei.noaa.gov/access/services/data/v1"
 DATASET = "global-summary-of-the-month"
-CACHE_TTL_S = 6 * 3600
 
 # Curated subset of GSOM variables shown in the dashboard (units = metric).
 VARIABLES: dict[str, dict[str, str]] = {
@@ -57,21 +57,6 @@ class Series(BaseModel):
     station: str
     variables: list[str]
     points: list[SeriesPoint]
-
-
-_cache: dict[str, tuple[float, Any]] = {}
-
-
-async def _get_json(client: httpx.AsyncClient, url: str, params: dict[str, Any]) -> Any:
-    key = url + "?" + "&".join(f"{k}={params[k]}" for k in sorted(params))
-    hit = _cache.get(key)
-    if hit and time.monotonic() - hit[0] < CACHE_TTL_S:
-        return hit[1]
-    resp = await client.get(url, params=params)
-    resp.raise_for_status()
-    body = resp.json()
-    _cache[key] = (time.monotonic(), body)
-    return body
 
 
 def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -125,7 +110,7 @@ async def find_stations(
     radius_km: float = 50,
     limit: int = 25,
 ) -> list[Station]:
-    body = await _get_json(
+    body = await get_json(
         client,
         SEARCH_URL,
         {"dataset": DATASET, "bbox": bbox(lat, lon, radius_km), "limit": 100},
@@ -154,7 +139,7 @@ def parse_series(
 async def get_series(
     client: httpx.AsyncClient, station: str, variables: list[str], start: str, end: str
 ) -> Series:
-    rows = await _get_json(
+    rows = await get_json(
         client,
         DATA_URL,
         {
