@@ -350,7 +350,7 @@
   "visitors_2025": 206423
  },
  {
-  "id": "haleakal",
+  "id": "haleakala",
   "code": "hale",
   "name": "Haleakalā National Park",
   "short": "Haleakalā",
@@ -362,7 +362,7 @@
   "visitors_2025": 853711
  },
  {
-  "id": "hawai-i-volcanoes",
+  "id": "hawaii-volcanoes",
   "code": "havo",
   "name": "Hawaiʻi Volcanoes National Park",
   "short": "Hawaiʻi Volcanoes",
@@ -523,7 +523,7 @@
   "name": "Mount Rainier National Park",
   "short": "Mount Rainier",
   "states": [
-   "Washington (state)"
+   "Washington"
   ],
   "lat": 46.85,
   "lon": -121.75,
@@ -547,7 +547,7 @@
   "name": "North Cascades National Park",
   "short": "North Cascades",
   "states": [
-   "Washington (state)"
+   "Washington"
   ],
   "lat": 48.7,
   "lon": -121.2,
@@ -559,7 +559,7 @@
   "name": "Olympic National Park",
   "short": "Olympic",
   "states": [
-   "Washington (state)"
+   "Washington"
   ],
   "lat": 47.97,
   "lon": -123.5,
@@ -667,7 +667,7 @@
   "name": "Virgin Islands National Park",
   "short": "Virgin Islands",
   "states": [
-   "United States Virgin Islands"
+   "U.S. Virgin Islands"
   ],
   "lat": 18.33,
   "lon": -64.73,
@@ -710,10 +710,10 @@
   "visitors_2025": 606258
  },
  {
-  "id": "wrangell-st-nbsp-elias",
+  "id": "wrangell-st-elias",
   "code": "wrst",
   "name": "Wrangell–St. Elias National Park and Preserve",
-  "short": "Wrangell–St.&nbsp;Elias",
+  "short": "Wrangell–St. Elias",
   "states": [
    "Alaska"
   ],

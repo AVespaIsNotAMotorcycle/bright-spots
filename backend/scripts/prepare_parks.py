@@ -29,10 +29,12 @@ Usage: uv run python scripts/prepare_parks.py [--limit N] [--only CODE,CODE]
 
 import argparse
 import calendar
+import html
 import json
 import re
 import statistics
 import time
+import unicodedata
 import zipfile
 from datetime import date
 from pathlib import Path
@@ -70,6 +72,18 @@ ROW_RE = re.compile(
 )
 
 
+def clean(text: str) -> str:
+    """Wikitext link text -> plain text (entities such as &nbsp; decoded)."""
+    return " ".join(html.unescape(text).split())
+
+
+def slug(text: str) -> str:
+    """ASCII id: "Haleakalā" -> "haleakala", "Wrangell–St. Elias" -> "wrangell-st-elias"."""
+    words = re.sub(r"[^\w]+", " ", text)  # punctuation, incl. en dashes -> space
+    ascii_ = unicodedata.normalize("NFKD", words).encode("ascii", "ignore").decode()
+    return re.sub(r"[^a-z0-9]+", "-", ascii_.lower()).strip("-")
+
+
 def parse_parks(wikitext: str) -> list[dict]:
     parks = []
     for m in ROW_RE.finditer(wikitext):
@@ -81,15 +95,21 @@ def parse_parks(wikitext: str) -> list[dict]:
             continue
         lines = row.split("\n|")
         location = lines[2] if len(lines) > 2 else ""
-        states = re.findall(r"\[\[([^|\]]+)(?:\|[^\]]+)?\]\]", location.split("<br")[0])
+        # Displayed link text: [[Washington (state)|Washington]] -> Washington.
+        states = [
+            clean(disp or target)
+            for target, disp in re.findall(
+                r"\[\[([^|\]]+)(?:\|([^\]]+))?\]\]", location.split("<br")[0]
+            )
+        ]
         visitors = lines[5].strip().replace(",", "") if len(lines) > 5 else ""
-        short = link.group(2) or link.group(1)
+        short = clean(link.group(2) or link.group(1))
         parks.append(
             {
                 # Unique id: NPS codes are shared by Sequoia and Kings Canyon (seki).
-                "id": re.sub(r"[^a-z0-9]+", "-", short.lower()).strip("-"),
+                "id": slug(short),
                 "code": code.group(1) if code else None,
-                "name": link.group(1),
+                "name": clean(link.group(1)),
                 "short": short,
                 "states": states,
                 "lat": float(coord.group(1)),
