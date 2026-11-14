@@ -129,7 +129,7 @@ The app is a React single-page front end talking to one Python service. The Pyth
    |-- fetch_power.py -> NASA POWER API              (rain, air temperature, soil wetness)
    |-- grace.py       -> bundled GRACE file on disk  (regional water storage)
    |-- koppen.py      -> bundled climate-class files (now and 2041-2070)
-   |-- landcover.py   -> bundled ESA CCI / C3S land cover (fallback when ORNL fails)
+   |-- cci_landcover.py -> bundled ESA CCI / C3S land cover (fallback when ORNL fails)
    |-- science/*.py   -> trends, rain adjustment, score, verdict
    |-- cache.py       -> SQLite (results keyed by rounded coordinates)
    v
@@ -375,7 +375,11 @@ All four whole-globe years were already in the CDS cache. A year that is not cac
 
 Bundle 1992 (the first CCI year) and the latest year (2025): about 0.57 GB. The fallback therefore covers a longer span than ORNL (1992 vs 2001 start), so a change between 1992 and 2001 can trip the guard even though it predates the greenness record. **Decide:** whether to bundle all 34 years (about 10 GB if every year compresses like 2015 and 2020) for a land-cover history view.
 
-At run time `landcover.py` opens the file for each year and reads the pixel containing the point with a windowed read: 0.8 ms median, 1.7 ms p95 (200 random points). The groups in section 7.6 map from LCCS codes as listed there.
+At run time `app/datasets/cci_landcover.py` uses the first and latest `lccs_{year}.tif` present, opens each file and reads the pixel containing the point with a windowed read (0.8 ms median, 1.7 ms p95 per read, 200 random points; a full two-year lookup measured 4 to 23 ms). Code 0 is no data. Codes map to the section 7.6 groups and `changed` compares groups, for both sources.
+
+The land-cover endpoint tries ORNL first and uses the CCI result when ORNL raises after its retries or returns no first or latest year. The response carries `source` (`MCD12Q1` or `ESA CCI / C3S`) so the UI and methods note can name it. `/api/datasets/cci/landcover` serves the bundled maps directly.
+
+Measured live on 2026-11-14 (Paris): ORNL timed out (`ReadTimeout` after 68.8 s: 20 s timeout, three attempts, 1 s and 3 s backoff), and the endpoint returned the CCI answer after 61.5 s. The fallback is correct but slow, because it waits for every ORNL retry first.
 
 ## 6. Backend
 
@@ -1238,6 +1242,7 @@ These were not confirmed when this spec was written. Check them in Stage 0 and u
 - [ ] **Nominatim limits.** Read the current usage policy. If it is too strict for a live demo, switch to Photon (`photon.komoot.io`) with the same response mapping.
 - [ ] **Hackathon rules.** Confirm that preparing bundled data files before the event is allowed, and the rule on use of AI tools.
 - [ ] **CCI land cover groups.** Check the LCCS-to-group mapping in section 7.6 against the CCI land cover product user guide, especially where sparse vegetation (140, 150-153) and mosaic classes (30, 40, 100) go.
+- [ ] **Land-cover fallback latency.** The CCI answer arrives only after ORNL's full retry cycle (61.5 s measured). Decide whether to use a shorter ORNL timeout for land cover, or to return CCI at once and replace it with MCD12Q1 if ORNL answers later.
 - [x] **CDS cache for 1992 and 2025.** Done 2026-11-14; times in section 5.7.
 - [ ] **Citations.** Before presenting, open each reference in section 7.0 and confirm the wording used on the methods page.
 
