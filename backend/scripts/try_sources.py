@@ -12,7 +12,7 @@ import httpx
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.datasets import bundled, nominatim, ornl, power
+from app.datasets import bundled, cci_landcover, nominatim, ornl, power
 from app.datasets.router import DATASETS
 
 
@@ -44,6 +44,7 @@ async def main(lat: float, lon: float) -> None:
                 "modis LST", ornl.get_series(c, sem, "MOD11A2", lat, lon, 2024, 2024)
             ),
             timed("modis landcover", ornl.get_landcover(c, sem, lat, lon)),
+            timed("cci landcover", asyncio.to_thread(cci_landcover.lookup, lat, lon)),
             timed("grace", asyncio.to_thread(bundled.grace_series, lat, lon)),
             timed("koppen", asyncio.to_thread(bundled.koppen_lookup, lat, lon)),
             timed("nominatim", nominatim.search(c, "Nairobi")),

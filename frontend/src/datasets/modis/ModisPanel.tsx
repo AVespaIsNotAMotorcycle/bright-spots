@@ -4,6 +4,7 @@ import LineChartCard from "../../components/LineChartCard";
 import { Chips, Status } from "../../components/Status";
 import { useAsync } from "../../hooks";
 import { SERIES_COLORS } from "../../palette";
+import { pickLandcover } from "./landcover";
 
 const THIS_YEAR = new Date().getFullYear();
 const RANGES = [
@@ -23,7 +24,12 @@ export default function ModisPanel({ place, dataset }: { place: Place; dataset: 
     () => api.modisSeries(place.lat, place.lon, product, start, THIS_YEAR),
     `${place.lat},${place.lon},${product},${start}`,
   );
-  const landcover = useAsync(() => api.landcover(place.lat, place.lon), `${place.lat},${place.lon}`);
+  // CCI answers in milliseconds; ORNL (often a minute or a timeout) replaces it if it answers.
+  const cciLandcover = useAsync(() => api.cciLandcover(place.lat, place.lon), `${place.lat},${place.lon}`);
+  const ornlLandcover = useAsync(() => api.landcover(place.lat, place.lon), `${place.lat},${place.lon}`);
+  const landcover = pickLandcover(cciLandcover, ornlLandcover);
+  const landcoverSource =
+    landcover.status !== "ok" ? null : landcover.data.lc.source === "MCD12Q1" ? "MCD12Q1, IGBP" : landcover.data.lc.source;
 
   const rows = useMemo(
     () =>
@@ -47,25 +53,30 @@ export default function ModisPanel({ place, dataset }: { place: Place; dataset: 
 
       <section className="card">
         <header className="card-head">
-          <h3 className="section-title">Land cover (MCD12Q1, IGBP)</h3>
+          <h3 className="section-title">Land cover{landcoverSource ? ` (${landcoverSource})` : ""}</h3>
           <span className="tag tag-measured">Measured</span>
         </header>
         <Status state={landcover} loading="Fetching land cover…">
-          {(lc) => (
-            <div className="kv-grid">
-              <div>
-                <div className="micro muted">First ({lc.first?.year ?? "–"})</div>
-                <div>{lc.first?.name ?? "No data"}</div>
+          {({ lc, note }) => (
+            <>
+              {note && <p className="small muted">{note}</p>}
+              <div className="kv-grid">
+                <div>
+                  <div className="micro muted">First ({lc.first?.year ?? "–"})</div>
+                  <div>{lc.first?.name ?? "No data"}</div>
+                  {lc.first?.group && <div className="micro muted">{lc.first.group}</div>}
+                </div>
+                <div>
+                  <div className="micro muted">Latest ({lc.latest?.year ?? "–"})</div>
+                  <div>{lc.latest?.name ?? "No data"}</div>
+                  {lc.latest?.group && <div className="micro muted">{lc.latest.group}</div>}
+                </div>
+                <div>
+                  <div className="micro muted">Changed group</div>
+                  <div>{lc.changed == null ? "Unknown" : lc.changed ? "Yes" : "No"}</div>
+                </div>
               </div>
-              <div>
-                <div className="micro muted">Latest ({lc.latest?.year ?? "–"})</div>
-                <div>{lc.latest?.name ?? "No data"}</div>
-              </div>
-              <div>
-                <div className="micro muted">Changed</div>
-                <div>{lc.changed == null ? "Unknown" : lc.changed ? "Yes" : "No"}</div>
-              </div>
-            </div>
+            </>
           )}
         </Status>
       </section>

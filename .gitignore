@@ -16,3 +16,4 @@ dist/
 backend/data/raw/
 backend/data/grace_1deg.npz
 backend/data/gpcc_annual_*.npz
+backend/data/landcover/

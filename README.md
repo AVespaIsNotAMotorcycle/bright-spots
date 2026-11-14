@@ -1,7 +1,7 @@
 # Bright Spots
 
 A web app that gives any place on Earth a live "check-up" from NASA satellite data.
-See `SPEC.pdf` for the full specification.
+See `SPEC.md` for the full specification.
 
 ## Layout
 

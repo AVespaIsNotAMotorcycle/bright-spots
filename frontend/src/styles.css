@@ -1,4 +1,4 @@
-/* Tokens from SPEC.pdf section 9. Plain CSS until Tailwind lands. */
+/* Tokens from SPEC.md section 9. Plain CSS until Tailwind lands. */
 :root {
   color-scheme: dark;
   --bg: #070b14;
