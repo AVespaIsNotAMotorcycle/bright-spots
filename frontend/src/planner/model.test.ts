@@ -1,5 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { cToF, fToC, inToMm, mmToIn, planQuery, rankParks, type Horizon, type ParkPlan, type Prefs } from "./model";
+import {
+  cToF,
+  distanceKm,
+  fToC,
+  inToMm,
+  mmToIn,
+  nearestParks,
+  planQuery,
+  popularParks,
+  rankParks,
+  type Horizon,
+  type ParkPlan,
+  type Prefs,
+} from "./model";
 
 const h = (score: number | null): Horizon => ({ score, low: score, high: score, factors: {}, values: {}, notes: [] });
 const plan = (short: string, now: number | null, next: number | null, y2050: number | null): ParkPlan => ({
@@ -49,5 +62,35 @@ describe("rankParks", () => {
   });
   it("puts parks without a score last", () => {
     expect(rankParks(parks, "y2050").map((p) => p.park.short)).toEqual(["Badlands", "Acadia", "Zion"]);
+  });
+});
+
+const at = (short: string, lat: number, lon: number, visitors: number | null): ParkPlan => {
+  const p = plan(short, 1, 1, 1);
+  return { ...p, park: { ...p.park, lat, lon, visitors_2025: visitors } };
+};
+
+describe("distanceKm", () => {
+  it("is zero for the same point and ~111 km per degree of latitude", () => {
+    expect(distanceKm({ lat: 40, lon: -105 }, { lat: 40, lon: -105 })).toBe(0);
+    expect(distanceKm({ lat: 0, lon: 0 }, { lat: 1, lon: 0 })).toBeCloseTo(111.19, 1);
+  });
+});
+
+describe("nearestParks and popularParks", () => {
+  const parks = [
+    at("Rocky", 40.4, -105.58, 4_000_000),
+    at("Arches", 38.68, -109.57, 1_400_000),
+    at("Acadia", 44.35, -68.21, 4_100_000),
+    at("Smokies", 35.68, -83.53, 12_000_000),
+    at("Samoa", -14.25, -170.68, null),
+  ];
+  it("orders by distance from the place", () => {
+    const denver = { name: "Denver", lat: 39.74, lon: -104.98 };
+    expect(nearestParks(parks, denver, 2).map((p) => p.park.short)).toEqual(["Rocky", "Arches"]);
+  });
+  it("orders by 2025 visitors, skipping given ids and unknown counts", () => {
+    expect(popularParks(parks, 3).map((p) => p.park.short)).toEqual(["Smokies", "Acadia", "Rocky"]);
+    expect(popularParks(parks, 2, new Set(["smokies"])).map((p) => p.park.short)).toEqual(["Acadia", "Rocky"]);
   });
 });

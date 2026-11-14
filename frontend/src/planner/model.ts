@@ -109,3 +109,37 @@ export async function fetchPlan(p: Prefs, signal?: AbortSignal): Promise<Plan> {
   }
   return resp.json();
 }
+
+export interface Place {
+  name: string;
+  lat: number;
+  lon: number;
+}
+
+/** Great-circle distance in km (haversine, mean Earth radius 6371 km). */
+export function distanceKm(a: { lat: number; lon: number }, b: { lat: number; lon: number }): number {
+  const rad = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * rad;
+  const dLon = (b.lon - a.lon) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLon / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+/** The n parks closest to a place, nearest first. */
+export function nearestParks(parks: ParkPlan[], at: Place, n: number): ParkPlan[] {
+  return [...parks].sort((a, b) => distanceKm(at, a.park) - distanceKm(at, b.park)).slice(0, n);
+}
+
+/** The n most-visited parks in 2025, excluding ids in `skip`. */
+export function popularParks(parks: ParkPlan[], n: number, skip: Set<string> = new Set()): ParkPlan[] {
+  return parks
+    .filter((p) => !skip.has(p.park.id) && p.park.visitors_2025 != null)
+    .sort((a, b) => b.park.visitors_2025! - a.park.visitors_2025!)
+    .slice(0, n);
+}
+
+export async function geocode(q: string): Promise<Place[]> {
+  const resp = await fetch(`/api/geocode?${new URLSearchParams({ q })}`);
+  if (!resp.ok) throw new Error(`${resp.status}: place search failed`);
+  return resp.json();
+}
