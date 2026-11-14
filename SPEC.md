@@ -288,7 +288,7 @@ Fill values to drop: NDVI `-3000`; LST `0`.
 
 **Call plan for surface heat.** From POWER data (5.2), find the warmest calendar month at the point. For each year request only the four 8-day composites centred on that month. That is about 100 dates, so about 10 to 25 requests depending on how the dates group.
 
-**Call plan for land cover.** Request the first available year (2001) and the latest available year. Two requests. If either fails after retries, use the bundled ESA CCI / C3S maps for the same two years instead (section 5.7). ORNL has proved unreliable, so the fallback is required, not optional.
+**Call plan for land cover.** Request the first available year (2001) and the latest available year. Two requests. If either fails after retries, use the bundled ESA CCI / C3S maps instead, comparing 1992 (the first CCI year) with the latest year (section 5.7). ORNL has proved unreliable, so the fallback is required, not optional.
 
 **Robustness.** Timeout 20 seconds per request. Retry twice with backoff of 1 and 3 seconds. If more than 20% of greenness chunks fail, report greenness as unavailable and try `VNP13A1`.
 
@@ -371,7 +371,7 @@ Measured for two years:
 
 Whole-globe years were already in the CDS cache. A year that is not cached may wait longer; that has not been measured.
 
-Bundle 2001 and the latest year (2025), matching the call plan in 5.1: about 0.57 GB. **Decide:** whether to bundle all 34 years (about 10 GB if every year compresses like 2015 and 2020) for a land-cover history view.
+Bundle 1992 (the first CCI year) and the latest year (2025): about 0.57 GB. The fallback therefore covers a longer span than ORNL (1992 vs 2001 start), so a change between 1992 and 2001 can trip the guard even though it predates the greenness record. **Decide:** whether to bundle all 34 years (about 10 GB if every year compresses like 2015 and 2020) for a land-cover history view.
 
 At run time `landcover.py` opens the file for each year and reads the pixel containing the point with a windowed read: 0.8 ms median, 1.7 ms p95 (200 random points). The groups in section 7.6 map from LCCS codes as listed there.
 
@@ -618,7 +618,7 @@ Plain wording: "Greener than the rain explains." / "Less green than the rain wou
 
 ### 7.6 Land-cover guard
 
-1. Read MCD12Q1 `LC_Type1` for the first and latest year. If ORNL fails, read the bundled ESA CCI / C3S `lccs_class` for the same years instead (section 5.7) and say so in the methods note.
+1. Read MCD12Q1 `LC_Type1` for the first and latest year. If ORNL fails, read the bundled ESA CCI / C3S `lccs_class` for 1992 and the latest year instead (section 5.7), and say so, with the years, in the methods note.
 2. Map the 17 IGBP codes to groups: Forest (1-5), Shrub and savanna (6-9), Grassland (10), Wetland (11), Cropland (12, 14), Built-up (13), Snow and ice (15), Bare (16), Water (17). For the CCI fallback, map LCCS codes following the IPCC aggregation in the CCI land cover user guide: Cropland (10-40), Forest (50-100, 160, 170), Grassland (110, 130), Wetland (180), Built-up (190), Shrub and savanna (120-122), Bare (140, 150-153, 200-202), Water (210), Snow and ice (220). Never compare an MCD12Q1 year with a CCI year; both years come from the same source.
 3. Answer `changed` if the group differs, else `stable`. Report both names.
 4. Tone is `neutral` for stable. For changed, tone is `unknown` and a warning is added to the verdict: "Land use changed from X to Y, so greenness changes may reflect a different kind of land, not healthier land."
@@ -1236,7 +1236,7 @@ These were not confirmed when this spec was written. Check them in Stage 0 and u
 - [ ] **Nominatim limits.** Read the current usage policy. If it is too strict for a live demo, switch to Photon (`photon.komoot.io`) with the same response mapping.
 - [ ] **Hackathon rules.** Confirm that preparing bundled data files before the event is allowed, and the rule on use of AI tools.
 - [ ] **CCI land cover groups.** Check the LCCS-to-group mapping in section 7.6 against the CCI land cover product user guide, especially where sparse vegetation (140, 150-153) and mosaic classes (30, 40, 100) go.
-- [ ] **CDS cache for 2001 and 2025.** Run `prepare_landcover.py 2001 2025` and record the request and download times.
+- [ ] **CDS cache for 1992 and 2025.** Run `prepare_landcover.py 1992 2025` and record the request and download times.
 - [ ] **Citations.** Before presenting, open each reference in section 7.0 and confirm the wording used on the methods page.
 
 ### Known scientific limits to state openly
