@@ -1,0 +1,762 @@
+[
+ {
+  "id": "acadia",
+  "code": "acad",
+  "name": "Acadia National Park",
+  "short": "Acadia",
+  "states": [
+   "Maine"
+  ],
+  "lat": 44.35,
+  "lon": -68.21,
+  "visitors_2025": 4079318
+ },
+ {
+  "id": "american-samoa",
+  "code": "npsa",
+  "name": "National Park of American Samoa",
+  "short": "American Samoa",
+  "states": [
+   "American Samoa"
+  ],
+  "lat": -14.25,
+  "lon": -170.68,
+  "visitors_2025": 43258
+ },
+ {
+  "id": "arches",
+  "code": "arch",
+  "name": "Arches National Park",
+  "short": "Arches",
+  "states": [
+   "Utah"
+  ],
+  "lat": 38.68,
+  "lon": -109.57,
+  "visitors_2025": 1511740
+ },
+ {
+  "id": "badlands",
+  "code": "badl",
+  "name": "Badlands National Park",
+  "short": "Badlands",
+  "states": [
+   "South Dakota"
+  ],
+  "lat": 43.75,
+  "lon": -102.5,
+  "visitors_2025": 1139361
+ },
+ {
+  "id": "big-bend",
+  "code": "bibe",
+  "name": "Big Bend National Park",
+  "short": "Big Bend",
+  "states": [
+   "Texas"
+  ],
+  "lat": 29.25,
+  "lon": -103.25,
+  "visitors_2025": 568104
+ },
+ {
+  "id": "biscayne",
+  "code": "bisc",
+  "name": "Biscayne National Park",
+  "short": "Biscayne",
+  "states": [
+   "Florida"
+  ],
+  "lat": 25.65,
+  "lon": -80.08,
+  "visitors_2025": 486567
+ },
+ {
+  "id": "black-canyon-of-the-gunnison",
+  "code": "blca",
+  "name": "Black Canyon of the Gunnison National Park",
+  "short": "Black Canyon of the Gunnison",
+  "states": [
+   "Colorado"
+  ],
+  "lat": 38.57,
+  "lon": -107.72,
+  "visitors_2025": 250086
+ },
+ {
+  "id": "bryce-canyon",
+  "code": "brca",
+  "name": "Bryce Canyon National Park",
+  "short": "Bryce Canyon",
+  "states": [
+   "Utah"
+  ],
+  "lat": 37.57,
+  "lon": -112.18,
+  "visitors_2025": 1967367
+ },
+ {
+  "id": "canyonlands",
+  "code": "cany",
+  "name": "Canyonlands National Park",
+  "short": "Canyonlands",
+  "states": [
+   "Utah"
+  ],
+  "lat": 38.2,
+  "lon": -109.93,
+  "visitors_2025": 796057
+ },
+ {
+  "id": "capitol-reef",
+  "code": "care",
+  "name": "Capitol Reef National Park",
+  "short": "Capitol Reef",
+  "states": [
+   "Utah"
+  ],
+  "lat": 38.2,
+  "lon": -111.17,
+  "visitors_2025": 1388476
+ },
+ {
+  "id": "carlsbad-caverns",
+  "code": "cave",
+  "name": "Carlsbad Caverns National Park",
+  "short": "Carlsbad Caverns",
+  "states": [
+   "New Mexico"
+  ],
+  "lat": 32.17,
+  "lon": -104.44,
+  "visitors_2025": 410778
+ },
+ {
+  "id": "channel-islands",
+  "code": "chis",
+  "name": "Channel Islands National Park",
+  "short": "Channel Islands",
+  "states": [
+   "California"
+  ],
+  "lat": 34.01,
+  "lon": -119.42,
+  "visitors_2025": 227186
+ },
+ {
+  "id": "congaree",
+  "code": "cong",
+  "name": "Congaree National Park",
+  "short": "Congaree",
+  "states": [
+   "South Carolina"
+  ],
+  "lat": 33.78,
+  "lon": -80.78,
+  "visitors_2025": 287833
+ },
+ {
+  "id": "crater-lake",
+  "code": "crla",
+  "name": "Crater Lake National Park",
+  "short": "Crater Lake",
+  "states": [
+   "Oregon"
+  ],
+  "lat": 42.94,
+  "lon": -122.1,
+  "visitors_2025": 632242
+ },
+ {
+  "id": "cuyahoga-valley",
+  "code": "cuva",
+  "name": "Cuyahoga Valley National Park",
+  "short": "Cuyahoga Valley",
+  "states": [
+   "Ohio"
+  ],
+  "lat": 41.24,
+  "lon": -81.55,
+  "visitors_2025": 3025325
+ },
+ {
+  "id": "death-valley",
+  "code": "deva",
+  "name": "Death Valley National Park",
+  "short": "Death Valley",
+  "states": [
+   "California",
+   "Nevada"
+  ],
+  "lat": 36.24,
+  "lon": -116.82,
+  "visitors_2025": 1320134
+ },
+ {
+  "id": "denali",
+  "code": "dena",
+  "name": "Denali National Park and Preserve",
+  "short": "Denali",
+  "states": [
+   "Alaska"
+  ],
+  "lat": 63.33,
+  "lon": -150.5,
+  "visitors_2025": 543300
+ },
+ {
+  "id": "dry-tortugas",
+  "code": "drto",
+  "name": "Dry Tortugas National Park",
+  "short": "Dry Tortugas",
+  "states": [
+   "Florida"
+  ],
+  "lat": 24.63,
+  "lon": -82.87,
+  "visitors_2025": 89355
+ },
+ {
+  "id": "everglades",
+  "code": "ever",
+  "name": "Everglades National Park",
+  "short": "Everglades",
+  "states": [
+   "Florida"
+  ],
+  "lat": 25.32,
+  "lon": -80.93,
+  "visitors_2025": 778198
+ },
+ {
+  "id": "gates-of-the-arctic",
+  "code": "gaar",
+  "name": "Gates of the Arctic National Park and Preserve",
+  "short": "Gates of the Arctic",
+  "states": [
+   "Alaska"
+  ],
+  "lat": 67.78,
+  "lon": -153.3,
+  "visitors_2025": 14923
+ },
+ {
+  "id": "gateway-arch",
+  "code": "jeff",
+  "name": "Gateway Arch National Park",
+  "short": "Gateway Arch",
+  "states": [
+   "Missouri"
+  ],
+  "lat": 38.63,
+  "lon": -90.19,
+  "visitors_2025": 2209028
+ },
+ {
+  "id": "glacier",
+  "code": "glac",
+  "name": "Glacier National Park (U.S.)",
+  "short": "Glacier",
+  "states": [
+   "Montana"
+  ],
+  "lat": 48.8,
+  "lon": -114.0,
+  "visitors_2025": 3136557
+ },
+ {
+  "id": "glacier-bay",
+  "code": "glba",
+  "name": "Glacier Bay National Park and Preserve",
+  "short": "Glacier Bay",
+  "states": [
+   "Alaska"
+  ],
+  "lat": 58.5,
+  "lon": -137.0,
+  "visitors_2025": 740044
+ },
+ {
+  "id": "grand-canyon",
+  "code": "grca",
+  "name": "Grand Canyon National Park",
+  "short": "Grand Canyon",
+  "states": [
+   "Arizona"
+  ],
+  "lat": 36.06,
+  "lon": -112.14,
+  "visitors_2025": 4430653
+ },
+ {
+  "id": "grand-teton",
+  "code": "grte",
+  "name": "Grand Teton National Park",
+  "short": "Grand Teton",
+  "states": [
+   "Wyoming"
+  ],
+  "lat": 43.73,
+  "lon": -110.8,
+  "visitors_2025": 3800648
+ },
+ {
+  "id": "great-basin",
+  "code": "grba",
+  "name": "Great Basin National Park",
+  "short": "Great Basin",
+  "states": [
+   "Nevada"
+  ],
+  "lat": 38.98,
+  "lon": -114.3,
+  "visitors_2025": 161210
+ },
+ {
+  "id": "great-sand-dunes",
+  "code": "grsa",
+  "name": "Great Sand Dunes National Park and Preserve",
+  "short": "Great Sand Dunes",
+  "states": [
+   "Colorado"
+  ],
+  "lat": 37.73,
+  "lon": -105.51,
+  "visitors_2025": 432498
+ },
+ {
+  "id": "great-smoky-mountains",
+  "code": "grsm",
+  "name": "Great Smoky Mountains National Park",
+  "short": "Great Smoky Mountains",
+  "states": [
+   "North Carolina",
+   "Tennessee"
+  ],
+  "lat": 35.68,
+  "lon": -83.53,
+  "visitors_2025": 11527939
+ },
+ {
+  "id": "guadalupe-mountains",
+  "code": "gumo",
+  "name": "Guadalupe Mountains National Park",
+  "short": "Guadalupe Mountains",
+  "states": [
+   "Texas"
+  ],
+  "lat": 31.92,
+  "lon": -104.87,
+  "visitors_2025": 206423
+ },
+ {
+  "id": "haleakal",
+  "code": "hale",
+  "name": "Haleakalā National Park",
+  "short": "Haleakalā",
+  "states": [
+   "Hawaii"
+  ],
+  "lat": 20.72,
+  "lon": -156.17,
+  "visitors_2025": 853711
+ },
+ {
+  "id": "hawai-i-volcanoes",
+  "code": "havo",
+  "name": "Hawaiʻi Volcanoes National Park",
+  "short": "Hawaiʻi Volcanoes",
+  "states": [
+   "Hawaii"
+  ],
+  "lat": 19.38,
+  "lon": -155.2,
+  "visitors_2025": 1877854
+ },
+ {
+  "id": "hot-springs",
+  "code": "hosp",
+  "name": "Hot Springs National Park",
+  "short": "Hot Springs",
+  "states": [
+   "Arkansas"
+  ],
+  "lat": 34.51,
+  "lon": -93.05,
+  "visitors_2025": 2494611
+ },
+ {
+  "id": "indiana-dunes",
+  "code": "indu",
+  "name": "Indiana Dunes National Park",
+  "short": "Indiana Dunes",
+  "states": [
+   "Indiana"
+  ],
+  "lat": 41.6533,
+  "lon": -87.0524,
+  "visitors_2025": 2629497
+ },
+ {
+  "id": "isle-royale",
+  "code": "isro",
+  "name": "Isle Royale National Park",
+  "short": "Isle Royale",
+  "states": [
+   "Michigan"
+  ],
+  "lat": 48.1,
+  "lon": -88.55,
+  "visitors_2025": 29091
+ },
+ {
+  "id": "joshua-tree",
+  "code": "jotr",
+  "name": "Joshua Tree National Park",
+  "short": "Joshua Tree",
+  "states": [
+   "California"
+  ],
+  "lat": 33.79,
+  "lon": -115.9,
+  "visitors_2025": 2932644
+ },
+ {
+  "id": "katmai",
+  "code": "katm",
+  "name": "Katmai National Park and Preserve",
+  "short": "Katmai",
+  "states": [
+   "Alaska"
+  ],
+  "lat": 58.5,
+  "lon": -155.0,
+  "visitors_2025": 34479
+ },
+ {
+  "id": "kenai-fjords",
+  "code": "kefj",
+  "name": "Kenai Fjords National Park",
+  "short": "Kenai Fjords",
+  "states": [
+   "Alaska"
+  ],
+  "lat": 59.92,
+  "lon": -149.65,
+  "visitors_2025": 425369
+ },
+ {
+  "id": "kings-canyon",
+  "code": "seki",
+  "name": "Kings Canyon National Park",
+  "short": "Kings Canyon",
+  "states": [
+   "California"
+  ],
+  "lat": 36.8,
+  "lon": -118.55,
+  "visitors_2025": 779791
+ },
+ {
+  "id": "kobuk-valley",
+  "code": "kova",
+  "name": "Kobuk Valley National Park",
+  "short": "Kobuk Valley",
+  "states": [
+   "Alaska"
+  ],
+  "lat": 67.55,
+  "lon": -159.28,
+  "visitors_2025": 7786
+ },
+ {
+  "id": "lake-clark",
+  "code": "lacl",
+  "name": "Lake Clark National Park and Preserve",
+  "short": "Lake Clark",
+  "states": [
+   "Alaska"
+  ],
+  "lat": 60.97,
+  "lon": -153.42,
+  "visitors_2025": 19778
+ },
+ {
+  "id": "lassen-volcanic",
+  "code": "lavo",
+  "name": "Lassen Volcanic National Park",
+  "short": "Lassen Volcanic",
+  "states": [
+   "California"
+  ],
+  "lat": 40.49,
+  "lon": -121.51,
+  "visitors_2025": 504777
+ },
+ {
+  "id": "mammoth-cave",
+  "code": "maca",
+  "name": "Mammoth Cave National Park",
+  "short": "Mammoth Cave",
+  "states": [
+   "Kentucky"
+  ],
+  "lat": 37.18,
+  "lon": -86.1,
+  "visitors_2025": 660734
+ },
+ {
+  "id": "mesa-verde",
+  "code": "meve",
+  "name": "Mesa Verde National Park",
+  "short": "Mesa Verde",
+  "states": [
+   "Colorado"
+  ],
+  "lat": 37.18,
+  "lon": -108.49,
+  "visitors_2025": 463130
+ },
+ {
+  "id": "mount-rainier",
+  "code": "mora",
+  "name": "Mount Rainier National Park",
+  "short": "Mount Rainier",
+  "states": [
+   "Washington (state)"
+  ],
+  "lat": 46.85,
+  "lon": -121.75,
+  "visitors_2025": 1635342
+ },
+ {
+  "id": "new-river-gorge",
+  "code": "neri",
+  "name": "New River Gorge National Park and Preserve",
+  "short": "New River Gorge",
+  "states": [
+   "West Virginia"
+  ],
+  "lat": 38.07,
+  "lon": -81.08,
+  "visitors_2025": 1958440
+ },
+ {
+  "id": "north-cascades",
+  "code": "noca",
+  "name": "North Cascades National Park",
+  "short": "North Cascades",
+  "states": [
+   "Washington (state)"
+  ],
+  "lat": 48.7,
+  "lon": -121.2,
+  "visitors_2025": 46925
+ },
+ {
+  "id": "olympic",
+  "code": "olym",
+  "name": "Olympic National Park",
+  "short": "Olympic",
+  "states": [
+   "Washington (state)"
+  ],
+  "lat": 47.97,
+  "lon": -123.5,
+  "visitors_2025": 3584187
+ },
+ {
+  "id": "petrified-forest",
+  "code": "pefo",
+  "name": "Petrified Forest National Park",
+  "short": "Petrified Forest",
+  "states": [
+   "Arizona"
+  ],
+  "lat": 35.07,
+  "lon": -109.78,
+  "visitors_2025": 315951
+ },
+ {
+  "id": "pinnacles",
+  "code": "pinn",
+  "name": "Pinnacles National Park",
+  "short": "Pinnacles",
+  "states": [
+   "California"
+  ],
+  "lat": 36.48,
+  "lon": -121.16,
+  "visitors_2025": 343208
+ },
+ {
+  "id": "redwood",
+  "code": "redw",
+  "name": "Redwood National and State Parks",
+  "short": "Redwood",
+  "states": [
+   "California"
+  ],
+  "lat": 41.3,
+  "lon": -124.0,
+  "visitors_2025": 1202480
+ },
+ {
+  "id": "rocky-mountain",
+  "code": "romo",
+  "name": "Rocky Mountain National Park",
+  "short": "Rocky Mountain",
+  "states": [
+   "Colorado"
+  ],
+  "lat": 40.4,
+  "lon": -105.58,
+  "visitors_2025": 4171431
+ },
+ {
+  "id": "saguaro",
+  "code": "sagu",
+  "name": "Saguaro National Park",
+  "short": "Saguaro",
+  "states": [
+   "Arizona"
+  ],
+  "lat": 32.25,
+  "lon": -110.5,
+  "visitors_2025": 847749
+ },
+ {
+  "id": "sequoia",
+  "code": "seki",
+  "name": "Sequoia National Park",
+  "short": "Sequoia",
+  "states": [
+   "California"
+  ],
+  "lat": 36.43,
+  "lon": -118.68,
+  "visitors_2025": 1378337
+ },
+ {
+  "id": "shenandoah",
+  "code": "shen",
+  "name": "Shenandoah National Park",
+  "short": "Shenandoah",
+  "states": [
+   "Virginia"
+  ],
+  "lat": 38.53,
+  "lon": -78.35,
+  "visitors_2025": 1682152
+ },
+ {
+  "id": "theodore-roosevelt",
+  "code": "thro",
+  "name": "Theodore Roosevelt National Park",
+  "short": "Theodore Roosevelt",
+  "states": [
+   "North Dakota"
+  ],
+  "lat": 46.97,
+  "lon": -103.45,
+  "visitors_2025": 729893
+ },
+ {
+  "id": "virgin-islands",
+  "code": "viis",
+  "name": "Virgin Islands National Park",
+  "short": "Virgin Islands",
+  "states": [
+   "United States Virgin Islands"
+  ],
+  "lat": 18.33,
+  "lon": -64.73,
+  "visitors_2025": 471074
+ },
+ {
+  "id": "voyageurs",
+  "code": "voya",
+  "name": "Voyageurs National Park",
+  "short": "Voyageurs",
+  "states": [
+   "Minnesota"
+  ],
+  "lat": 48.5,
+  "lon": -92.88,
+  "visitors_2025": 206326
+ },
+ {
+  "id": "white-sands",
+  "code": "whsa",
+  "name": "White Sands National Park",
+  "short": "White Sands",
+  "states": [
+   "New Mexico"
+  ],
+  "lat": 32.78,
+  "lon": -106.17,
+  "visitors_2025": 659742
+ },
+ {
+  "id": "wind-cave",
+  "code": "wica",
+  "name": "Wind Cave National Park",
+  "short": "Wind Cave",
+  "states": [
+   "South Dakota"
+  ],
+  "lat": 43.57,
+  "lon": -103.48,
+  "visitors_2025": 606258
+ },
+ {
+  "id": "wrangell-st-nbsp-elias",
+  "code": "wrst",
+  "name": "Wrangell–St. Elias National Park and Preserve",
+  "short": "Wrangell–St.&nbsp;Elias",
+  "states": [
+   "Alaska"
+  ],
+  "lat": 61.0,
+  "lon": -142.0,
+  "visitors_2025": 108840
+ },
+ {
+  "id": "yellowstone",
+  "code": "yell",
+  "name": "Yellowstone National Park",
+  "short": "Yellowstone",
+  "states": [
+   "Wyoming",
+   "Montana",
+   "Idaho"
+  ],
+  "lat": 44.6,
+  "lon": -110.5,
+  "visitors_2025": 4762988
+ },
+ {
+  "id": "yosemite",
+  "code": "yose",
+  "name": "Yosemite National Park",
+  "short": "Yosemite",
+  "states": [
+   "California"
+  ],
+  "lat": 37.83,
+  "lon": -119.5,
+  "visitors_2025": 4278413
+ },
+ {
+  "id": "zion",
+  "code": "zion",
+  "name": "Zion National Park",
+  "short": "Zion",
+  "states": [
+   "Utah"
+  ],
+  "lat": 37.3,
+  "lon": -113.05,
+  "visitors_2025": 4984525
+ }
+]
