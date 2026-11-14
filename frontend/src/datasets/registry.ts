@@ -6,8 +6,9 @@ import GsomPanel from "./gsom/GsomPanel";
 import KoppenPanel from "./koppen/KoppenPanel";
 import ModisPanel from "./modis/ModisPanel";
 import PowerPanel from "./power/PowerPanel";
+import RainDivPanel from "./raindiv/RainDivPanel";
 
-export type PanelProps = { dataset: DatasetInfo; place: Place };
+export type PanelProps = { dataset: DatasetInfo; place: Place; onPlace?: (p: Place) => void };
 
 /**
  * Frontend panels keyed by backend dataset id (see GET /api/datasets).
@@ -18,6 +19,7 @@ export const PANELS: Record<string, ComponentType<PanelProps>> = {
   modis: ModisPanel,
   grace: GracePanel,
   koppen: KoppenPanel,
+  raindiv: RainDivPanel,
   gibs: GibsPanel,
   gsom: GsomPanel,
 };

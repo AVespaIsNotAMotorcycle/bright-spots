@@ -131,3 +131,155 @@ def koppen_lookup(lat: float, lon: float) -> KoppenResult:
 
 def koppen_legend() -> dict[str, dict]:
     return _koppen()[2]
+
+
+# ---------- Rainfall divergence (GPCC; built by scripts/prepare_rain_divergence.py) ----------
+
+RAINDIV_TAGS = {"1": "1deg", "2.5": "2p5deg"}
+
+
+class RainDivGrid(BaseModel):
+    res: float
+    lat0: float  # centre of first row (north)
+    lon0: float  # centre of first column (west)
+    nlat: int
+    nlon: int
+    base_start: int
+    base_end: int
+    post_start: int
+    post_end: int
+    pct: list[float | None]  # row-major, north->south, west->east
+    mm: list[float | None]
+    z: list[float | None]
+
+
+class RainDivPoint(BaseModel):
+    res: float
+    cell_lat: float
+    cell_lon: float
+    land: bool
+    base_start: int
+    base_end: int
+    post_start: int
+    post_end: int
+    pct: float | None
+    mm: float | None
+    z: float | None
+    base_mean: float | None
+    slope_pre: float | None
+    years: list[
+        dict[str, float | int | None]
+    ]  # {year, actual, fit (baseline+post only)}
+
+
+def _raindiv_paths(res: str) -> tuple[Path, Path]:
+    tag = RAINDIV_TAGS[res]
+    return DATA_DIR / f"rain_divergence_{tag}.npz", DATA_DIR / f"gpcc_annual_{tag}.npz"
+
+
+@lru_cache(maxsize=2)
+def _raindiv(res: str) -> dict[str, np.ndarray]:
+    path, _ = _raindiv_paths(res)
+    if not path.exists():
+        raise MissingDataFile(
+            f"data/{path.name} missing; run scripts/prepare_rain_divergence.py --res {res}"
+        )
+    with np.load(path) as f:
+        return {k: f[k] for k in f.files}
+
+
+@lru_cache(maxsize=2)
+def _raindiv_annual(res: str) -> dict[str, np.ndarray]:
+    _, path = _raindiv_paths(res)
+    if not path.exists():
+        raise MissingDataFile(
+            f"data/{path.name} missing; run scripts/prepare_rain_divergence.py --res {res}"
+        )
+    with np.load(path) as f:
+        return {k: f[k] for k in f.files}
+
+
+def _round_list(a: np.ndarray, nd: int) -> list[float | None]:
+    flat = a.ravel().astype(np.float64)
+    return [None if not np.isfinite(v) else round(float(v), nd) for v in flat]
+
+
+@lru_cache(maxsize=2)
+def raindiv_grid(res: str) -> RainDivGrid:
+    d = _raindiv(res)
+    b0, b1, p0, p1 = (int(x) for x in d["meta"])
+    return RainDivGrid(
+        res=float(d["res"]),
+        lat0=float(d["lat"][0]),
+        lon0=float(d["lon"][0]),
+        nlat=len(d["lat"]),
+        nlon=len(d["lon"]),
+        base_start=b0,
+        base_end=b1,
+        post_start=p0,
+        post_end=p1,
+        pct=_round_list(d["pct"], 1),
+        mm=_round_list(d["mm"], 0),
+        z=_round_list(d["z"], 2),
+    )
+
+
+def raindiv_cell(res: str, lat: float, lon: float) -> tuple[int, int]:
+    d = _raindiv(res)
+    r = float(d["res"])
+    i = int(
+        np.clip(np.floor((float(d["lat"][0]) + r / 2 - lat) / r), 0, len(d["lat"]) - 1)
+    )
+    j = int(
+        np.clip(
+            np.floor((lon - (float(d["lon"][0]) - r / 2)) / r), 0, len(d["lon"]) - 1
+        )
+    )
+    return i, j
+
+
+def raindiv_point(res: str, lat: float, lon: float) -> RainDivPoint:
+    d = _raindiv(res)
+    a = _raindiv_annual(res)
+    i, j = raindiv_cell(res, lat, lon)
+    b0, b1, p0, p1 = (int(x) for x in d["meta"])
+
+    def val(k: str, nd: int) -> float | None:
+        v = float(d[k][i, j])
+        return round(v, nd) if np.isfinite(v) else None
+
+    pct, slope = val("pct", 1), val("slope_pre", 3)
+    base_mean = val("base_mean", 1)
+    land = pct is not None
+    years: list[dict[str, float | int | None]] = []
+    if land and slope is not None and base_mean is not None:
+        # Fitted line passes through (mean baseline year with data, base_mean).
+        yrs = a["years"]
+        col = a["annual"][:, i, j]
+        in_base = (yrs >= b0) & (yrs <= b1) & np.isfinite(col)
+        xbar = float(yrs[in_base].mean())
+        for y, v in zip(yrs.tolist(), col.tolist(), strict=True):
+            fit = round(base_mean + slope * (y - xbar), 1) if b0 <= y <= p1 else None
+            years.append(
+                {
+                    "year": int(y),
+                    "actual": round(v, 1) if np.isfinite(v) else None,
+                    "fit": fit,
+                }
+            )
+    return RainDivPoint(
+        res=float(d["res"]),
+        cell_lat=float(d["lat"][i]),
+        cell_lon=float(d["lon"][j]),
+        land=land,
+        base_start=b0,
+        base_end=b1,
+        post_start=p0,
+        post_end=p1,
+        pct=pct,
+        mm=val("mm", 1),
+        z=val("z", 2),
+        base_mean=base_mean,
+        slope_pre=slope,
+        years=years,
+    )

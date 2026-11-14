@@ -15,3 +15,4 @@ dist/
 *.tsbuildinfo
 backend/data/raw/
 backend/data/grace_1deg.npz
+backend/data/gpcc_annual_*.npz

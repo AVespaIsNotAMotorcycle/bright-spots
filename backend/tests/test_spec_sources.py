@@ -298,4 +298,67 @@ def test_bundled_missing_file_is_503(tmp_path, monkeypatch):
 def test_datasets_lists_six_spec_sources_plus_gsom():
     with TestClient(app) as c:
         ids = [d["id"] for d in c.get("/api/datasets").json()]
-    assert ids == ["power", "modis", "grace", "koppen", "gibs", "gsom"]
+    assert ids == ["power", "modis", "grace", "koppen", "raindiv", "gibs", "gsom"]
+
+
+# ---------- rainfall divergence ----------
+
+
+@pytest.fixture
+def fake_raindiv(tmp_path, monkeypatch):
+    lat = np.array([1.0, -1.0], dtype=np.float32)  # 2x2 grid at 2 deg
+    lon = np.array([-1.0, 1.0], dtype=np.float32)
+    nan = np.nan
+    np.savez_compressed(
+        tmp_path / "rain_divergence_1deg.npz",
+        pct=np.array([[12.5, nan], [nan, -3.0]], np.float32),
+        mm=np.array([[50.0, nan], [nan, -9.0]], np.float32),
+        z=np.array([[2.5, nan], [nan, -0.4]], np.float32),
+        base_mean=np.array([[400.0, nan], [nan, 300.0]], np.float32),
+        slope_pre=np.array([[-2.0, nan], [nan, 0.0]], np.float32),
+        lat=lat,
+        lon=lon,
+        meta=np.array([1951, 1999, 2000, 2018]),
+        res=np.float32(2.0),
+    )
+    years = np.arange(1951, 2020)
+    annual = np.full((len(years), 2, 2), nan, np.float32)
+    annual[:, 0, 0] = 400.0
+    np.savez_compressed(
+        tmp_path / "gpcc_annual_1deg.npz", annual=annual, years=years, lat=lat, lon=lon
+    )
+    monkeypatch.setattr(bundled, "DATA_DIR", tmp_path)
+    for fn in (bundled._raindiv, bundled._raindiv_annual, bundled.raindiv_grid):
+        fn.cache_clear()
+    yield
+    for fn in (bundled._raindiv, bundled._raindiv_annual, bundled.raindiv_grid):
+        fn.cache_clear()
+
+
+def test_raindiv_grid_and_point(fake_raindiv):
+    with TestClient(app) as c:
+        g = c.get("/api/datasets/raindiv/grid", params={"res": "1"}).json()
+        p = c.get(
+            "/api/datasets/raindiv/point", params={"lat": 1.5, "lon": -1.5}
+        ).json()
+        ocean = c.get(
+            "/api/datasets/raindiv/point", params={"lat": 1.5, "lon": 1.5}
+        ).json()
+        bad = c.get("/api/datasets/raindiv/grid", params={"res": "3"})
+    assert (g["nlat"], g["nlon"], g["lat0"], g["lon0"]) == (2, 2, 1.0, -1.0)
+    assert g["pct"] == [12.5, None, None, -3.0]
+    assert (g["post_start"], g["post_end"]) == (2000, 2018)
+    assert (p["cell_lat"], p["cell_lon"], p["pct"], p["z"]) == (1.0, -1.0, 12.5, 2.5)
+    # Fit passes through (mean baseline year 1975, 400) with slope -2 mm/yr.
+    by_year = {y["year"]: y for y in p["years"]}
+    assert by_year[1975]["fit"] == 400.0
+    assert by_year[2018]["fit"] == 400.0 - 2 * (2018 - 1975)
+    assert by_year[2019]["fit"] is None  # beyond the post period
+    assert ocean["land"] is False and ocean["years"] == []
+    assert bad.status_code == 422
+
+
+def test_raindiv_cell_edges(fake_raindiv):
+    assert bundled.raindiv_cell("1", 90, -180) == (0, 0)
+    assert bundled.raindiv_cell("1", -90, 180) == (1, 1)
+    assert bundled.raindiv_cell("1", 0.1, -0.1) == (0, 0)
