@@ -84,6 +84,13 @@ All falloffs and thresholds above are provisional choices, not from a source.
 
 **API.** `GET /api/parks`, `GET /api/parks/plan?month&t_lo&t_hi[&rh_max&rain_max&avoid_bugs&stars&snowmelt&scenario]`.
 
-**Front end.** One screen: preferences (°F or °C, inches or mm), a ranked list with three scores per park labelled Measured, Forecast and Projected, ranked by any of the three; a row expands to the values, the factor scores and the notes on each horizon.
+**Front end.** One page, top to bottom:
+
+1. A preferences panel: travel month (12-month grid), ideal daytime high as a two-thumb slider (°F or °C), optional humidity and monthly-rain limits as sliders, avoid bugs, and interests (stargazing, snowmelt season).
+2. Pick parks: the five parks nearest the user (browser geolocation after the user clicks, or a place search through `/api/geocode`, OpenStreetMap Nominatim) and the five most visited in 2025 (excluding any already in the near list), each with its three scores and a checkbox.
+3. Your parks: a detailed card for each selected park (three horizon scores with ranges, the values, the factor scores and the notes on each horizon), plus the 2050 scenario switch.
+4. All parks, ranked: collapsed by default; ranks by any horizon and doubles as a picker.
+
+Place, selected parks and units are kept in the browser's localStorage as a convenience only.
 
 **Not yet built from Parts 1–4.** USGS gauges and day-of-year medians for waterfalls; USA-NPN growing degree days and bloom data; MCD12Q2 foliage dates; caves as the constant; NPS visitation as a crowding layer; seasonal outlooks; moon phase and light pollution for stargazing.
