@@ -520,19 +520,6 @@ th {
   flex-direction: column;
   gap: 16px;
 }
-.prefs {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.prefs input[type="number"],
-.prefs select {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 4px 8px;
-  width: 6.5em;
-}
 .check {
   display: inline-flex;
   align-items: center;
@@ -656,4 +643,261 @@ th {
   .details {
     padding-left: 8px;
   }
+}
+
+/* Preferences panel */
+.prefs-panel {
+  padding: 20px 22px;
+}
+.prefs-head {
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.prefs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 22px 28px;
+}
+.pref-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pref-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+.month-grid .chip {
+  padding: 4px 0;
+}
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.slider-row input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent);
+}
+
+/* Two-thumb slider: two native ranges stacked; only the thumbs take pointer events. */
+.range2-values {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 18px;
+  font-weight: 500;
+}
+.range2-track {
+  position: relative;
+  height: 28px;
+}
+.range2-track::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 12px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--grid);
+}
+.range2-fill {
+  position: absolute;
+  top: 12px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.range2-track input[type="range"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  margin: 0;
+  background: none;
+  pointer-events: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.range2-track input[type="range"]::-webkit-slider-thumb {
+  pointer-events: auto;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  cursor: grab;
+}
+.range2-track input[type="range"]::-moz-range-thumb {
+  pointer-events: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  cursor: grab;
+}
+.range2-track input[type="range"]::-moz-range-track {
+  background: none;
+}
+.range2-scale {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* Location and suggestions */
+.pick-head {
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.text-input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 7px 10px;
+  min-width: 12em;
+}
+.place-results {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+.location-line {
+  margin: 0 0 4px;
+}
+.suggest-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px 28px;
+  margin-top: 14px;
+}
+.suggest-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.suggestion {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.suggestion:hover {
+  border-color: var(--text-muted);
+}
+.suggestion.selected,
+.park-row.selected {
+  border-color: var(--accent);
+  background: rgba(124, 196, 255, 0.08);
+}
+.suggestion-name {
+  font-weight: 500;
+}
+.suggestion-scores {
+  display: flex;
+  gap: 10px;
+  font-size: 14px;
+}
+
+/* Selected park cards */
+.cards-head {
+  margin: 4px 0 10px;
+}
+.empty-cards {
+  margin: 0;
+}
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 16px;
+}
+.park-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.park-card-head p {
+  margin: 2px 0 0;
+}
+.park-card-scores {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 12px 0 4px;
+}
+.park-card .details {
+  padding: 4px 0 0;
+}
+
+/* Full ranked list, collapsed by default */
+.all-parks > summary {
+  cursor: pointer;
+  list-style-position: inside;
+}
+.all-parks[open] > summary {
+  margin-bottom: 10px;
+}
+label.park-row {
+  border: 1px solid transparent;
+  border-radius: 8px;
+}
+@media (max-width: 640px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+  .suggest-grid {
+    grid-template-columns: 1fr;
+  }
+  .suggestion {
+    grid-template-columns: auto 1fr;
+  }
+  .suggestion-scores {
+    grid-column: 2;
+  }
+  .park-card-scores {
+    grid-template-columns: 1fr;
+  }
+}
+.park-card .table-wrap {
+  max-height: none;
+}
+.park-card-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+.park-card-score {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.big-score {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+.park-card .meter-track {
+  flex: none;
+  width: 100%;
+}
+.park-card .detail-table {
+  width: 100%;
+}
+.park-card .detail-table tbody th {
+  width: 42%;
 }
