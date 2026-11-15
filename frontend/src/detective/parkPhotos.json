@@ -1,0 +1,380 @@
+{
+ "acad": {
+  "file": "/parks/acad.jpg",
+  "credit": "Plh1234us",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Acadia_National_Park_02.JPG"
+ },
+ "arch": {
+  "file": "/parks/arch.jpg",
+  "credit": "Palacemusic",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Delicate_arch_sunset.jpg"
+ },
+ "badl": {
+  "file": "/parks/badl.jpg",
+  "credit": "Martin Kraft",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:MK00609_Badlands.jpg"
+ },
+ "bibe": {
+  "file": "/parks/bibe.jpg",
+  "credit": "Michael from Minnesota (@Michael)",
+  "license": "CC BY-SA 2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Canyon,_Rio_Grande,_Texas.jpeg"
+ },
+ "bisc": {
+  "file": "/parks/bisc.jpg",
+  "credit": "Catholic 85 at English Wikipedia",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Biscayne.JPG"
+ },
+ "blca": {
+  "file": "/parks/blca.jpg",
+  "credit": "Terry Foote",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Black_Canyon_and_Gunnison_River_2008.jpg"
+ },
+ "brca": {
+  "file": "/parks/brca.jpg",
+  "credit": "King of Hearts",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Inspiration_Point_Bryce_Canyon_November_2018_panorama.jpg"
+ },
+ "cany": {
+  "file": "/parks/cany.jpg",
+  "credit": "au_ears",
+  "license": "CC BY-SA 2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Green_River_Overlook_Ekker_Butte.jpg"
+ },
+ "care": {
+  "file": "/parks/care.jpg",
+  "credit": "Wolfgang Staudt",
+  "license": "CC BY 2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Capitol_Reef_National_Park.jpg"
+ },
+ "cave": {
+  "file": "/parks/cave.jpg",
+  "credit": "Eric Guinther, User:Marshman",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Carlsbad_Interior_Formations.jpg"
+ },
+ "chir": {
+  "file": "/parks/chir.jpg",
+  "credit": "Pretzelpaws",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Chiricahua_balanced_rock.jpg"
+ },
+ "chis": {
+  "file": "/parks/chis.jpg",
+  "credit": "Copernicus Sentinel-2, ESA",
+  "license": "CC BY-SA 3.0 igo",
+  "source": "https://commons.wikimedia.org/wiki/File:Channel_Islands_National_Park_by_Sentinel-2.jpg"
+ },
+ "crla": {
+  "file": "/parks/crla.jpg",
+  "credit": "Athleticamps derivative work: User:Maps and stuff (cropped to 2.5:1 ratio, eliminating sign and stone structure on right while centering on lake; increased brightness in dark areas; saved as a high quality JPG)",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Above_Crater_Lake_(cropped).jpg"
+ },
+ "cuva": {
+  "file": "/parks/cuva.jpg",
+  "credit": "Niagara66",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Cuyahoga_Valley_National_Park_20.jpg"
+ },
+ "dena": {
+  "file": "/parks/dena.jpg",
+  "credit": "Denali National Park and Preserve",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Every_Road-_Denali_(7945497984).jpg"
+ },
+ "deva": {
+  "file": "/parks/deva.jpg",
+  "credit": "Brocken Inaglory",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Mesquite_Sand_Dunes_in_Death_Valley.jpg"
+ },
+ "drto": {
+  "file": "/parks/drto.jpg",
+  "credit": "U.S. National Park Service",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Fort-Jefferson_Dry-Tortugas.jpg"
+ },
+ "ever": {
+  "file": "/parks/ever.jpg",
+  "credit": "Everglades NPS from Homestead, Florida, United States",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Sunset_over_the_River_of_Grass,_NPSphoto,_G.Gardner_(9255157507).jpg"
+ },
+ "gaar": {
+  "file": "/parks/gaar.jpg",
+  "credit": "Sean Tevebaugh, National Park Service",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Remote_river_in_Gates_of_the_Arctic_(16524035298).jpg"
+ },
+ "glac": {
+  "file": "/parks/glac.jpg",
+  "credit": "Robert M. Russell",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Mountain_Goat_at_Hidden_Lake.jpg"
+ },
+ "grba": {
+  "file": "/parks/grba.jpg",
+  "credit": "James R Bouldin (talk · contribs)",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Prometheus_Wheeler.jpg"
+ },
+ "grca": {
+  "file": "/parks/grca.jpg",
+  "credit": "Murray Foubister",
+  "license": "CC BY-SA 2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Dawn_on_the_S_rim_of_the_Grand_Canyon_(8645178272).jpg"
+ },
+ "grsa": {
+  "file": "/parks/grsa.jpg",
+  "credit": "Lionello DelPiccolo liodp",
+  "license": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Great_Sand_Dunes_National_Park_and_Preserve,_United_States_(Unsplash).jpg"
+ },
+ "grsm": {
+  "file": "/parks/grsm.jpg",
+  "credit": "AppalachianCentrist",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:View_atop_Cliff_Tops_on_Mount_LeConte,_GSMNP,_TN.jpg"
+ },
+ "grte": {
+  "file": "/parks/grte.jpg",
+  "credit": "Jon Sullivan, PD Photo.",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Barns_grand_tetons.jpg"
+ },
+ "gumo": {
+  "file": "/parks/gumo.jpg",
+  "credit": "CarlCarlsonIV",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Guadalupe_Peak_from_Hunter_Peak.jpg"
+ },
+ "hale": {
+  "file": "/parks/hale.jpg",
+  "credit": "Niagara66",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Haleakala_National_Park_02.jpg"
+ },
+ "havo": {
+  "file": "/parks/havo.jpg",
+  "credit": "Brocken Inaglory",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:P%C4%81hoehoe_and_Aa_flows_at_Hawaii.jpg"
+ },
+ "hosp": {
+  "file": "/parks/hosp.jpg",
+  "credit": "TripOfALifestyle.com",
+  "license": "CC BY 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Steamy_Entrance_Springs_on_Cold_Night_in_Hot_Springs_National_Park.jpg"
+ },
+ "indu": {
+  "file": "/parks/indu.jpg",
+  "credit": "Diego Delso",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Indiana_Dunes_National_Lakeshore,_Michigan_City,_Indiana,_Estados_Unidos,_2012-10-20,_DD_03.jpg"
+ },
+ "isro": {
+  "file": "/parks/isro.jpg",
+  "credit": "William Wadas",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Edisen_Fishery_at_IRNP.jpg"
+ },
+ "jeff": {
+  "file": "/parks/jeff.jpg",
+  "credit": "Lewis Hulbert",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Gateway_Arch,_St._Louis.jpg"
+ },
+ "jotr": {
+  "file": "/parks/jotr.jpg",
+  "credit": "Jarek Tuszyński",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Joshua_Tree_-_Cyclops_%2B_Potato_Head_-_Sunrise.jpg"
+ },
+ "katm": {
+  "file": "/parks/katm.jpg",
+  "credit": "Captain Budd Christman, NOAA Corps",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Katmai_Crater_1980.jpg"
+ },
+ "kefj": {
+  "file": "/parks/kefj.jpg",
+  "credit": "NPS",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Kenai_Fjords_coast.jpg"
+ },
+ "kova": {
+  "file": "/parks/kova.jpg",
+  "credit": "16Terezka",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Kobuk_Bendlova_235.jpg"
+ },
+ "lacl": {
+  "file": "/parks/lacl.jpg",
+  "credit": "Unknown",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Lake_Clark_National_Park.jpg"
+ },
+ "lavo": {
+  "file": "/parks/lavo.jpg",
+  "credit": "NPS Photo",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Lassen_Peak_and_Lake_Helen.jpg"
+ },
+ "maca": {
+  "file": "/parks/maca.jpg",
+  "credit": "Willis Thomas Lee",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Mammoth_Cave_Rotunda_(USGS_Lwt02830).jpg"
+ },
+ "meve": {
+  "file": "/parks/meve.jpg",
+  "credit": "Tobi 87",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Cliff_Palace-Colorado-Mesa_Verde_NP.jpg"
+ },
+ "mora": {
+  "file": "/parks/mora.jpg",
+  "credit": "Samuel Kerr",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Mount_Rainier_from_above_Myrtle_Falls_in_August.JPG"
+ },
+ "neri": {
+  "file": "/parks/neri.jpg",
+  "credit": "Aparkswv",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Grandview_Overlook,_New_River.jpg"
+ },
+ "noca": {
+  "file": "/parks/noca.jpg",
+  "credit": "National Park Service/Deby Dixon",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Cascade_Pass_and_Pelton_Basin.jpg"
+ },
+ "npsa": {
+  "file": "/parks/npsa.jpg",
+  "credit": "Tavita Togia, National Park Service",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Pola_Islands_Tutuila_NPS.jpg"
+ },
+ "olym": {
+  "file": "/parks/olym.jpg",
+  "credit": "Adbar",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Cedar_Creek_Abbey_Island_Ruby_Beach.jpg"
+ },
+ "pefo": {
+  "file": "/parks/pefo.jpg",
+  "credit": "Jeffhollett",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Jasper_Forest_at_Petrified_Forest_NP_in_AZ_12.jpg"
+ },
+ "pinn": {
+  "file": "/parks/pinn.jpg",
+  "credit": "Brocken Inaglory",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Rock_formations_at_Pinnacles_National_Park.jpg"
+ },
+ "redw": {
+  "file": "/parks/redw.jpg",
+  "credit": "Michael Schweppe",
+  "license": "CC BY-SA 2.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Redwood_National_Park,_fog_in_the_forest.jpg"
+ },
+ "romo": {
+  "file": "/parks/romo.jpg",
+  "credit": "Daniel Mayer (Mav)",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Rocky_Mountain_National_Park_in_September_2011_-_Glacier_Gorge_from_Bear_Lake.JPG"
+ },
+ "sagu": {
+  "file": "/parks/sagu.jpg",
+  "credit": "Saguaro Pictures",
+  "license": "CC BY 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Saguaro_Sunset.jpg"
+ },
+ "seki": {
+  "file": "/parks/seki.jpg",
+  "credit": "Marty Aligata",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:General_Sherman_Tree_in_Sequoia_National_Park_-_June_2022.jpg"
+ },
+ "shen": {
+  "file": "/parks/shen.jpg",
+  "credit": "Shenandoah National Park from Virginia",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Skyline_Drive_in_the_Fall_(21852619608).jpg"
+ },
+ "thro": {
+  "file": "/parks/thro.jpg",
+  "credit": "NPS/Mark Hoffman",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:View_of_Theodore_Roosevelt_National_Park.jpg"
+ },
+ "viis": {
+  "file": "/parks/viis.jpg",
+  "credit": "Fred Hsu (Wikipedia:User:Fred Hsu on en.wikipedia)",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:St_John_Trunk_Bay_3.jpg"
+ },
+ "voya": {
+  "file": "/parks/voya.jpg",
+  "credit": "Unknown",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Voyageurs_National_Park.jpg"
+ },
+ "whsa": {
+  "file": "/parks/whsa.jpg",
+  "credit": "uncredited National Park Service employee",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:White_Sands_National_Park_visitor_center_and_native_plant_garden,_New_Mexico,_United_States.jpg"
+ },
+ "wica": {
+  "file": "/parks/wica.jpg",
+  "credit": "National Park Service of the United States of America",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Skyway_Lake,_stalactites,_Wind_Cave.jpg"
+ },
+ "wrst": {
+  "file": "/parks/wrst.jpg",
+  "credit": "Mr. David Sinson, NOAA, Office of Coast Survey",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Mt_Saint_Elias,_South_Central_Alaska.jpg"
+ },
+ "yell": {
+  "file": "/parks/yell.jpg",
+  "credit": "Rhododendrites",
+  "license": "CC BY-SA 4.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Grand_Canyon_of_the_Yellowstone_Lower_Falls_(95819p).jpg"
+ },
+ "yose": {
+  "file": "/parks/yose.jpg",
+  "credit": "Thomas Wolf, www.foto-tw.de",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Half_Dome_with_Eastern_Yosemite_Valley_(50MP).jpg"
+ },
+ "zion": {
+  "file": "/parks/zion.jpg",
+  "credit": "Diliff",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Zion_angels_landing_view.jpg"
+ },
+ "cong": {
+  "file": "/parks/cong.jpg",
+  "credit": "Brian W. Schaller",
+  "license": "FAL",
+  "source": "https://commons.wikimedia.org/wiki/File:A548,_Congaree_National_Park,_South_Carolina,_USA,_2012.jpg"
+ },
+ "glba": {
+  "file": "/parks/glba.jpg",
+  "credit": "Brian W. Schaller",
+  "license": "FAL",
+  "source": "https://commons.wikimedia.org/wiki/File:A045,_Glacier_Bay_National_Park,_Alaska,_USA,_Johns_Hopkins_Glacier,_2002.jpg"
+ }
+}

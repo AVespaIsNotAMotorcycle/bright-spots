@@ -5,34 +5,77 @@ import { loadProgress } from "./games";
 import { PARK_NAMES } from "./parkNames";
 import { caseForPark, casesByPark, stamps } from "./stamps";
 import { E, TOPO } from "./theme";
+import photos from "./parkPhotos.json";
 
+// Stamp: the park's photo in a round frame. Stamped = full colour with an ink ring;
+// not yet = faded grey behind a dashed ring.
 const CSS = `
-.pp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:14px}
-.pp-stamp{aspect-ratio:1;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:2px;text-align:center;padding:12px;cursor:pointer;font:inherit;transition:transform .15s}
-.pp-stamp:hover,.pp-stamp:focus-visible{transform:scale(1.05) rotate(0deg)!important}
-.pp-on{border:3px double ${E.rust};color:${E.rust};background:rgba(247,241,227,.9);box-shadow:inset 0 0 0 4px rgba(139,58,26,.08)}
-.pp-off{border:2px dashed rgba(74,55,38,.35);color:rgba(74,55,38,.55);background:transparent}
-.pp-name{font-family:var(--font-display);font-weight:800;font-size:13px;line-height:1.1;text-transform:uppercase;letter-spacing:.03em}
-.pp-row{display:flex;gap:10px;flex-wrap:wrap}
-.pp-row .pp-stamp{width:86px;padding:8px}
-.pp-row .pp-name{font-size:10px}
+.pp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:18px}
+.pp-stamp{position:relative;width:100%;aspect-ratio:1;border-radius:50%;padding:0;cursor:pointer;font:inherit;
+  overflow:visible;background:${E.cream};transition:transform .2s}
+.pp-stamp:hover,.pp-stamp:focus-visible{transform:scale(1.06) rotate(0deg)!important}
+.pp-photo{position:absolute;inset:6px;border-radius:50%;overflow:hidden;background:#d9ccb0}
+.pp-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.pp-on{border:4px double ${E.rust};box-shadow:0 4px 10px rgba(74,55,38,.25)}
+.pp-on .pp-photo img{filter:saturate(1.1) contrast(1.05)}
+.pp-on .pp-photo::after{content:"";position:absolute;inset:0;border-radius:50%;box-shadow:inset 0 0 0 3px rgba(247,241,227,.7),inset 0 -40px 30px -20px rgba(0,0,0,.55)}
+.pp-off{border:2px dashed rgba(74,55,38,.4)}
+.pp-off .pp-photo img{filter:grayscale(1) sepia(.3);opacity:.35}
+.pp-name{position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);white-space:nowrap;max-width:118%;overflow:hidden;text-overflow:ellipsis;
+  font-family:var(--font-display);font-weight:800;font-size:11px;letter-spacing:.04em;text-transform:uppercase;
+  padding:3px 9px;border-radius:4px;background:${E.cream};color:${E.rust};border:1.5px solid ${E.rust}}
+.pp-off .pp-name{color:rgba(74,55,38,.6);border-color:rgba(74,55,38,.35);border-style:dashed}
+.pp-badge{position:absolute;top:-4px;right:-4px;font-size:18px;line-height:1;width:30px;height:30px;border-radius:50%;
+  display:grid;place-items:center;background:${E.cream};border:2px solid ${E.rust}}
+.pp-off .pp-badge{border:2px dashed rgba(74,55,38,.35);filter:grayscale(1);opacity:.6}
+.pp-stars{position:absolute;top:8px;left:50%;transform:translateX(-50%);font-size:12px;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.pp-row{display:flex;gap:16px;flex-wrap:wrap;padding-bottom:10px}
+.pp-row .pp-stamp{width:96px;height:96px}
+.pp-row .pp-name{font-size:9px;padding:2px 6px}
+.pp-row .pp-badge{width:24px;height:24px;font-size:13px}
 @media (prefers-reduced-motion:reduce){.pp-stamp{transition:none}}
 `;
 
 /** A small random-looking tilt that stays the same for each park. */
 const tilt = (id: string) => ((id.charCodeAt(0) * 7 + id.charCodeAt(id.length - 1) * 3) % 17) - 8;
 const caseById = (id: string) => CASES.find((c) => c.id === id);
+const PHOTOS = photos as Record<string, { file: string; credit: string; license: string; source: string }>;
 
 function Stamp({ park, solved, onClick, title }: { park: string; solved: string[]; onClick: () => void; title: string }) {
   const on = solved.length > 0;
   const first = on ? caseById(solved[0]) : undefined;
+  const photo = PHOTOS[park];
+  const name = PARK_NAMES[park] ?? park;
   return (
-    <button className={`pp-stamp ${on ? "pp-on" : "pp-off"}`} style={{ transform: `rotate(${on ? tilt(park) : 0}deg)` }} onClick={onClick} title={title}>
-      <span style={{ fontSize: 22, filter: on ? "none" : "grayscale(1)", opacity: on ? 1 : 0.4 }}>{first?.emoji ?? "⛰"}</span>
-      <span className="pp-name">{PARK_NAMES[park] ?? park}</span>
-      {on && solved.length > 1 && <span style={{ fontSize: 11 }}>{"⭐".repeat(Math.min(solved.length - 1, 5))}</span>}
+    <button
+      className={`pp-stamp ${on ? "pp-on" : "pp-off"}`}
+      style={{ transform: `rotate(${on ? tilt(park) : 0}deg)` }}
+      onClick={onClick}
+      title={photo ? `${title}\nPhoto: ${photo.credit} (${photo.license})` : title}
+      aria-label={`${name}: ${title}`}
+    >
+      <span className="pp-photo">{photo && <img src={photo.file} alt="" loading="lazy" />}</span>
+      {on && solved.length > 1 && <span className="pp-stars">{"⭐".repeat(Math.min(solved.length - 1, 5))}</span>}
+      <span className="pp-badge" aria-hidden>{on ? first?.emoji : "🔒"}</span>
+      <span className="pp-name">{name}</span>
     </button>
+  );
+}
+
+/** Who took each photo, with its licence and Commons page. */
+function PhotoCredits({ parks }: { parks: string[] }) {
+  return (
+    <details className="micro muted">
+      <summary style={{ cursor: "pointer" }}>Photo credits (Wikimedia Commons)</summary>
+      <ul style={{ margin: "6px 0 0", paddingLeft: 18, lineHeight: 1.7 }}>
+        {parks.filter((p) => PHOTOS[p]).map((p) => (
+          <li key={p}>
+            {PARK_NAMES[p]}: {PHOTOS[p].credit}, {PHOTOS[p].license},{" "}
+            <a href={PHOTOS[p].source} target="_blank" rel="noreferrer">source</a>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }
 
@@ -73,7 +116,7 @@ export function PassportPreview({ onOpen, onCase }: { onOpen: () => void; onCase
           );
         })}
       </div>
-      <p className="micro muted" style={{ margin: "10px 0 0" }}>Solve a case to stamp every park it studies.</p>
+      <p className="micro muted" style={{ margin: "10px 0 0" }}>Solve a case to stamp every park it studies. Photos: Wikimedia Commons.</p>
     </section>
   );
 }
@@ -138,6 +181,7 @@ export default function Passport({ onCase, onExplore }: Go) {
           ))}
         </div>
       </section>
+      <PhotoCredits parks={casePark} />
     </div>
   );
 }

@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
+import photos from "./parkPhotos.json";
 import { CASES } from "./cases";
 import { PARK_NAMES } from "./parkNames";
 import { caseForPark, caseParks, casesByPark, mainPark, stamps } from "./stamps";
+
+const ON_DISK = Object.keys(import.meta.glob("/public/parks/*.jpg"));
 
 describe("park passport", () => {
   it("every case studies at least one real park", () => {
@@ -20,6 +23,16 @@ describe("park passport", () => {
     const s = stamps({ "crater-lake-warming": { stars: 3 }, "july-crater": { stars: 1 } });
     expect(s.get("crla")).toEqual(["crater-lake-warming", "july-crater"]);
     expect(stamps({}).size).toBe(0);
+  });
+
+  it("every park has a credited, freely licensed photo on disk", () => {
+    for (const p of Object.keys(PARK_NAMES)) {
+      const ph = (photos as Record<string, { file: string; credit: string; license: string; source: string }>)[p];
+      expect(ph, p).toBeTruthy();
+      expect(ON_DISK, ph.file).toContain(`/public${ph.file}`);
+      expect(ph.license).toMatch(/public domain|cc|fal/i);
+      expect(ph.source).toMatch(/^https:\/\/commons\.wikimedia\.org\//);
+    }
   });
 
   it("points to an unsolved case for a park when one exists", () => {
