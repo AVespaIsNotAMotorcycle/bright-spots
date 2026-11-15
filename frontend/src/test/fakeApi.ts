@@ -4,6 +4,8 @@ import grace from "../../../backend/data/trends/grace.json";
 import insights from "../../../backend/data/trends/insights.json";
 import zion from "../../../backend/data/trends/parks/zion.json";
 import { vi } from "vitest";
+import publicAtlas from "../../public/data/atlas.json";
+import tripFixture from "./tripFixture.json";
 
 export interface FakeOptions {
   posts?: unknown[];
@@ -39,6 +41,9 @@ export function installFakeApi(opts: FakeOptions = {}) {
       const row = (grace.parks as Record<string, unknown>)[id];
       return row ? json({ meta: grace.meta, park_id: id, ...(row as object) }) : json({ detail: "nope" }, 404);
     }
+    if (path.startsWith("/api/parks/trip")) return json(tripFixture);
+    if (path.startsWith("/api/parks/best-days")) return json({ parks: {} });
+    if (path.startsWith("/data/atlas.json")) return json(publicAtlas);
     if (path.startsWith("/api/community/posts")) return json(opts.posts ?? []);
     if (path.startsWith("/api/datasets/koppen")) return json({ now: { code: "BSk", name: "Arid, steppe, cold" }, future: null });
     if (path.startsWith("/us-states.json")) return json({ features: [] });

@@ -22,6 +22,8 @@ export interface NavState {
   park2: string | null;
   v: string | null;
   per: string | null;
+  /** Trip planner settings, encoded (see planner/trip/tripModel.ts). */
+  q: string | null;
 }
 
 function parseHash(): NavState {
@@ -35,6 +37,7 @@ function parseHash(): NavState {
     park2:  p.get("park2"),
     v:      p.get("v"),
     per:    p.get("per"),
+    q:      p.get("trip"),
   };
 }
 
@@ -48,6 +51,7 @@ function toHash(s: Partial<NavState>): string {
   if (s.park2)  p.set("park2", s.park2);
   if (s.v)      p.set("v", s.v);
   if (s.per)    p.set("per", s.per);
+  if (s.q)      p.set("trip", s.q);
   const str = p.toString();
   return str ? "#" + str : "#";
 }

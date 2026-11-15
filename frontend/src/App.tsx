@@ -9,8 +9,7 @@ import { StationStrip, StationStyle } from "./research/station";
 const Home = lazy(() => import("./Home"));
 const Detective = lazy(() => import("./detective/Detective"));
 const StudentDetective = lazy(() => import("./detective/StudentDetective"));
-const Planner = lazy(() => import("./planner/Planner"));
-const PlannerShadow = lazy(() => import("./planner/PlannerShadow"));
+const TripPlanner = lazy(() => import("./planner/trip/TripPlanner"));
 const Compare = lazy(() => import("./research/Compare"));
 const Families = lazy(() => import("./research/Families"));
 const MapView = lazy(() => import("./research/MapView"));
@@ -324,16 +323,16 @@ export default function App() {
           />
         )}
         {tab === "planner" && (
-          <PlannerShadow>
-            <Planner
-              unit={unit}
-              setUnit={setUnit}
-              month={nav.month}
-              park={nav.park}
-              science={science}
-              onCase={profile.persona === "explorer" ? (caseId) => go("student", { caseId, step: 0 }) : undefined}
-            />
-          </PlannerShadow>
+          <TripPlanner
+            unit={unit}
+            setUnit={setUnit}
+            month={nav.month}
+            park={nav.park}
+            q={nav.q}
+            science={science}
+            onState={(q) => replace({ tab: "planner", q })}
+            onCase={profile.persona === "explorer" ? (caseId) => go("student", { caseId, step: 0 }) : undefined}
+          />
         )}
         </Suspense>
         </ErrorBoundary>

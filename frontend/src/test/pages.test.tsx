@@ -79,6 +79,39 @@ describe("App", () => {
     expect(localStorage.getItem("explorer.science")).toBe("true");
   });
 
+  it("the trip planner shows only the best matches, with why #1, chips and the drawer", async () => {
+    localStorage.setItem("profile", JSON.stringify({ name: "", persona: "explorer" }));
+    history.replaceState(null, "", "#tab=planner&month=10");
+    render(<App />);
+    expect(await screen.findByText(/Why #1\?/, undefined, { timeout: 3000 })).toBeTruthy();
+    expect(screen.getByText(/parks? fit your trip/)).toBeTruthy();
+    expect(screen.getAllByRole("button", { name: /score \d+\. Open details/ })).toHaveLength(3);
+    // Seasons pick 3 months; a chip goes nice -> must.
+    fireEvent.click(screen.getByRole("button", { name: /Autumn/ }));
+    const stars = screen.getByRole("button", { name: /^Stargazing:/ });
+    fireEvent.click(stars);
+    expect(stars.getAttribute("aria-label")).toContain("nice to have");
+    fireEvent.click(stars);
+    expect(stars.getAttribute("aria-label")).toContain("must have");
+    expect(location.hash).toContain("trip=");
+    // Open the top park, save it, and close.
+    fireEvent.click(screen.getAllByRole("button", { name: /Open details/ })[0]);
+    expect(await screen.findByRole("dialog")).toBeTruthy();
+    expect(screen.getByText(/Then, now and 2050/)).toBeTruthy();
+    fireEvent.click(screen.getAllByRole("button", { name: /Want to go/ })[0]);
+    expect(JSON.parse(localStorage.getItem("wishlist")!)).toHaveLength(1);
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("a mood sets the chips", async () => {
+    localStorage.setItem("profile", JSON.stringify({ name: "", persona: "explorer" }));
+    history.replaceState(null, "", "#tab=planner");
+    render(<App />);
+    fireEvent.click(await screen.findByRole("button", { name: /Leaf peeping/ }, { timeout: 3000 }));
+    expect(screen.getByRole("button", { name: /^Fall colours:/ }).getAttribute("aria-label")).toContain("must have");
+  });
+
   it("a solved case stamps its parks in the passport", async () => {
     localStorage.setItem("profile", JSON.stringify({ name: "", persona: "explorer" }));
     localStorage.setItem("detective.progress", JSON.stringify({ "crater-lake-warming": { pts: 5, max: 5, stars: 3 } }));

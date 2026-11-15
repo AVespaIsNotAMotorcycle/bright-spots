@@ -6,6 +6,7 @@ import { PARK_NAMES } from "./parkNames";
 import { caseForPark, casesByPark, stamps } from "./stamps";
 import { E, TOPO } from "./theme";
 import { PHOTOS } from "./photos";
+import { useWishlist } from "./wishlist";
 
 // Stamp: the park's photo in a round frame. Stamped = full colour with an ink ring;
 // not yet = faded grey behind a dashed ring.
@@ -124,6 +125,7 @@ export function PassportPreview({ onOpen, onCase }: { onOpen: () => void; onCase
 export default function Passport({ onCase, onExplore }: Go) {
   const { progress, got, byPark } = useStamps();
   const [pick, setPick] = useState<string | null>(null);
+  const [wish, toggleWish] = useWishlist();
   const all = Object.keys(PARK_NAMES).sort((a, b) => PARK_NAMES[a].localeCompare(PARK_NAMES[b]));
   const casePark = all.filter((p) => byPark.has(p));
   const noCase = all.filter((p) => !byPark.has(p));
@@ -170,6 +172,20 @@ export default function Passport({ onCase, onExplore }: Go) {
             title={got.has(p) ? `${got.get(p)!.length} case(s) solved here` : `Solve "${caseForPark(p, progress)?.title}" to stamp it`} />
         ))}
       </div>
+
+      {wish.length > 0 && (
+        <section>
+          <div className="section-title" style={{ marginBottom: 6 }}>♡ Want to go ({wish.length})</div>
+          <p className="small muted" style={{ margin: "0 0 10px" }}>Saved from the Trip Planner. Solve a case there to stamp it.</p>
+          <div className="pp-row">
+            {wish.map((p) => (
+              <Stamp key={p} park={p} solved={got.get(p) ?? []} onClick={() => (byPark.has(p) ? setPick(p) : onExplore(p))}
+                title={got.has(p) ? "Stamped and on your list" : "On your want-to-go list"} />
+            ))}
+          </div>
+          <button className="link-btn small" onClick={() => wish.forEach(toggleWish)}>Clear the list</button>
+        </section>
+      )}
 
       <section>
         <div className="section-title" style={{ marginBottom: 6 }}>No case yet</div>
