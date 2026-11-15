@@ -1,4 +1,22 @@
-import { FACTOR_LABEL, cToF, distanceKm, mmToIn, type FactorKey, type Horizon, type HorizonKey, type ParkPlan, type Place, type Plan } from "./model";
+import { useEffect, useState } from "react";
+import YearChart from "./YearChart";
+import {
+  FACTOR_LABEL,
+  MONTHS,
+  MONTH_STARTS,
+  cToF,
+  distanceKm,
+  fetchDaily,
+  mmToIn,
+  type DailyCurves,
+  type DailyVar,
+  type FactorKey,
+  type Horizon,
+  type HorizonKey,
+  type ParkPlan,
+  type Place,
+  type Plan,
+} from "./model";
 import type { Unit } from "./PrefsPanel";
 
 export const HORIZONS: { key: HorizonKey; tag: string; tagClass: string }[] = [
@@ -57,14 +75,96 @@ function fmtRain(mm: number | null | undefined, unit: Unit) {
 const pct = (v: number | null | undefined) => (v == null ? "–" : `${Math.round(v)}%`);
 
 /** Values, factor scores and horizon notes for one park. */
+const DAILY_LABEL: Record<DailyVar, string> = {
+  tmax: "Daytime high",
+  rh: "Humidity",
+  precip: "Rain per day",
+  cloud: "Cloud cover",
+};
+
+function dailyFormat(v: DailyVar, unit: Unit): (x: number) => string {
+  if (v === "tmax") return (x) => (unit === "F" ? `${Math.round(cToF(x))}°F` : `${Math.round(x)}°C`);
+  if (v === "precip") return (x) => (unit === "F" ? `${mmToIn(x).toFixed(2)} in` : `${x.toFixed(1)} mm`);
+  return (x) => `${Math.round(x)}%`;
+}
+
+/** 0-based non-leap day-of-year index -> "Nov 11". */
+function dayLabel(doy: number): string {
+  const m = MONTH_STARTS.findIndex((start, i) => doy >= start && doy < MONTH_STARTS[i + 1]);
+  return `${MONTHS[m]} ${doy - MONTH_STARTS[m] + 1}`;
+}
+
+interface Tip {
+  v: DailyVar;
+  hz: (typeof HORIZONS)[number];
+  x: number;
+  y: number;
+}
+
+/** Floating chart of a year of daily values for one variable and horizon. */
+function DailyTip({ tip, parkId, plan, unit }: { tip: Tip; parkId: string; plan: Plan; unit: Unit }) {
+  const [data, setData] = useState<DailyCurves | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    fetchDaily(parkId, plan.scenario)
+      .then((d) => live && setData(d))
+      .catch((e) => live && setError(e instanceof Error ? e.message : String(e)));
+    return () => {
+      live = false;
+    };
+  }, [parkId, plan.scenario]);
+
+  const W = 320;
+  const left = Math.max(8, Math.min(tip.x - W / 2, window.innerWidth - W - 8));
+  const above = tip.y > 240;
+  const style = above ? { left, bottom: window.innerHeight - tip.y + 8 } : { left, top: tip.y + 28 };
+  const title = `${DAILY_LABEL[tip.v]} · ${horizonTitle(tip.hz.key, plan)} ${tip.hz.tag.toLowerCase()}`;
+  let note = "";
+  if (data && tip.hz.key === "this_year") {
+    const days = data.this_year[tip.v];
+    const last = days.reduce<number>((acc, v, i) => (v != null ? i : acc), -1);
+    note = last < 0 ? "No days measured yet this year." : `Measured days through ${dayLabel(last)} ${data.year}.`;
+  }
+  if (tip.hz.key === "next_year") note = "Daily shape of 1991–2020, shifted by the monthly forecast.";
+  if (tip.hz.key === "y2050")
+    note =
+      tip.v === "tmax" || tip.v === "precip"
+        ? "Daily shape of 1991–2020, shifted by the monthly 2041–2060 projection."
+        : "Not projected for 2050; shown at the 1991–2020 average.";
+  return (
+    <div className="daily-tip" role="tooltip" id="daily-tip" style={style}>
+      <div className="small daily-tip-title">{title}</div>
+      {error && <p className="small error">{error}</p>}
+      {!data && !error && <p className="small muted">Loading…</p>}
+      {data && (
+        <YearChart
+          normal={data.normal[tip.v]}
+          series={tip.hz.key === "y2050" ? data.y2050[tip.v] : data[tip.hz.key][tip.v]}
+          seriesLabel={`${horizonTitle(tip.hz.key, plan)} ${tip.hz.tag.toLowerCase()}`}
+          seriesClass={tip.hz.tagClass}
+          month={plan.month}
+          format={dailyFormat(tip.v, unit)}
+        />
+      )}
+      {note && <p className="micro muted daily-tip-note">{note}</p>}
+    </div>
+  );
+}
+
 export function Details({ p, plan, unit }: { p: ParkPlan; plan: Plan; unit: Unit }) {
   const factorKeys = Object.keys(p.this_year.factors) as FactorKey[];
-  const rows: [string, (h: Horizon) => string][] = [
-    ["Daytime high", (h) => fmtTemp(h.values.tmax, unit)],
-    ["Humidity", (h) => pct(h.values.rh)],
-    ["Rain (month)", (h) => fmtRain(h.values.precip, unit)],
-    ["Cloud cover", (h) => pct(h.values.cloud)],
+  const rows: [string, DailyVar, (h: Horizon) => string][] = [
+    ["Daytime high", "tmax", (h) => fmtTemp(h.values.tmax, unit)],
+    ["Humidity", "rh", (h) => pct(h.values.rh)],
+    ["Rain (month)", "precip", (h) => fmtRain(h.values.precip, unit)],
+    ["Cloud cover", "cloud", (h) => pct(h.values.cloud)],
   ];
+  const [tip, setTip] = useState<Tip | null>(null);
+  const show = (v: DailyVar, hz: Tip["hz"]) => (e: React.SyntheticEvent<HTMLElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    setTip({ v, hz, x: r.left + r.width / 2, y: r.top });
+  };
   return (
     <div className="details">
       <div className="table-wrap">
@@ -80,11 +180,20 @@ export function Details({ p, plan, unit }: { p: ParkPlan; plan: Plan; unit: Unit
             </tr>
           </thead>
           <tbody>
-            {rows.map(([label, fmt]) => (
+            {rows.map(([label, v, fmt]) => (
               <tr key={label}>
                 <th scope="row">{label}</th>
                 {HORIZONS.map((hz) => (
-                  <td key={hz.key} className="num">
+                  <td
+                    key={hz.key}
+                    className="num has-tip"
+                    tabIndex={0}
+                    aria-describedby={tip && tip.v === v && tip.hz.key === hz.key ? "daily-tip" : undefined}
+                    onMouseEnter={show(v, hz)}
+                    onFocus={show(v, hz)}
+                    onMouseLeave={() => setTip(null)}
+                    onBlur={() => setTip(null)}
+                  >
                     {fmt(p[hz.key])}
                   </td>
                 ))}
@@ -115,6 +224,7 @@ export function Details({ p, plan, unit }: { p: ParkPlan; plan: Plan; unit: Unit
           )),
         )}
       </ul>
+      {tip && <DailyTip tip={tip} parkId={p.park.id} plan={plan} unit={unit} />}
     </div>
   );
 }

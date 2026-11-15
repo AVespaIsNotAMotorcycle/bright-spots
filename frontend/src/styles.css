@@ -17,6 +17,7 @@
   --accent-tint: rgba(47, 93, 58, 0.1);
   --accent-band: rgba(47, 93, 58, 0.28);
   --neutral-ink: #4b5563;
+  --chart-neutral: #8a806e; /* reference lines; 3.7:1 on surface */
   --on-accent: #fbf9f4;
   --warning: var(--accent-2);
   --error: #9c3b1b;
@@ -911,4 +912,89 @@ label.park-row {
 }
 .park-card .detail-table tbody th {
   width: 42%;
+}
+
+/* Hover chart of a year of daily values */
+td.has-tip {
+  cursor: help;
+  text-decoration: underline dotted var(--border);
+  text-underline-offset: 3px;
+}
+td.has-tip:hover,
+td.has-tip:focus-visible {
+  background: var(--accent-tint);
+}
+.daily-tip {
+  position: fixed;
+  z-index: 50;
+  width: 320px;
+  padding: 10px 10px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 6px 24px rgba(43, 39, 33, 0.16);
+  pointer-events: none;
+}
+.daily-tip-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.daily-tip-note {
+  margin: 4px 0 0;
+}
+.year-chart {
+  margin: 0;
+}
+.yc-month {
+  fill: var(--accent-tint);
+}
+.yc-axis {
+  stroke: var(--border);
+}
+.yc-tick {
+  fill: var(--text-muted);
+  font-size: 10px;
+}
+.yc-normal {
+  fill: none;
+  stroke: var(--chart-neutral);
+  stroke-width: 1.5;
+}
+.yc-series {
+  fill: none;
+  stroke-width: 2;
+}
+path.yc-series.tag-measured {
+  stroke: var(--accent);
+  stroke-width: 1.2;
+}
+path.yc-series.tag-forecast {
+  stroke: var(--accent-2);
+  stroke-dasharray: 5 3;
+}
+path.yc-series.tag-projected {
+  stroke: var(--neutral-ink);
+  stroke-dasharray: 2 2;
+}
+.yc-legend {
+  display: flex;
+  gap: 14px;
+  color: var(--text-muted);
+}
+.yc-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 0;
+  border-top: 2px solid var(--chart-neutral);
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.yc-swatch.tag-measured {
+  border-top-color: var(--accent);
+}
+.yc-swatch.tag-forecast {
+  border-top: 2px dashed var(--accent-2);
+}
+.yc-swatch.tag-projected {
+  border-top: 2px dotted var(--neutral-ink);
 }

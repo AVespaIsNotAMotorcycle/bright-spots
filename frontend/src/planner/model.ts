@@ -145,3 +145,38 @@ export async function geocode(q: string): Promise<Place[]> {
   if (!resp.ok) throw new Error(`${resp.status}: place search failed`);
   return resp.json();
 }
+
+export type DailyVar = "tmax" | "rh" | "precip" | "cloud";
+type Curves = Record<DailyVar, (number | null)[]>;
+
+/** 365-day curves per horizon (Feb 29 dropped); see GET /api/parks/{id}/daily. */
+export interface DailyCurves {
+  park_id: string;
+  year: number;
+  through: string;
+  scenario: string;
+  normal: Curves;
+  this_year: Curves;
+  next_year: Curves;
+  y2050: Record<DailyVar, (number | null)[] | null>;
+}
+
+const dailyCache = new Map<string, Promise<DailyCurves>>();
+
+/** Fetched once per park and scenario, then reused (failures are not cached). */
+export function fetchDaily(parkId: string, scenario: string): Promise<DailyCurves> {
+  const key = `${parkId}|${scenario}`;
+  let p = dailyCache.get(key);
+  if (!p) {
+    p = fetch(`/api/parks/${encodeURIComponent(parkId)}/daily?scenario=${scenario}`).then((r) => {
+      if (!r.ok) throw new Error(`${r.status}: daily data unavailable`);
+      return r.json() as Promise<DailyCurves>;
+    });
+    dailyCache.set(key, p);
+    p.catch(() => dailyCache.delete(key));
+  }
+  return p;
+}
+
+/** First day-of-year index (0-based, non-leap) of each month, plus 365. */
+export const MONTH_STARTS = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365];
