@@ -3,6 +3,8 @@ import type { Atlas } from "./detective/model";
 import { Safe } from "./ErrorBoundary";
 import Logo, { TAGLINE } from "./brand/Logo";
 import RightNow from "./home/RightNow";
+import { NextCase, ParkOfTheDay } from "./detective/StudentWidgets";
+import { GuessTheTwin } from "./detective/TwinGame";
 import { MONTHS } from "./planner/trip/tripModel";
 import "./home/home.css";
 
@@ -19,8 +21,9 @@ const CARDS = [
   { tab: "passport", title: "Passport", text: "Collect a stamp for every park you solve." },
 ];
 
-export default function Home({ name, research, onGo }: Props) {
+export default function Home({ name, research, atlas, onGo }: Props) {
   const now = new Date().getMonth() + 1;
+  const explore = (park: string) => onGo("explore", { park });
   const cards = research
     ? [...CARDS, { tab: "atlas", title: "Research", text: "Trend atlas, maps, comparisons and methods." }]
     : CARDS;
@@ -58,6 +61,17 @@ export default function Home({ name, research, onGo }: Props) {
       <Safe what="Park picks">
         <RightNow month={now} onOpen={(code, id) => onGo("planner", { park: code ?? id })} />
       </Safe>
+
+      <section className="hm-sec" aria-label="Play today">
+        <h2 className="hm-h2">Play today</h2>
+        <Safe what="Next case"><NextCase onPlay={(c) => onGo("student", { caseId: c.id, step: 0 })} /></Safe>
+        {atlas && (
+          <div className="hm-games">
+            <Safe what="Park of the day"><ParkOfTheDay atlas={atlas} onExplore={explore} /></Safe>
+            <Safe what="Guess the twin"><GuessTheTwin atlas={atlas} onExplore={explore} /></Safe>
+          </div>
+        )}
+      </section>
 
       <section className="hm-cards" aria-label="Where to next">
         {cards.map((c) => (

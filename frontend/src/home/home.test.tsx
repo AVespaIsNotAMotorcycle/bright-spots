@@ -19,6 +19,14 @@ describe("Home", () => {
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Go when the park is at its best.");
   });
 
+  it("next case opens that case at step 0", () => {
+    const onGo = vi.fn();
+    render(<Home name="Sam" research={false} atlas={null} onGo={onGo} />);
+    expect(screen.getByRole("heading", { name: "Play today" })).toBeTruthy();
+    fireEvent.click(screen.getByText("Next case").closest("button")!);
+    expect(onGo).toHaveBeenCalledWith("student", expect.objectContaining({ step: 0, caseId: expect.any(String) }));
+  });
+
   it("month pill opens the planner on that month", () => {
     const onGo = vi.fn();
     render(<Home name="Sam" research={false} atlas={null} onGo={onGo} />);

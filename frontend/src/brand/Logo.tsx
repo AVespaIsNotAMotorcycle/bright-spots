@@ -11,7 +11,7 @@ export function LeafMark({ size = 28 }: { size?: number }) {
 }
 
 // Deep forest to light sage, left to right. The fallback colour shows where background-clip:text is missing.
-const WORD_GRADIENT = "linear-gradient(90deg, #2F3D24 0%, #3F5230 20%, #5B6B3A 40%, #6F7F4A 60%, #8A9A62 80%, #A9B39A 100%)";
+const WORD_GRADIENT = "linear-gradient(90deg, #2F3D24 0%, #3F5230 20%, #5B6B3A 40%, #6F7F4A 65%, #7F8F55 85%, #8A9A62 100%)";
 
 export default function Logo({ size = 28, withWord = true }: { size?: number; withWord?: boolean }) {
   return (

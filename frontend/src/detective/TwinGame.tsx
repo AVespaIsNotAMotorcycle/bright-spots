@@ -7,7 +7,7 @@ import { PERIOD_LABEL } from "./model";
 import { parkName } from "./games";
 import { PhotoCredit, photoOf } from "./photos";
 import { play } from "./sound";
-import { E, Leaves, RIDGE, TOPO, WIDGET_CSS } from "./StudentWidgets";
+import { E, Leaves, RIDGE, WIDGET_CSS } from "./StudentWidgets";
 
 function dayIndex(now = new Date()) {
   return Math.floor(new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() / 86400000);
@@ -76,19 +76,18 @@ export function GuessTheTwin({ atlas, onExplore }: { atlas: Atlas; onExplore: (p
   const pct = Math.round(((round.score + 1) / 2) * 100);
 
   return (
-    <section style={{ borderRadius: 22, overflow: "hidden", border: `2px solid ${E.sage}`, background: E.cream,
-      boxShadow: "0 12px 28px rgba(74,55,38,.12)", position: "relative" }}>
+    <section style={{ borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--stone)", background: "var(--paper)",
+      position: "relative" }}>
       <style>{WIDGET_CSS}</style>
       <div style={{
         background: photo
           ? `linear-gradient(180deg, rgba(31,42,36,.15) 0%, rgba(31,42,36,.72) 100%), url("${photo.file}") center / cover no-repeat`
           : `${RIDGE} bottom / 100% 60px no-repeat, linear-gradient(180deg, #cfdcb4 0%, #9db07a 55%, #6b7f3a 100%)`,
         padding: photo ? "96px 24px 18px" : "20px 24px 54px", position: "relative" }}>
-        <span aria-hidden style={{ position: "absolute", right: 22, bottom: 16, fontSize: 34 }}>🪞</span>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: photo ? E.cream : E.bark }}>
-          Field guide · Guess the twin
+        <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".14em", textTransform: "uppercase", color: photo ? E.cream : E.bark }}>
+          Guess the twin
         </div>
-        <h3 style={{ margin: "4px 0 0", fontFamily: "var(--font-display)", fontSize: 30, color: photo ? "#fff" : E.bark,
+        <h3 style={{ margin: "4px 0 0", fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 28, color: photo ? "#fff" : E.bark,
           textShadow: photo ? "0 2px 8px rgba(0,0,0,.55)" : undefined }}>
           Who changes most like {name}?
         </h3>
@@ -96,8 +95,7 @@ export function GuessTheTwin({ atlas, onExplore }: { atlas: Atlas; onExplore: (p
       </div>
 
       {!guess ? (
-        <div style={{ padding: "18px 24px 22px", display: "flex", flexDirection: "column", gap: 14,
-          background: `${TOPO} right -60px bottom -60px / 280px no-repeat` }}>
+        <div style={{ padding: "18px 22px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
           <div style={{ fontSize: 14.5, color: E.bark }}>
             Twin parks change in the same ways: the same seasons warm, the same rain goes up or down. Pick one.
           </div>
@@ -107,8 +105,8 @@ export function GuessTheTwin({ atlas, onExplore }: { atlas: Atlas; onExplore: (p
               return (
                 <button key={id} className="sw-pick" onClick={() => pickOne(id)}
                   title={ph ? `Photo: ${ph.credit} (${ph.license}), Wikimedia Commons` : undefined}
-                  style={{ background: "linear-gradient(150deg,#f3ecd9,#e2d3b1)", border: `2px solid ${E.clay}`, borderRadius: 16,
-                    padding: ph ? "0 0 14px" : "16px 10px", overflow: "hidden", cursor: "pointer", color: E.bark, fontWeight: 800, fontSize: 16 }}>
+                  style={{ background: "var(--sand)", border: "1px solid var(--stone)", borderRadius: 12, font: "inherit",
+                    padding: ph ? "0 0 12px" : "16px 10px", overflow: "hidden", cursor: "pointer", color: E.bark, fontWeight: 600, fontSize: 15 }}>
                   {ph
                     ? <div aria-hidden style={{ height: 120, marginBottom: 12, background: `url("${ph.file}") center / cover no-repeat` }} />
                     : <div style={{ fontSize: 30 }}>🏞️</div>}
@@ -117,7 +115,7 @@ export function GuessTheTwin({ atlas, onExplore }: { atlas: Atlas; onExplore: (p
               );
             })}
           </div>
-          <div style={{ fontSize: 12.5, color: E.moss, fontWeight: 600 }}>New park every day. Answers come from NASA data since 1981.</div>
+          <div style={{ fontSize: 13, color: "var(--bark-2)" }}>New park every day. Answers come from NASA data since 1981.</div>
         </div>
       ) : (
         <div className="sw-reveal" style={{ padding: "18px 24px 22px", display: "flex", flexDirection: "column", gap: 12, position: "relative" }}>
@@ -125,7 +123,7 @@ export function GuessTheTwin({ atlas, onExplore }: { atlas: Atlas; onExplore: (p
           <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
             <div style={{ fontSize: 44 }}>{right ? "🦌" : "🦉"}</div>
             <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 22, color: right ? E.pine : E.rust }}>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22, color: right ? E.pine : E.rust }}>
                 {right ? "You found the twin!" : "Whoo-ops, not that one!"}
               </div>
               <div style={{ fontSize: 14, lineHeight: 1.5, color: E.bark }}>
@@ -134,7 +132,7 @@ export function GuessTheTwin({ atlas, onExplore }: { atlas: Atlas; onExplore: (p
               </div>
             </div>
             <div style={{ textAlign: "center", minWidth: 110 }}>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: 900, fontSize: 34, color: E.pine, lineHeight: 1 }}>{pct}%</div>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 34, color: E.pine, lineHeight: 1 }}>{pct}%</div>
               <div style={{ fontSize: 11, color: E.moss, fontWeight: 700 }}>match score</div>
             </div>
           </div>
@@ -145,8 +143,8 @@ export function GuessTheTwin({ atlas, onExplore }: { atlas: Atlas; onExplore: (p
             Twins change alike. They can still look very different: a desert and a forest can be twins.
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <button className="btn" onClick={() => onExplore(round.park)}>🧭 Explore {name}</button>
-            <button className="btn-ghost" onClick={() => onExplore(round.answer)}>🧭 Explore {twin}</button>
+            <button className="btn" onClick={() => onExplore(round.park)}>Explore {name}</button>
+            <button className="btn-ghost" onClick={() => onExplore(round.answer)}>Explore {twin}</button>
           </div>
         </div>
       )}

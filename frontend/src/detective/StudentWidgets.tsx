@@ -10,7 +10,7 @@ import { setSound, soundOn, play } from "./sound";
 import TrendChart from "./TrendChart";
 
 export { E, RIDGE, TOPO, trailWord, trees } from "./theme";
-import { E, RIDGE, TOPO } from "./theme";
+import { E, RIDGE } from "./theme";
 
 export const WIDGET_CSS = `
 @keyframes sw-sway { 0%,100% { transform: rotate(-3deg) translateY(0) } 50% { transform: rotate(3deg) translateY(-6px) } }
@@ -18,14 +18,14 @@ export const WIDGET_CSS = `
 @keyframes sw-sun { from { transform: translateX(-130%) skewX(-18deg) } to { transform: translateX(280%) skewX(-18deg) } }
 @keyframes sw-pop { from { transform: scale(.85); opacity: 0 } to { transform: scale(1); opacity: 1 } }
 @keyframes sw-leaf { 0% { transform: translate(0,-10px) rotate(0); opacity: 0 } 15% { opacity: .9 } 100% { transform: translate(var(--dx), 150px) rotate(var(--r)); opacity: 0 } }
-.sw-hero { position: relative; overflow: hidden; animation: sw-glow 3s ease-in-out infinite; transition: transform .18s }
-.sw-hero:hover { transform: translateY(-3px) }
+.sw-hero { position: relative; overflow: hidden; transition: transform .18s, border-color .18s }
+.sw-hero:hover { transform: translateY(-2px); border-color: var(--moss) !important }
 .sw-hero:active { transform: scale(.995) }
 .sw-hero .sw-sun { position: absolute; top: 0; bottom: 0; width: 35%; background: linear-gradient(90deg, transparent, rgba(255,240,200,.45), transparent); animation: sw-sun 4.5s ease-in-out infinite; pointer-events: none }
 .sw-hero:hover .sw-go { background: ${E.pine}; color: ${E.cream} }
 .sw-sway { animation: sw-sway 3.6s ease-in-out infinite; transform-origin: 50% 90% }
-.sw-pick { transition: transform .15s, box-shadow .15s }
-.sw-pick:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(74,55,38,.22) }
+.sw-pick { transition: transform .15s, border-color .15s }
+.sw-pick:hover { transform: translateY(-2px); border-color: var(--moss) !important }
 .sw-reveal { animation: sw-pop .35s cubic-bezier(.2,1.3,.4,1) both }
 .sw-leafy { position: absolute; top: 0; font-size: 20px; animation: sw-leaf 1.6s ease-in forwards; pointer-events: none }
 @media (prefers-reduced-motion: reduce) { .sw-hero, .sw-sway, .sw-hero .sw-sun, .sw-reveal, .sw-leafy { animation: none } }
@@ -165,38 +165,35 @@ export function NextCase({ onPlay }: { onPlay: (c: Case) => void }) {
       className="sw-hero"
       onClick={() => onPlay(n.c)}
       style={{
-        background: `${RIDGE} bottom / 100% 70px no-repeat, ${TOPO} right -40px top -30px / 260px no-repeat, linear-gradient(140deg, #f3e6c8, #e3c99a 60%, #d6ae7b)`,
-        border: `3px solid ${E.bark}`, outline: `2px dashed ${E.cream}`, outlineOffset: -9,
-        color: E.bark, borderRadius: 22, padding: "24px 26px 44px", cursor: "pointer", textAlign: "left",
-        display: "flex", gap: 22, alignItems: "center", flexWrap: "wrap", width: "100%",
+        background: "var(--paper)", border: "1px solid var(--stone)",
+        color: E.bark, borderRadius: "var(--radius)", padding: "20px 22px", cursor: "pointer", textAlign: "left",
+        display: "flex", gap: 18, alignItems: "center", flexWrap: "wrap", width: "100%", font: "inherit",
       }}
     >
       <style>{WIDGET_CSS}</style>
-      <span className="sw-sun" aria-hidden />
       <span
-        className="sw-sway"
         style={{
-          fontSize: 60, width: 104, height: 104, borderRadius: "50%", display: "grid", placeItems: "center", flexShrink: 0,
-          background: E.cream, border: `4px solid ${E.pine}`, boxShadow: "inset 0 0 0 3px #e9dcc0, 0 6px 14px rgba(74,55,38,.25)",
+          fontSize: 34, width: 68, height: 68, borderRadius: "50%", display: "grid", placeItems: "center", flexShrink: 0,
+          background: "var(--sand)", border: "1px solid var(--stone)",
         }}
       >
         {n.c.emoji}
       </span>
-      <span style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minWidth: 220, position: "relative" }}>
+      <span style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 200, position: "relative" }}>
         <span style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <span style={chip(E.pine, E.cream)}>{n.replay ? "⭐ Go for 3 stars" : "🧭 Next trail"}</span>
-          <span style={chip("rgba(247,241,227,.85)", d.c)}>● {d.t}</span>
+          <span style={chip("var(--sage)", E.bark)}>{n.replay ? "Go for 3 stars" : "Next case"}</span>
+          <span style={chip("var(--sand)", d.c)}>● {d.t}</span>
         </span>
-        <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 30, lineHeight: 1.15, color: E.pine }}>{n.c.title}</span>
-        <span style={{ fontSize: 15, lineHeight: 1.5 }}>{n.c.subtitle}</span>
-        {n.c.badge && <span style={{ fontSize: 13, fontWeight: 700, color: E.rust }}>🏅 Earn the patch: {n.c.badge}</span>}
+        <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 26, lineHeight: 1.15, color: E.bark }}>{n.c.title}</span>
+        <span style={{ fontSize: 15, lineHeight: 1.5, color: "var(--bark-2)" }}>{n.c.subtitle}</span>
+        {n.c.badge && <span style={{ fontSize: 13, fontWeight: 600, color: E.clay }}>Earn the patch: {n.c.badge}</span>}
       </span>
       <span
         className="sw-go"
         aria-hidden
         style={{
-          width: 50, height: 50, borderRadius: "50%", border: `2px solid ${E.pine}`, color: E.pine, background: "rgba(247,241,227,.85)",
-          display: "grid", placeItems: "center", fontSize: 22, fontWeight: 800, flexShrink: 0, transition: "background .15s, color .15s",
+          width: 44, height: 44, borderRadius: "50%", border: `1px solid ${E.moss}`, color: E.moss, background: "transparent",
+          display: "grid", placeItems: "center", fontSize: 20, flexShrink: 0, transition: "background .15s, color .15s",
         }}
       >
         →
@@ -247,8 +244,8 @@ export function ParkOfTheDay({ atlas, onExplore, science = false }: { atlas: Atl
   return (
     <section
       style={{
-        borderRadius: 22, overflow: "hidden", border: `2px solid ${E.sage}`, background: E.cream,
-        boxShadow: "0 12px 28px rgba(74,55,38,.12)", position: "relative",
+        borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--stone)", background: "var(--paper)",
+        position: "relative",
       }}
     >
       <style>{WIDGET_CSS}</style>
@@ -260,13 +257,12 @@ export function ParkOfTheDay({ atlas, onExplore, science = false }: { atlas: Atl
           color: E.cream, padding: photo ? "96px 24px 18px" : "20px 24px 54px", position: "relative",
         }}
       >
-        {!photo && <span aria-hidden style={{ position: "absolute", right: 22, top: 14, fontSize: 34 }}>🌄</span>}
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: photo ? E.cream : E.bark }}>
-          Field guide · Park of the day
+        <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".14em", textTransform: "uppercase", color: photo ? E.cream : E.bark }}>
+          Park of the day
         </div>
         <h3
           style={{
-            margin: "4px 0 0", fontFamily: "var(--font-display)", fontSize: 32, color: photo ? "#fff" : E.bark,
+            margin: "4px 0 0", fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 30, color: photo ? "#fff" : E.bark,
             textShadow: photo ? "0 2px 8px rgba(0,0,0,.55)" : "0 1px 0 rgba(255,255,255,.4)",
           }}
         >
@@ -276,8 +272,8 @@ export function ParkOfTheDay({ atlas, onExplore, science = false }: { atlas: Atl
       </div>
 
       {!guess ? (
-        <div style={{ padding: "18px 24px 22px", display: "flex", flexDirection: "column", gap: 14, background: `${TOPO} right -60px bottom -60px / 280px no-repeat` }}>
-          <div style={{ fontWeight: 800, fontSize: 19, color: E.bark }}>Ranger's quick guess: since 1981, is {name} getting…</div>
+        <div style={{ padding: "18px 22px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ fontWeight: 600, fontSize: 18, color: E.bark }}>Quick guess: since 1981, is {name} getting…</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
             {GUESSES.map((g) => (
               <button
@@ -285,16 +281,16 @@ export function ParkOfTheDay({ atlas, onExplore, science = false }: { atlas: Atl
                 className="sw-pick"
                 onClick={() => pick(g.id)}
                 style={{
-                  background: g.bg, border: `2px solid ${g.edge}`, borderRadius: 16, padding: "16px 10px",
-                  cursor: "pointer", color: E.bark, fontWeight: 800, fontSize: 16,
+                  background: "var(--sand)", border: "1px solid var(--stone)", borderTop: `3px solid ${g.edge}`, borderRadius: 12, padding: "14px 10px",
+                  cursor: "pointer", color: E.bark, fontWeight: 600, fontSize: 15, font: "inherit",
                 }}
               >
-                <div style={{ fontSize: 38 }}>{g.emoji}</div>
+                <div style={{ fontSize: 28, marginBottom: 4 }}>{g.emoji}</div>
                 {g.text}
               </button>
             ))}
           </div>
-          <div style={{ fontSize: 12.5, color: E.moss, fontWeight: 600 }}>Tap one to see what 45 years of NASA data say.</div>
+          <div style={{ fontSize: 13, color: "var(--bark-2)" }}>Tap one to see what 45 years of NASA data say.</div>
         </div>
       ) : (
         <div className="sw-reveal" style={{ padding: "18px 24px 22px", display: "flex", flexDirection: "column", gap: 14, position: "relative" }}>
@@ -302,7 +298,7 @@ export function ParkOfTheDay({ atlas, onExplore, science = false }: { atlas: Atl
           <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
             <div style={{ fontSize: 44 }}>{right ? "🦌" : "🦉"}</div>
             <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 22, color: right ? E.pine : E.rust }}>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22, color: right ? E.pine : E.rust }}>
                 {right ? "Sharp eyes, ranger!" : "Whoo-ops, not quite!"}
               </div>
               <div style={{ fontSize: 14, lineHeight: 1.5, color: E.bark }}>
@@ -313,7 +309,7 @@ export function ParkOfTheDay({ atlas, onExplore, science = false }: { atlas: Atl
               </div>
             </div>
             <div style={{ textAlign: "center" }}>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: 900, fontSize: 38, color: per > 0 ? E.rust : E.dusk, lineHeight: 1 }}>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 38, color: per > 0 ? E.rust : E.dusk, lineHeight: 1 }}>
                 {per > 0 ? "+" : ""}{per.toFixed(2)}°F
               </div>
               <div style={{ fontSize: 11, color: E.moss, fontWeight: 700 }}>every 10 years</div>
@@ -336,7 +332,7 @@ export function ParkOfTheDay({ atlas, onExplore, science = false }: { atlas: Atl
             <div className="small muted">Loading the chart…</div>
           )}
           <div>
-            <button className="btn" onClick={() => onExplore(cell.park_id)}>🧭 Explore {name}</button>
+            <button className="btn" onClick={() => onExplore(cell.park_id)}>Explore {name}</button>
           </div>
         </div>
       )}
