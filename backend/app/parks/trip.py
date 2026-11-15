@@ -415,6 +415,45 @@ def _glow_row(park: dict) -> dict | None:
     return {"glow": g, "level": glow_level(g), "why": "estimated from NASA Black Marble imagery"}
 
 
+GOOD_AT = 0.6  # a want scoring this or more counts as "good for" that month
+BAD_AT = 0.35  # an avoid scoring this or less counts as a "watch out" that month
+# Not about the month (mystery, witness, crowds), true almost everywhere (calm), or a guess
+# about falls we cannot see (waterfalls).
+YEAR_SKIP = {"mystery", "witness", "crowds", "calm", "waterfalls"}
+YEAR_TOP = 4  # at most this many "good for" tags per month
+
+
+def park_year(park: dict, cl: dict, ex: dict, horizon: str = "next_year", scenario: str = "ssp245") -> dict:
+    """Twelve months for one park, no settings needed: weather, what it is good for, what to watch out for."""
+    months_x = (ex.get(park["id"]) or {}).get("months") or [{}] * 12
+    melt = melt_shares([cl["months"][i]["snow"]["normal"] for i in range(12)])
+    base = [score_park(cl, Prefs(m, 15, 27), scenario)[horizon].values or {} for m in range(1, 13)]
+    out = []
+    for m in range(1, 13):
+        v, x = base[m - 1], months_x[m - 1] or {}
+        ctx = Ctx(park, m, v, x, base[(m - 2) % 12], melt, set())
+        good, bad = [], []
+        for key, f in WANTS.items():
+            r = None if key in YEAR_SKIP else f(ctx)
+            if r is not None and r[0] >= GOOD_AT:
+                good.append((r[0], key))
+        for key, f in AVOIDS.items():
+            r = None if key in YEAR_SKIP else f(ctx)
+            if r is not None and r[0] <= BAD_AT:
+                bad.append((r[0], key))
+        out.append({
+            "month": m,
+            "tmax": v.get("tmax"),
+            "tmin": x.get("tmin"),
+            "precip": v.get("precip"),
+            "rainy_days": x.get("rainy_days"),
+            "snow": v.get("snow"),
+            "good": [k for _, k in sorted(good, reverse=True)][:YEAR_TOP],
+            "bad": [k for _, k in sorted(bad)],
+        })
+    return {"park_id": park["id"], "horizon": horizon, "months": out}
+
+
 def plan_trip(parks: list, climate: dict[str, dict], tp: TripPrefs) -> dict:
     ex = extras()
     lo, hi = min(b[0] for b in tp.bands), max(b[1] for b in tp.bands)

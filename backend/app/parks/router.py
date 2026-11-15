@@ -15,7 +15,7 @@ from app.parks.bestdays import best_days
 from app.parks.city import CityNormals, city_normals
 from app.parks.daily import curves
 from app.parks.scoring import Prefs, Scored, score_park
-from app.parks.trip import AVOIDS, WANTS, TripPrefs, parse_chips, plan_trip
+from app.parks.trip import AVOIDS, WANTS, TripPrefs, extras, park_year, parse_chips, plan_trip
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "parks"
 
@@ -199,6 +199,23 @@ def trip(
         mystery={x for x in (mystery or "").split(",") if x},
     )
     return plan_trip(parks, climate, tp)
+
+
+@router.get("/{park_id}/year")
+def year(
+    park_id: str,
+    horizon: Literal["this_year", "next_year", "y2050"] = "next_year",
+    scenario: Literal["ssp245", "ssp585"] = "ssp245",
+) -> dict:
+    """One park, all 12 months: highs, lows, rain, what it is good for, what to watch out for."""
+    try:
+        parks, climate = load()
+    except FileNotFoundError as e:
+        raise HTTPException(503, str(e)) from e
+    park = next((p for p in parks if p.id == park_id), None)
+    if park is None:
+        raise HTTPException(404, f"unknown park {park_id!r}")
+    return park_year(park.model_dump(), climate[park_id], extras(), horizon, scenario)
 
 
 @router.get("/{park_id}/daily")

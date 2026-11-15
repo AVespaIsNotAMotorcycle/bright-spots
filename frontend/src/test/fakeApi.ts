@@ -43,6 +43,14 @@ export function installFakeApi(opts: FakeOptions = {}) {
     }
     if (path.startsWith("/api/parks/trip")) return json(tripFixture);
     if (path.startsWith("/api/parks/best-days")) return json({ parks: {} });
+    if (/^\/api\/parks\/[^/]+\/year/.test(path))
+      return json({
+        months: Array.from({ length: 12 }, (_, i) => ({
+          month: i + 1, tmax: 10 + 2 * (6 - Math.abs(6 - i)) * 2, tmin: 2 * (6 - Math.abs(6 - i)), precip: 20, rainy_days: 5, snow: 0,
+          good: i >= 3 && i <= 4 ? ["wildflowers", "hikes"] : ["stars"],
+          bad: i >= 5 && i <= 7 ? ["heat"] : [],
+        })),
+      });
     if (path.startsWith("/data/atlas.json")) return json(publicAtlas);
     if (path.startsWith("/api/community/posts")) return json(opts.posts ?? []);
     if (path.startsWith("/api/datasets/koppen")) return json({ now: { code: "BSk", name: "Arid, steppe, cold" }, future: null });

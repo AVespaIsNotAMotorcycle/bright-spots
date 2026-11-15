@@ -8,6 +8,7 @@ import type { BestDays } from "../model";
 import { fetchDates, fmtWindow } from "./bestDates";
 import { whatChanged } from "../whatChanged";
 import { Badges, MonthStrip, ScoreRing, Sci } from "./TripCards";
+import YearGlance from "./YearGlance";
 import {
   CHIP,
   EMOJI,
@@ -155,11 +156,12 @@ export default function ParkDrawer({ p, trip, state, unit, science = false, plai
         </div>
         {photo && <div style={{ padding: "4px 20px 0" }}><PhotoCredit photo={photo} style={{ color: "var(--text-muted)" }} /></div>}
         <div className="tp-sec">
-          <div className="tp-why">{plain ? "Pick a mood or a filter to see scores and best dates for this park." : whySentence(p, unit)}</div>
+          <div className="tp-why">{plain ? "Here is the park across the year. Pick a month, mood or filter for scores and best dates." : whySentence(p, unit)}</div>
           {!p.ok && p.failed.length > 0 && <p className="tp-note" style={{ color: "var(--rust)" }}>Fails a must: {p.failed.map(LABEL).join(", ")}.</p>}
           {!plain && <div style={{ marginTop: 10 }}><Badges p={p} caseFor={caseFor} /></div>}
           <div className="tp-actions" style={{ marginTop: 10 }}>{actions}</div>
         </div>
+        {plain && <div className="tp-sec"><YearGlance p={p} state={state} unit={unit} /></div>}
         {!plain && <>
         <div className="tp-sec"><Days list={bd ?? []} loading={!bd} picked={state.months} unit={unit} /></div>
         <div className="tp-sec">
@@ -189,6 +191,7 @@ export default function ParkDrawer({ p, trip, state, unit, science = false, plai
           <div className="tp-h">All year <small>gold = best month · dots = your months · faded = fails a must</small></div>
           <MonthStrip p={p} picked={state.months} />
         </div>
+        <div className="tp-sec"><YearGlance p={p} state={state} unit={unit} /></div>
         <div className="tp-sec"><ThenNow p={p} trip={trip} unit={unit} /></div>
         {changed && (
           <div className="tp-sec">

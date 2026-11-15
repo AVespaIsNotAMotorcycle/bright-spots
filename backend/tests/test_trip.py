@@ -152,3 +152,16 @@ def test_trip_api_reports_night_glow_as_estimate():
     assert glows
     assert all(0 <= g["glow"] <= 1 and g["level"] in ("low", "medium", "high") for g in glows)
     assert all("NASA Black Marble" in g["why"] for g in glows)
+
+
+def test_park_year_needs_no_settings():
+    r = client.get("/api/parks/arches/year")
+    assert r.status_code == 200, r.text
+    ms = r.json()["months"]
+    assert [m["month"] for m in ms] == list(range(1, 13))
+    jan, jul = ms[0], ms[6]
+    assert jul["tmax"] > jan["tmax"]
+    assert "freezing" in jan["bad"] and "heat" in jul["bad"]
+    assert all(len(m["good"]) <= trip_mod.YEAR_TOP for m in ms)
+    assert not any(k in trip_mod.YEAR_SKIP for m in ms for k in m["good"] + m["bad"])
+    assert client.get("/api/parks/nope/year").status_code == 404

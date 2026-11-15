@@ -134,6 +134,21 @@ export const TRIP_CSS = `
 .tp-mlist{list-style:none;margin:10px 0 0;padding:0;border-top:1px solid var(--border)}
 .tp-mlist li{display:grid;grid-template-columns:1fr auto 36px;gap:10px;padding:7px 4px;border-bottom:1px solid var(--border);font-size:14px}
 .tp-mlist li span:last-child{text-align:right}
+.tp-year-best{font-size:15px;margin:0 0 10px;color:var(--bark)}
+.tp-year-best b{color:var(--moss);font-size:18px}
+.tp-year-best small{color:var(--text-muted);font-size:12.5px}
+.tp-year-sub{font-size:12.5px;font-weight:700;color:var(--bark-2);margin:10px 0 4px}
+.tp-year-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--stone)}
+.tp-year-list li{display:flex;justify-content:space-between;gap:10px;padding:6px 4px;border-bottom:1px solid var(--stone);font-size:14px}
+.tp-year-list li b{color:var(--moss);font-weight:600;text-align:right}
+.tp-year-list li small{color:var(--moss);font-size:12px}
+.tp-year-list li.on{background:var(--sand)}
+.tp-year-list.bad li b{color:var(--clay)}
+.tp-year-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13.5px;font-variant-numeric:tabular-nums}
+.tp-year-table th{text-align:left;font-weight:600;color:var(--bark-2);font-size:12px;padding:4px 6px;border-bottom:1px solid var(--stone)}
+.tp-year-table td{padding:4px 6px;border-bottom:1px solid var(--stone)}
+.tp-year-table tr.best td{background:var(--sand);color:var(--moss);font-weight:600}
+.tp-year-table tr.picked td:first-child{box-shadow:inset 3px 0 0 var(--moss)}
 .tp-mlist li.top b{color:var(--pine)}
 .tp-trend{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:500;padding:2px 9px;border-radius:99px;
   background:var(--sand);color:var(--bark-2);border:1px solid var(--stone);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
@@ -189,6 +204,9 @@ export const TRIP_CSS = `
 .tp-season{background:var(--sand);color:var(--bark);border:1px solid var(--stone);border-radius:10px;font-weight:500}
 .tp-month{background:var(--paper);color:var(--bark);border:1px solid var(--stone);font-weight:500}
 .tp-season:hover,.tp-month:hover{border-color:var(--moss)}
+.tp-month{display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.15}
+.tp-month-y{font-size:10.5px;font-weight:500;color:var(--bark-2);letter-spacing:.02em}
+.tp-month[aria-pressed=true] .tp-month-y{color:var(--paper);opacity:.85}
 .tp-season[aria-pressed=true],.tp-month[aria-pressed=true]{background:var(--moss);border-color:var(--moss);color:var(--paper);box-shadow:none;font-weight:600}
 .tp-feel{border:1px solid var(--stone);background:var(--paper);font-weight:500;color:var(--bark)}
 .tp-feel[aria-pressed=true]{border-color:var(--moss);background:color-mix(in srgb,var(--sage) 35%,var(--paper));color:var(--bark)}

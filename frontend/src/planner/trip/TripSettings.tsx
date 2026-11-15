@@ -7,6 +7,7 @@ import {
   AVOIDS,
   FEELS,
   MONTHS,
+  MONTHS_LONG,
   SEASONS,
   SOURCE_LABEL,
   WANTS,
@@ -23,6 +24,15 @@ interface Props {
   set: (patch: Partial<TripState>) => void;
   unit: Unit;
   setUnit: (u: Unit) => void;
+}
+
+/** The next 12 months from today, each with its year, so Dec this year and Dec next year never mix. */
+export function nextTwelve(today = new Date()): { m: number; y: number; now: boolean }[] {
+  const start = today.getMonth() + 1;
+  return Array.from({ length: 12 }, (_, i) => {
+    const m = ((start - 1 + i) % 12) + 1;
+    return { m, y: today.getFullYear() + (m < start ? 1 : 0), now: i === 0 };
+  });
 }
 
 function Months({ state, set }: Pick<Props, "state" | "set">) {
@@ -56,11 +66,13 @@ function Months({ state, set }: Pick<Props, "state" | "set">) {
         ))}
       </div>
       <div className="tp-months" role="group" aria-label="Months">
-        {[12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((m) => {
+        {nextTwelve().map(({ m, y, now }) => {
           const on = state.months.includes(m);
           return (
-            <button key={m} className="tp-month" aria-pressed={on} onClick={(e) => pick(m, e)}>
+            <button key={m} className="tp-month" aria-pressed={on} onClick={(e) => pick(m, e)}
+              aria-label={`${MONTHS_LONG[m - 1]} ${y}`} title={`${MONTHS_LONG[m - 1]} ${y}${now ? " (this month)" : ""}`}>
               {MONTHS[m - 1]}
+              <small className="tp-month-y">{now ? "now" : `'${String(y).slice(2)}`}</small>
             </button>
           );
         })}

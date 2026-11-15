@@ -185,6 +185,10 @@ describe("App", () => {
     render(<App />);
     const d = await screen.findByRole("dialog", undefined, { timeout: 3000 });
     expect(d.textContent).toMatch(/Zion/);
+    // The year view fills the drawer even with nothing picked.
+    expect(await within(d).findByText("Things to do")).toBeTruthy();
+    expect(within(d).getByText("Watch out for")).toBeTruthy();
+    expect(within(d).getByText("Jun–Aug")).toBeTruthy();
   });
 
   it("the trip planner shows only the best matches, with why #1, chips and the drawer", async () => {
