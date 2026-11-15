@@ -15,6 +15,7 @@ from app.parks.bestdays import best_days
 from app.parks.city import CityNormals, city_normals
 from app.parks.daily import curves
 from app.parks.scoring import Prefs, Scored, score_park
+from app.parks.trip import AVOIDS, WANTS, TripPrefs, parse_chips, plan_trip
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "parks"
 
@@ -148,6 +149,56 @@ class DailyCurves(BaseModel):
     this_year: dict[str, list[float | None]]
     next_year: dict[str, list[float | None]]
     y2050: dict[str, list[float | None] | None]
+
+
+def _ints(s: str, lo: int, hi: int) -> list[int]:
+    try:
+        xs = sorted({int(x) for x in s.split(",") if x.strip()})
+    except ValueError as e:
+        raise HTTPException(422, f"bad list: {s!r}") from e
+    if not xs or any(x < lo or x > hi for x in xs):
+        raise HTTPException(422, f"values must be {lo}-{hi}")
+    return xs
+
+
+def _bands(s: str) -> list[tuple[float, float]]:
+    out = []
+    for part in s.split(","):
+        try:
+            a, b = (float(x) for x in part.split(":"))
+        except ValueError as e:
+            raise HTTPException(422, f"bad band {part!r}, use lo:hi in C") from e
+        if not (-40 <= a <= b <= 50):
+            raise HTTPException(422, f"band {part!r} out of range")
+        out.append((a, b))
+    return out
+
+
+@router.get("/trip")
+def trip(
+    months: Annotated[str, Query(description="comma-separated months 1-12", examples=["9,10,11"])],
+    bands: Annotated[str, Query(description="ideal daytime-high bands lo:hi in C", examples=["15:24,24:30"])] = "15:27",
+    want: Annotated[str | None, Query(description="I'm into chips; suffix ! = must, e.g. stars,camping!")] = None,
+    avoid: Annotated[str | None, Query(description="avoid chips; suffix ! = must")] = None,
+    horizon: Literal["this_year", "next_year", "y2050"] = "next_year",
+    scenario: Literal["ssp245", "ssp585"] = "ssp245",
+    mystery: Annotated[str | None, Query(description="park codes that have an unsolved case")] = None,
+) -> dict:
+    """Every park ranked for a trip: best month in the range, reasons, month strip, 2050 change."""
+    try:
+        parks, climate = load()
+    except FileNotFoundError as e:
+        raise HTTPException(503, str(e)) from e
+    tp = TripPrefs(
+        months=_ints(months, 1, 12),
+        bands=_bands(bands),
+        wants=parse_chips(want, WANTS),
+        avoids=parse_chips(avoid, AVOIDS),
+        horizon=horizon,
+        scenario=scenario,
+        mystery={x for x in (mystery or "").split(",") if x},
+    )
+    return plan_trip(parks, climate, tp)
 
 
 @router.get("/{park_id}/daily")
