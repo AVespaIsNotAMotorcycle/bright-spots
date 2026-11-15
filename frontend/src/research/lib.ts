@@ -14,6 +14,7 @@ export interface ParkMeta {
 
 export interface FamilyInfo {
   id: number;
+  title: string;
   name: string;
   size: number;
   stability: number;

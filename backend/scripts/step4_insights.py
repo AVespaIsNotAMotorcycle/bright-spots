@@ -114,9 +114,16 @@ def families(parks):
             if abs(zmean[j]) < 0.4:
                 continue
             phrases.append(FEATURES[j][2] if zmean[j] > 0 else FEATURES[j][3])
+        tz, pz = float(rawmean[0:6].mean()), float(rawmean[6:9].mean())   # signal-to-noise, not z
+        title = "Fast warmers" if tz >= 0.7 else ("Steady warmers" if tz >= 0.45 else "Gentle warmers")
+        if pz <= -0.15:
+            title += ", drying"
+        elif pz >= 0.15:
+            title += ", wetting"
         stab = float(np.mean([co[np.ix_([i], members)].mean() for i in members]))
         fams.append({
             "id": int(fam),
+            "title": title,
             "name": ", ".join(phrases) if phrases else "no strong shared trend",
             "size": len(members),
             "stability": round(stab, 2),
@@ -229,7 +236,7 @@ def main():
     fam["ecoregions"] = ecoregion_overlay(fam)
     (DATA / "insights.json").write_text(json.dumps(
         {"parks": meta, "families": fam, "opposites": opp}, ensure_ascii=False))
-    print(f"{len(parks)} parks; families: {[(f['id'], f['size'], f['stability'], f['name']) for f in fam['families']]}")
+    print(f"{len(parks)} parks; families: {[(f['id'], f['size'], f['stability'], f['title']) for f in fam['families']]}")
     e = fam["ecoregions"]
     if e:
         print(f"ecoregion overlay: ARI={e['ari']} p={e['p']} over {e['n_with_ecoregion']} parks, {e['n_ecoregions']} ecoregions")
