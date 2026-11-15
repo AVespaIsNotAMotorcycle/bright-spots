@@ -18,6 +18,70 @@ const countReal = (a: Atlas, v: string, per: string) => {
 export const MORE_CASES: Case[] = [
   // ───────────────────────────────────────────────────────────────────────
   {
+    id: "crater-lake-warming",
+    title: "Is Crater Lake warming?",
+    subtitle: "The challenge author filmed his intro here. Does the data agree with the vibe?",
+    emoji: "🌋",
+    difficulty: "easy",
+    badge: "🌋 Rim Detective",
+    steps: [
+      {
+        kind: "intro",
+        heading: "The deepest lake in America",
+        body: "Crater Lake sits inside a volcano that blew up 7,700 years ago. The water is so blue it looks fake. Your first case: is the air around it warming, or is it all in our heads?",
+      },
+      {
+        kind: "verdict",
+        heading: "Eyeball it",
+        body: "Here are 45 years of annual high temperatures at Crater Lake. No line yet. What do you see?",
+        verdictQ: S("crla", "tmax_c", "annual"),
+        fact: "The dots tilt upward. A tilt that small is hard to spot by eye, which is why we use a statistical test.",
+      },
+      {
+        kind: "guess",
+        heading: "Put a number on it",
+        body: "How fast is the annual high rising, in °F per decade?",
+        guess: { parkId: "crla", variable: "tmax_c", period: "annual", min: 0, max: 2.5, step: 0.05 },
+        fact: "Small per decade, but it adds up over a lifetime.",
+      },
+      {
+        kind: "duel",
+        heading: "Lake vs the Pacific",
+        body: "Crater Lake or Channel Islands: whose annual high is rising faster?",
+        duel: { a: S("crla", "tmax_c", "annual"), b: S("chis", "tmax_c", "annual") },
+        fact: (a) => `Crater Lake ${R(a, "crla", "tmax_c", "annual")}. Channel Islands ${R(a, "chis", "tmax_c", "annual")}.`,
+      },
+      {
+        kind: "hunt",
+        heading: "Which July is the hottest mover?",
+        body: "Look at July highs only. Which park is climbing fastest?",
+        hunt: { parks: ["crla", "lavo", "grba", "grte"], variable: "tmax_c", period: "7", pick: "max" },
+        fact: (a) => `Crater Lake: ${R(a, "crla", "tmax_c", "7")}. July is where the signal shouts.`,
+      },
+      {
+        kind: "myth",
+        heading: "Myth or fact?",
+        body: "Crater Lake's warming is just random noise.",
+        myth: { isTrue: false },
+        fact: (a) => {
+          const q = cellOf(a, S("crla", "tmax_c", "annual"))?.q;
+          return `The false-alarm-corrected q is ${q != null ? q.toFixed(3) : "small"}, under the 0.05 bar. Not luck.`;
+        },
+      },
+      {
+        kind: "interpret",
+        heading: "So should I pack different?",
+        body: "A hotter July means earlier snowmelt and a shorter snow season. Peek at what a July visit looks like now.",
+        parkId: "crla",
+        variable: "tmax_c",
+        period: "7",
+        plannerLink: { month: 7, label: "Plan a July visit to Crater Lake" },
+      },
+    ],
+  },
+
+  // ───────────────────────────────────────────────────────────────────────
+  {
     id: "opposite-rain",
     title: "Same planet, opposite answers",
     subtitle: "One park is getting wetter while another dries out. Same warming, two stories.",
@@ -27,11 +91,8 @@ export const MORE_CASES: Case[] = [
     steps: [
       {
         kind: "intro",
-        heading: "The central mystery of the challenge",
-        body:
-          "NASA says a trend can point one way in one place and the other way somewhere else, " +
-          "even when the same cause drives both. We will catch that in real rain data. " +
-          "Watch for the word “possible”: it means the evidence leans one way but has not cleared the bar.",
+        heading: "Mission: catch two parks doing opposite things",
+        body: "You are an intern at NASA's rain desk. Your boss slides two folders across the table: one park getting wetter, one getting drier. Same planet, same warming. Prove it with five quick questions.",
       },
       {
         kind: "duel",
@@ -84,10 +145,8 @@ export const MORE_CASES: Case[] = [
     steps: [
       {
         kind: "intro",
-        heading: "Days above 90°F",
-        body:
-          "Hot days stress wildlife, raise fire risk and shrink the safe hiking window. " +
-          "We counted them for every park since 1981. Some parks never see one. Others keep adding more.",
+        heading: "Mission: find the park that is cooking",
+        body: "A ranger radio crackles: “Hot days are piling up and nobody can say where first.” Count the days above 90°F, park by park, and find the hot spot.",
       },
       {
         kind: "hunt",
@@ -137,8 +196,8 @@ export const MORE_CASES: Case[] = [
     steps: [
       {
         kind: "intro",
-        heading: "100°F is a different kind of hot",
-        body: "Triple-digit days are the real danger days. Four desert parks are in the ring. Place your bets.",
+        heading: "Welcome to the heat dome",
+        body: "Four deserts walk into a bar. The bartender asks: who has been adding 100°F days the fastest? You have 5 seconds an answer. Do not sweat it. (You will.)",
       },
       {
         kind: "duel",
@@ -182,10 +241,8 @@ export const MORE_CASES: Case[] = [
     steps: [
       {
         kind: "intro",
-        heading: "Nobody watches the nights",
-        body:
-          "We talk about hot afternoons. But the nightly low matters just as much. " +
-          "When nights stay warm, people, plants and animals never get to cool off.",
+        heading: "Clock in for the night shift",
+        body: "Everyone tracks the hot afternoons. Almost nobody checks the cool-down at midnight. Today you are the one who does.",
       },
       {
         kind: "duel",
@@ -233,8 +290,8 @@ export const MORE_CASES: Case[] = [
     steps: [
       {
         kind: "intro",
-        heading: "Almost everything is warming",
-        body: "Almost. A few places are not moving at all. Your job: find the stubborn one.",
+        heading: "The case of the stubborn island",
+        body: "Almost every park on the map is warming. A few refuse. Somebody has to find out which, and why the ocean might be covering for them.",
       },
       {
         kind: "hunt",
@@ -276,10 +333,8 @@ export const MORE_CASES: Case[] = [
     steps: [
       {
         kind: "intro",
-        heading: "Bigger is not always truer",
-        body:
-          "A big slope looks exciting. But if the years bounce around wildly, a big slope can be pure luck. " +
-          "This case separates size from certainty.",
+        heading: "Don't trust a big number",
+        body: "A headline screams: “RAIN UP 107 MM A DECADE!” Your job is to be the person in the room who says “wait, show me the dots.” Size is not proof.",
       },
       {
         kind: "duel",
@@ -323,8 +378,8 @@ export const MORE_CASES: Case[] = [
     steps: [
       {
         kind: "intro",
-        heading: "Winter is the fastest-changing season",
-        body: "Warmer winters mean less snow, shorter ski seasons and pests that no longer freeze off.",
+        heading: "Where did winter go?",
+        body: "Ski lodges, snow fleas and tree-killing beetles all depend on one thing: a proper cold winter. Follow the missing chill across the parks.",
       },
       {
         kind: "hunt",
@@ -368,8 +423,8 @@ export const MORE_CASES: Case[] = [
     steps: [
       {
         kind: "intro",
-        heading: "One month, one lake",
-        body: "Annual averages hide a lot. Looking at July alone can show a much stronger signal.",
+        heading: "One month. One lake.",
+        body: "Crater Lake is the park where the NASA challenge author filmed his intro. We will zoom in on a single month and see if the warming is louder there.",
       },
       {
         kind: "duel",
@@ -415,8 +470,8 @@ export const MORE_CASES: Case[] = [
     steps: [
       {
         kind: "intro",
-        heading: "The warm-night effect",
-        body: "When summer nights stay warm, wildfires burn longer into the night. Yosemite is one of the strongest cases in the data.",
+        heading: "What happens after sunset in Yosemite?",
+        body: "Wildfire crews say the danger is the night that does not cool. See how fast Yosemite's summer nights are warming.",
       },
       {
         kind: "guess",
@@ -453,8 +508,8 @@ export const MORE_CASES: Case[] = [
     steps: [
       {
         kind: "intro",
-        heading: "The Arctic is the canary",
-        body: "Scientists say the Arctic warms faster than anywhere else. We can test that with the Alaskan parks.",
+        heading: "Race to the top of the world",
+        body: "Scientists say the Arctic warms faster than anywhere. Alaska's parks line up at the start. Let's see who is actually fastest, and who is just loud.",
       },
       {
         kind: "hunt",
@@ -498,8 +553,8 @@ export const MORE_CASES: Case[] = [
     steps: [
       {
         kind: "intro",
-        heading: "March to May",
-        body: "Spring warming pulls snowmelt and flowers earlier. But it does not happen everywhere.",
+        heading: "Spring is showing up early",
+        body: "Cherry blossoms, snowmelt and wildflowers all run on one clock: spring warming. Race the parks to see where the clock is ticking fastest.",
       },
       {
         kind: "hunt",
@@ -536,45 +591,52 @@ export const MORE_CASES: Case[] = [
 
   // ───────────────────────────────────────────────────────────────────────
   {
-    id: "island-thirst",
-    title: "The Thirsty Islands",
-    subtitle: "Two island parks lose rain fast. Is it real or a maybe?",
-    emoji: "🌴",
+    id: "climate-olympics",
+    title: "The Climate Olympics",
+    subtitle: "Five events. Five gold medals. Which park wins each?",
+    emoji: "🥇",
     difficulty: "medium",
-    badge: "🌊 Island Hopper",
+    badge: "🏆 Gold Medalist",
     steps: [
       {
         kind: "intro",
-        heading: "Tropics are not always getting wetter",
-        body: "Warm air holds more water, so you might guess more rain in the tropics. The data says otherwise for two island parks.",
+        heading: "Opening ceremony",
+        body: "Welcome to the Games. Parks compete in five events, from night-time heat to disappearing rain. Pick the winner of each. Gold means the biggest change, which is not always good news.",
       },
       {
         kind: "hunt",
-        heading: "Drying the fastest",
-        body: "Which of these parks loses the most yearly rain?",
-        hunt: { parks: ["viis", "npsa", "drto", "hale"], variable: "prcp_mm", period: "annual", pick: "min" },
-        fact: (a) => `Virgin Islands ${R(a, "viis", "prcp_mm", "annual")}. Hale is on the other side of the sign: ${R(a, "hale", "prcp_mm", "annual")}.`,
+        heading: "🌙 Night marathon",
+        body: "Who is warming up fastest after dark? (annual night-time low)",
+        hunt: { parks: ["indu", "deva", "kova", "jotr"], variable: "tmin_c", period: "annual", pick: "max" },
+        fact: (a) => `Joshua Tree takes gold at ${R(a, "jotr", "tmin_c", "annual")}.`,
       },
       {
-        kind: "verdict",
-        heading: "Virgin Islands: sure?",
-        body: "A big drop. Real, maybe, or noise?",
-        verdictQ: S("viis", "prcp_mm", "annual"),
-        fact: "Leans real, but not over the bar. That is exactly what “possible” means.",
+        kind: "hunt",
+        heading: "☀️ Summer high jump",
+        body: "Whose summer daytime highs jumped the most?",
+        hunt: { parks: ["cave", "deva", "lavo", "pefo"], variable: "tmax_c", period: "JJA", pick: "max" },
+        fact: (a) => `Petrified Forest leaps ${R(a, "pefo", "tmax_c", "JJA")}.`,
       },
       {
-        kind: "verdict",
-        heading: "American Samoa: sure?",
-        body: "Another big drop, in the Pacific.",
-        verdictQ: S("npsa", "prcp_mm", "annual"),
-        fact: "This one clears the bar after the false-alarm correction.",
+        kind: "hunt",
+        heading: "🐢 The tortoise award",
+        body: "Who barely moved? Pick the park with the SLOWEST summer-high warming.",
+        hunt: { parks: ["chis", "maca", "havo", "kefj"], variable: "tmax_c", period: "JJA", pick: "min" },
+        fact: (a) => `Channel Islands finishes at ${R(a, "chis", "tmax_c", "JJA")}. The ocean keeps it cool.`,
       },
       {
-        kind: "myth",
-        heading: "Myth or fact?",
-        body: "“Possible” means the park is definitely changing.",
-        myth: { isTrue: false },
-        fact: "“Possible” means we lean one way but cannot rule out luck. It is a pointer for more study.",
+        kind: "hunt",
+        heading: "🏜️ The drought slide",
+        body: "Which park is losing the most yearly rain?",
+        hunt: { parks: ["viis", "npsa", "olym", "drto"], variable: "prcp_mm", period: "annual", pick: "min" },
+        fact: (a) => `Virgin Islands slides ${R(a, "viis", "prcp_mm", "annual")}.`,
+      },
+      {
+        kind: "rank",
+        heading: "🏅 Medal ceremony",
+        body: "Final event. Podium time: rank these parks by how fast their winters are warming.",
+        rank: { parks: ["cong", "acad", "romo", "olym"], variable: "tmean_c", period: "DJF" },
+        fact: "Gold goes to the warmest winter. Not every medal is a happy one.",
       },
     ],
   },
@@ -590,8 +652,8 @@ export const MORE_CASES: Case[] = [
     steps: [
       {
         kind: "intro",
-        heading: "Same state, same ocean",
-        body: "Haleakalā and Hawaiʻi Volcanoes sit on neighbouring islands. Do they warm at the same speed?",
+        heading: "Two volcanoes, one island chain",
+        body: "Haleakalā and Hawaiʻi Volcanoes share an ocean and a state. You would expect twins. The data may disagree.",
       },
       {
         kind: "duel",
@@ -635,8 +697,8 @@ export const MORE_CASES: Case[] = [
     steps: [
       {
         kind: "intro",
-        heading: "Ready? Six quick pairs.",
-        body: "Each duel is a coin flip until you know the patterns. Points add up. Go fast.",
+        heading: "Lightning round! ⚡",
+        body: "Six duels. No story. No second chances. Your gut and the data are about to find out if they are friends.",
       },
       {
         kind: "duel",
@@ -694,8 +756,8 @@ export const MORE_CASES: Case[] = [
     steps: [
       {
         kind: "intro",
-        heading: "Your eye vs the test",
-        body: "Scientists spot trends by eye first, then check with a test. Look at five charts. Call each one before you see the line.",
+        heading: "Train your detective eyes",
+        body: "Real scientists look at dots first and test second. Five charts are coming. Call each one before the trend line shows up.",
       },
       {
         kind: "verdict",
@@ -746,8 +808,8 @@ export const MORE_CASES: Case[] = [
     steps: [
       {
         kind: "intro",
-        heading: "The final case",
-        body: "Mix of every game: hunt, rank, guess, verdict and myth. Earn three stars to take the badge.",
+        heading: "The final exam",
+        body: "Every game you have played, one after another. Earn three stars and the Chief Detective badge is yours.",
       },
       {
         kind: "hunt",

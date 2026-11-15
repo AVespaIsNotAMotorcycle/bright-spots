@@ -6,8 +6,8 @@ import TrendChart from "./TrendChart";
 import ExplainerCard from "./ExplainerCard";
 import type { Case, Step } from "./cases";
 import { CASES } from "./cases";
-import { GameStep, GAME_KINDS, loadProgress, saveResult, rankTitle, makeFact } from "./games";
-import type { DataFact } from "./games";
+import { GAME_KINDS, loadProgress, saveResult, rankTitle } from "./games";
+import QuizCard from "./quiz";
 import type { CaseResult } from "./games";
 import FlashCard, { themeFor } from "./cardTheme";
 
@@ -119,120 +119,6 @@ function useParkTrends(parkId: string | undefined): ParkTrends | null {
       .finally(() => setLoading(false));
   }
   return null;
-}
-
-// ── Predict step ──────────────────────────────────────────────────────────
-
-function PredictStep({
-  step,
-  onNext,
-}: {
-  step: Step;
-  onNext: () => void;
-}) {
-  const [picked, setPicked] = useState<number | null>(null);
-  const [revealed, setRevealed] = useState(false);
-
-  const choices = step.choices ?? [];
-  const correct = picked != null ? choices[picked].correct : false;
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6 }}>{step.body}</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {choices.map((ch, i) => {
-          const isSelected = picked === i;
-          const isRevealed = revealed;
-          let bg = "var(--surface)";
-          let border = "var(--border)";
-          if (isRevealed && isSelected) {
-            bg = ch.correct ? "#d4edda" : "#f8d7da";
-            border = ch.correct ? "#2a7d4f" : "#c0392b";
-          } else if (isRevealed && ch.correct) {
-            bg = "#d4edda";
-            border = "#2a7d4f";
-          } else if (isSelected) {
-            border = "var(--accent)";
-            bg = "var(--accent-tint)";
-          }
-          return (
-            <button
-              key={i}
-              disabled={revealed}
-              onClick={() => setPicked(i)}
-              style={{
-                background: bg,
-                border: `2px solid ${border}`,
-                borderRadius: 10,
-                padding: "12px 16px",
-                cursor: revealed ? "default" : "pointer",
-                textAlign: "left",
-                fontSize: 14,
-                fontWeight: isSelected ? 600 : 400,
-                transition: "all 0.15s",
-              }}
-            >
-              {ch.label}
-            </button>
-          );
-        })}
-      </div>
-
-      {!revealed && picked != null && (
-        <button
-          onClick={() => setRevealed(true)}
-          style={{
-            background: "var(--accent)",
-            color: "var(--on-accent)",
-            border: "none",
-            borderRadius: 8,
-            padding: "10px 20px",
-            cursor: "pointer",
-            fontWeight: 600,
-            fontSize: 14,
-            alignSelf: "flex-start",
-          }}
-        >
-          Reveal the answer
-        </button>
-      )}
-
-      {revealed && picked != null && (
-        <div
-          style={{
-            background: correct ? "#d4edda" : "#fff3cd",
-            border: `1px solid ${correct ? "#2a7d4f" : "#b8860b"}`,
-            borderRadius: 10,
-            padding: "14px 16px",
-            fontSize: 14,
-            lineHeight: 1.6,
-          }}
-        >
-          <strong>{correct ? "✓ You got it." : "✗ Not quite."}</strong>{" "}
-          {choices[picked].explanation}
-        </div>
-      )}
-
-      {revealed && (
-        <button
-          onClick={onNext}
-          style={{
-            background: "var(--accent)",
-            color: "var(--on-accent)",
-            border: "none",
-            borderRadius: 8,
-            padding: "10px 20px",
-            cursor: "pointer",
-            fontWeight: 600,
-            fontSize: 14,
-            alignSelf: "flex-start",
-          }}
-        >
-          Next step →
-        </button>
-      )}
-    </div>
-  );
 }
 
 // ── Examine / Analyze step (shows the actual chart + card) ────────────────
@@ -380,7 +266,6 @@ export default function StudentDetective({
   const [stepIndex, setStepIndex] = useState(navStep ?? 0);
   const [scores, setScores] = useState<Record<number, { pts: number; max: number }>>({});
   const [result, setResult] = useState<CaseResult | null>(null);
-  const [fact, setFact] = useState<DataFact | null>(null);
 
   // Sync from URL (back/forward landed on student tab with a case in URL).
   useEffect(() => {
@@ -395,22 +280,18 @@ export default function StudentDetective({
     setStepIndex(0);
     setScores({});
     setResult(null);
-    setFact(null);
     onNavChange?.(c.id, 0);
+  }
+
+  function backToCases() {
+    setResult(null);
+    setActiveCase(null);
+    setStepIndex(0);
+    onNavChange?.(null, null);
   }
 
   function nextStep() {
     if (!activeCase) return;
-    const cur = activeCase.steps[stepIndex];
-    const isGame = (GAME_KINDS as readonly string[]).includes(cur.kind);
-    if (!fact && isGame && stepIndex < activeCase.steps.length - 1 && stepIndex % 2 === 1) {
-      const f = makeFact(cur, atlas, (stepIndex - 1) / 2);
-      if (f) {
-        setFact(f);
-        return;
-      }
-    }
-    setFact(null);
     if (stepIndex + 1 >= activeCase.steps.length) {
       const vals = Object.values(scores);
       const max = vals.reduce((n, v) => n + v.max, 0);
@@ -424,14 +305,6 @@ export default function StudentDetective({
       setStepIndex(next);
       onNavChange?.(activeCase.id, next);
     }
-  }
-
-  function backToCases() {
-    setResult(null);
-    setFact(null);
-    setActiveCase(null);
-    setStepIndex(0);
-    onNavChange?.(null, null);
   }
 
   if (!activeCase) {
@@ -455,131 +328,67 @@ export default function StudentDetective({
 
   const step = activeCase.steps[stepIndex];
   const isLast = stepIndex === activeCase.steps.length - 1;
+  const isGame = (GAME_KINDS as readonly string[]).includes(step.kind);
+  const primaryBtn = {
+    background: "#1f2a24", color: "#fff", border: "none", borderRadius: 10,
+    padding: "11px 22px", cursor: "pointer", fontWeight: 700, fontSize: 14, alignSelf: "flex-start",
+  } as const;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       {/* Case header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          flexWrap: "wrap",
-        }}
-      >
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
         <button
           onClick={backToCases}
-          style={{
-            background: "none",
-            border: "1px solid var(--border)",
-            borderRadius: 8,
-            padding: "6px 14px",
-            cursor: "pointer",
-            fontSize: 13,
-          }}
+          style={{ background: "none", border: "1px solid var(--border)", borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 13 }}
         >
           ← All cases
         </button>
-        <div>
-          <div style={{ fontWeight: 700, fontSize: 16 }}>
-            {activeCase.emoji} {activeCase.title}
-          </div>
+        <div style={{ fontWeight: 700, fontSize: 16 }}>
+          {activeCase.emoji} {activeCase.title}
         </div>
       </div>
 
-      {/* Step */}
-      <FlashCard key={`${activeCase.id}-${stepIndex}${fact ? "-fact" : ""}`} step={step} caseId={activeCase.id} index={stepIndex}>
-        {fact ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 14, alignItems: "flex-start" }}>
-            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>
-              {fact.emoji} Data fact
-            </div>
-            <h3 style={{ margin: 0, fontSize: 26, fontWeight: 800 }}>{fact.title}</h3>
-            <p style={{ margin: 0, fontSize: 17, lineHeight: 1.6 }}>{fact.text}</p>
-            <button
-              onClick={nextStep}
-              style={{
-                background: "var(--accent)", color: "var(--on-accent)", border: "none", borderRadius: 8,
-                padding: "10px 20px", cursor: "pointer", fontWeight: 600, fontSize: 14,
-              }}
-            >
-              Next question →
-            </button>
-          </div>
-        ) : (
-          <>
-        <div>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              color: "var(--accent-2)",
-              marginBottom: 6,
-            }}
-          >
-            {step.kind === "intro" && "Scene"}
-            {step.kind === "predict" && "🔮 Your prediction"}
-            {step.kind === "examine" && "🔍 Examine the data"}
-            {step.kind === "analyze" && "📊 Statistical analysis"}
-            {step.kind === "interpret" && "💡 What it means"}
-            {(GAME_KINDS as readonly string[]).includes(step.kind) && "🎮 Your move"}
-          </div>
-          <h3 style={{ margin: "0 0 4px", fontSize: 24, fontWeight: 800, lineHeight: 1.25 }}>
-            {step.heading}
-          </h3>
-        </div>
-
-        {(step.kind === "intro") && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7 }}>{step.body}</p>
-            <button
-              onClick={nextStep}
-              style={{
-                background: "var(--accent)",
-                color: "var(--on-accent)",
-                border: "none",
-                borderRadius: 8,
-                padding: "10px 20px",
-                cursor: "pointer",
-                fontWeight: 600,
-                fontSize: 14,
-                alignSelf: "flex-start",
-              }}
-            >
-              Let's start →
-            </button>
-          </div>
-        )}
-
-        {step.kind === "predict" && (
-          <PredictStep step={step} onNext={nextStep} />
-        )}
-
-        {(GAME_KINDS as readonly string[]).includes(step.kind) && (
-          <GameStep
+      {isGame ? (
+        <>
+          {/* Placeholder behind the blurred overlay so the page is not empty */}
+          <div style={{ minHeight: 280, borderRadius: 22, background: "var(--surface-2)", opacity: 0.6 }} />
+          <QuizCard
             key={`${activeCase.id}-${stepIndex}`}
             step={step}
             atlas={atlas}
+            caseId={activeCase.id}
+            index={stepIndex}
+            isLast={isLast}
             onScore={(pts, max) => setScores((s) => ({ ...s, [stepIndex]: { pts, max } }))}
             onNext={nextStep}
-            nextLabel={isLast ? "Finish case 🏁" : "Next →"}
           />
-        )}
+        </>
+      ) : (
+        <FlashCard key={`${activeCase.id}-${stepIndex}`} step={step} caseId={activeCase.id} index={stepIndex}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>
+              {step.kind === "intro" && "🕵️ The case file"}
+              {step.kind === "examine" && "🔍 Examine the data"}
+              {step.kind === "analyze" && "📊 Statistical analysis"}
+              {step.kind === "interpret" && "💡 What it means"}
+            </div>
+            <h3 style={{ margin: "0 0 4px", fontSize: 26, fontWeight: 900, lineHeight: 1.2 }}>{step.heading}</h3>
+          </div>
 
-        {(step.kind === "examine" || step.kind === "analyze" || step.kind === "interpret") && (
-          <DataStep
-            step={step}
-            atlas={atlas}
-            onNext={nextStep}
-            onGoPlanner={onGoPlanner}
-            isLast={isLast}
-          />
-        )}
-          </>
-        )}
-      </FlashCard>
+          {step.kind === "intro" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <p style={{ margin: 0, fontSize: 16, lineHeight: 1.7 }}>{step.body}</p>
+              <p style={{ margin: 0, fontSize: 13, opacity: 0.75 }}>Each question gives you 5 seconds. Miss it and the point is gone.</p>
+              <button onClick={nextStep} style={primaryBtn}>Start the case →</button>
+            </div>
+          )}
+
+          {(step.kind === "examine" || step.kind === "analyze" || step.kind === "interpret") && (
+            <DataStep step={step} atlas={atlas} onNext={nextStep} onGoPlanner={onGoPlanner} isLast={isLast} />
+          )}
+        </FlashCard>
+      )}
     </div>
   );
 }

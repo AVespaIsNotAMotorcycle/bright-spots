@@ -62,9 +62,9 @@ export function themeFor(step: Step, caseId: string): Theme {
   return T[key ?? CASE_THEME[caseId] ?? "forest"];
 }
 
-const ANIMS = ["dc-flip", "dc-slide", "dc-drop", "dc-zoom", "dc-swing", "dc-curtain", "dc-tilt"];
+export const ANIMS = ["dc-flip", "dc-slide", "dc-drop", "dc-zoom", "dc-swing", "dc-curtain", "dc-tilt"];
 
-const CSS = `
+export const CARD_CSS = `
 @keyframes dc-flip   { from { transform: perspective(900px) rotateY(-90deg); opacity: 0 } to { transform: perspective(900px) rotateY(0); opacity: 1 } }
 @keyframes dc-slide  { from { transform: translateX(80px); opacity: 0 } to { transform: none; opacity: 1 } }
 @keyframes dc-drop   { 0% { transform: translateY(-90px); opacity: 0 } 60% { transform: translateY(10px); opacity: 1 } 80% { transform: translateY(-4px) } 100% { transform: none } }
@@ -111,7 +111,7 @@ export default function FlashCard({
         gap: 16,
       }}
     >
-      <style>{CSS}</style>
+      <style>{CARD_CSS}</style>
       {DECO.map((d, i) => (
         <span key={i} className="dc-deco" style={d} aria-hidden>
           {t.emoji[i % t.emoji.length]}
