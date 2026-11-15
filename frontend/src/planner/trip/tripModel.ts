@@ -281,10 +281,23 @@ export const LABEL = (k: string) => (k === "temperature" ? "Daytime high" : CHIP
 export const EMOJI = (k: string) => (k === "temperature" ? "🌡️" : CHIP[k]?.emoji ?? "•");
 
 /** "Why #1": the strongest reasons, as one sentence. */
+const rankOfReason = (r: Reason) => (r.level === "must" ? 3 : r.kind === "feel" ? 1 : r.kind === "base" ? 0 : 2);
+
+/** Two best reasons for a card, e.g. "20°C highs · 2 rainy days". */
+export function shortWhy(p: TripPark, u: Unit): string {
+  return p.reasons
+    .filter((r) => r.score != null && r.score >= 0.5)
+    .sort((a, b) => rankOfReason(b) - rankOfReason(a) || b.score! - a.score!)
+    .slice(0, 2)
+    .map((r) => reasonText(r, u))
+    .join(" · ");
+}
+
 export function whySentence(p: TripPark, u: Unit): string {
   const good = p.reasons
     .filter((r) => r.score != null && r.score >= 0.75)
-    .sort((a, b) => (b.level === "must" ? 1 : 0) - (a.level === "must" ? 1 : 0) || b.score! - a.score!)
+    // Your musts first, then your other picks, then warmth, then the always-counted weather.
+    .sort((a, b) => rankOfReason(b) - rankOfReason(a) || b.score! - a.score!)
     .slice(0, 3)
     .map((r) => reasonText(r, u));
   if (!good.length) return `${p.park.short} is the closest fit, though nothing fits perfectly.`;

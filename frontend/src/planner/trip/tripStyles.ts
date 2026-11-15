@@ -64,6 +64,7 @@ export const TRIP_CSS = `
 .tp-name small{display:block;font-family:var(--font-body);font-size:12px;font-weight:600;opacity:.9}
 .tp-ring{position:absolute;right:10px;bottom:8px;z-index:1}
 .tp-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px;flex:1}
+.tp-simple{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
 .tp-reasons{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;font-size:13px}
 .tp-reasons li{display:flex;gap:6px;align-items:baseline}
 .tp-ok{color:var(--pine);font-weight:800}

@@ -24,8 +24,8 @@ from app.parks.scoring import (
     humidity_score,
     rain_score,
     score_park,
-    temp_score,
 )
+from app.parks.trip import warmth
 
 WINDOW = 5  # days in the "best stretch"
 TOP_DAYS = 5
@@ -66,23 +66,26 @@ def best_days(
         if horizon == "this_year" and series["tmax"][i] is not None:
             measured += 1
         tmax, rh, dew, pr, cl = (val(k) for k in ("tmax", "rh", "dewpoint", "precip", "cloud"))
-        f: list[float] = []
+        # Same weights as the trip cards: warmth 2 (peaks mid-range), picked checks 1,
+        # and rain, cloud and mugginess at 0.5 when not already picked.
+        f: list[tuple[float, float]] = []
         if tmax is not None:
-            f.append(temp_score(tmax, prefs.t_lo, prefs.t_hi))
+            f.append((warmth(tmax, [(prefs.t_lo, prefs.t_hi)]), 2.0))
         if prefs.rh_max is not None and rh is not None:
-            f.append(humidity_score(rh, prefs.rh_max))
-        if prefs.dew_max is not None and dew is not None:
-            f.append(dewpoint_score(dew, prefs.dew_max))
-        if rain_limit is not None and pr is not None:
-            f.append(rain_score(pr, rain_limit))
-        if prefs.stars and cl is not None:
-            f.append(clamp01(1 - cl / 100))
+            f.append((humidity_score(rh, prefs.rh_max), 1.0))
+        if dew is not None:
+            f.append((dewpoint_score(dew, prefs.dew_max if prefs.dew_max is not None else 16), 1.0 if prefs.dew_max is not None else 0.5))
+        if pr is not None:
+            f.append((rain_score(pr, rain_limit), 1.0) if rain_limit is not None else (clamp01(1 - pr / 6), 0.5))
+        if cl is not None:
+            f.append((clamp01(1 - cl / 100), 1.0) if prefs.stars else (clamp01((85 - cl) / 45), 0.5))
         for k in ("bugs", "snowmelt"):  # monthly only
             if monthly.get(k) is not None:
-                f.append(monthly[k])
+                f.append((monthly[k], 1.0))
+        wsum = sum(w for _, w in f)
         days.append({
             "day": i - start + 1,
-            "score": round(100 * sum(f) / len(f), 1) if f else None,
+            "score": round(100 * sum(x * w for x, w in f) / wsum, 1) if f else None,
             "tmax": tmax, "rh": rh, "dewpoint": dew, "precip": pr,
         })
 

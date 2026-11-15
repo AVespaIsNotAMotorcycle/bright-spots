@@ -116,3 +116,15 @@ def test_rain_gray_and_muggy_always_count_unless_picked():
     r2 = c.get("/api/parks/trip", params={"months": "7", "bands": "15:30", "avoid": "rain"}).json()
     rows = r2["parks"][0]["reasons"]
     assert [x["kind"] for x in rows if x["key"] == "rain"] == ["avoid"]
+
+
+def test_best_days_are_not_all_tied():
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+
+    c = TestClient(app)
+    r = c.get("/api/parks/best-days", params={"park_ids": "big-bend", "month": 1, "t_lo": 15, "t_hi": 30}).json()
+    days = r["parks"]["big-bend"]["days"]
+    scores = {round(d["score"]) for d in days if d["score"] is not None}
+    assert len(scores) > 3  # day scores move with the daily weather, not one flat 100

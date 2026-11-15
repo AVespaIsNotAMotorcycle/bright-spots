@@ -63,13 +63,14 @@ export function Sci({ r }: { r: Reason }) {
   );
 }
 
-export function TopCard({ p, i, unit, picked, caseFor, onOpen, actions, science = false, dates }: {
-  p: TripPark; i: number; unit: Unit; picked: number[]; caseFor?: Case; onOpen: () => void; actions: React.ReactNode; science?: boolean;
-  /** Best 5-day stretch in the picked months, e.g. "Feb 3–9". */
+export function TopCard({ p, i, onOpen, heart, dates, why }: {
+  p: TripPark; i: number; onOpen: () => void; heart: React.ReactNode;
+  /** Best 5 days in the park's best month, e.g. "Dec 3–7". */
   dates?: string;
+  /** One short reason, e.g. "20°C highs, 2 rainy days". */
+  why?: string;
 }) {
   const photo = photoOf(p.park.code);
-  const top = p.reasons.filter((r) => r.score != null).sort((a, b) => (b.level === "must" ? 1 : 0) - (a.level === "must" ? 1 : 0) || Math.abs(b.score! - 0.5) - Math.abs(a.score! - 0.5)).slice(0, 4);
   return (
     <article className="tp-card" tabIndex={0} role="button" aria-label={`${p.park.short}, score ${Math.round(p.score ?? 0)}. Open details`}
       onClick={onOpen} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onOpen())}>
@@ -79,21 +80,12 @@ export function TopCard({ p, i, unit, picked, caseFor, onOpen, actions, science 
         <div className="tp-name">{p.park.short}<small>{p.park.states.join(", ")} · best in {MONTHS[p.best_month - 1]}</small></div>
         <div className="tp-ring"><ScoreRing score={p.score} /></div>
       </div>
-      <div className="tp-body">
-        {dates && <p className="tp-card-dates">📅 Best dates: <b>{dates}</b></p>}
-        <ul className="tp-reasons">
-          {top.map((r) => (
-            <li key={r.key}>
-              <span className={r.score! >= 0.5 ? "tp-ok" : "tp-no"} aria-label={r.score! >= 0.5 ? "good" : "not great"}>{r.score! >= 0.5 ? "✓" : "✗"}</span>
-              <span aria-hidden>{EMOJI(r.key)}</span>
-              <span>{reasonText(r, unit)}</span>
-              {science && <Sci r={r} />}
-            </li>
-          ))}
-        </ul>
-        <MonthStrip p={p} picked={picked} />
-        <Badges p={p} caseFor={caseFor} />
-        <div className="tp-actions" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>{actions}</div>
+      <div className="tp-body tp-simple">
+        <span>
+          {dates && <p className="tp-card-dates">📅 <b>{dates}</b></p>}
+          {why && <p className="small muted" style={{ margin: "2px 0 0" }}>{why}</p>}
+        </span>
+        {heart}
       </div>
     </article>
   );

@@ -28,6 +28,7 @@ import {
   encodeState,
   fetchTrip,
   scoreColor,
+  shortWhy,
   whySentence,
   type HorizonKey,
   type Trip,
@@ -36,7 +37,7 @@ import {
   type Unit,
 } from "./tripModel";
 import { whatChanged } from "../whatChanged";
-import { fetchDates, fmtWindow, rankStretches, type DatesByMonth } from "./bestDates";
+import { fetchDates, fmtWindow, type DatesByMonth } from "./bestDates";
 import { loadAtlas, type Atlas } from "../../atlas/model";
 
 const TOP = 3;
@@ -148,15 +149,12 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
   useEffect(() => {
     if (!trip || !topIds || browse) return;
     const ctl = new AbortController();
-    // Any time: the top parks' own best months.
-    const ms = state.months.length ? state.months : [...new Set(shown.slice(0, TOP).map((p) => p.best_month))];
+    // Each card shows dates in its own best month, so ask for those months only.
+    const ms = [...new Set(shown.slice(0, TOP).map((p) => p.best_month))];
     fetchDates(state, ms, topIds.split(","), ctl.signal).then(setDates).catch(() => undefined);
     return () => ctl.abort();
   }, [trip, topIds]); // eslint-disable-line react-hooks/exhaustive-deps
-  const datesOf = (p: TripPark) => {
-    const b = rankStretches(dates, p.park.id).find((x) => p.month_scores[x.month - 1]?.ok);
-    return fmtWindow(b) ?? undefined;
-  };
+  const datesOf = (p: TripPark) => fmtWindow(dates[p.best_month]?.[p.park.id]) ?? undefined;
 
   // Open the park a case sent us to, once.
   useEffect(() => {
@@ -319,8 +317,8 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
             <div className="tp-why"><b>Why #1?</b> {whySentence(shown[0], unit)}</div>
             <div className="tp-top3">
               {shown.slice(0, TOP).map((p, i) => (
-                <TopCard key={p.park.id} p={p} i={i} unit={unit} picked={state.months} caseFor={caseOf(p)} science={science} dates={datesOf(p)}
-                  onOpen={() => setOpen(code(p))} actions={actions(p)} />
+                <TopCard key={p.park.id} p={p} i={i} dates={datesOf(p)} why={shortWhy(p, unit)} heart={heart(p)}
+                  onOpen={() => setOpen(code(p))} />
               ))}
             </div>
             {shown.length > TOP && (
