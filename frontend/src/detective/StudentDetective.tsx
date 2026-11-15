@@ -14,7 +14,7 @@ import QuizCard from "./quiz";
 import type { CaseResult } from "./games";
 import FlashCard from "./cardTheme";
 import { PARK_NAMES } from "./parkNames";
-import { caseParks } from "./stamps";
+import { caseParks, mainPark } from "./stamps";
 
 // ── Case list ──────────────────────────────────────────────────────────────
 
@@ -88,7 +88,7 @@ function DataStep({
   step: Step;
   atlas: Atlas;
   onNext: () => void;
-  onGoPlanner?: (month: number) => void;
+  onGoPlanner?: (month: number, park?: string) => void;
   isLast: boolean;
 }) {
   const [retry, setRetry] = useState(0);
@@ -176,7 +176,7 @@ function DataStep({
         )}
         {isLast && step.plannerLink && onGoPlanner && (
           <button
-            onClick={() => onGoPlanner(step.plannerLink!.month)}
+            onClick={() => onGoPlanner(step.plannerLink!.month, step.parkId)}
             style={{
               background: "var(--accent)",
               color: "var(--on-accent)",
@@ -299,8 +299,9 @@ export default function StudentDetective({
         onAgain={() => startCase(activeCase)}
         onBack={backToCases}
         onPlanner={(() => {
-          const link = activeCase.steps.find((s) => s.plannerLink)?.plannerLink;
-          return link ? { label: link.label, go: () => onGoPlanner(link.month) } : undefined;
+          const s = activeCase.steps.find((x) => x.plannerLink);
+          const link = s?.plannerLink;
+          return link ? { label: link.label, go: () => onGoPlanner(link.month, s?.parkId ?? mainPark(activeCase)) } : undefined;
         })()}
         onTrip={(park) => onGoPlanner(activeCase.steps.find((s) => s.plannerLink)?.plannerLink?.month ?? null, park)}
       />

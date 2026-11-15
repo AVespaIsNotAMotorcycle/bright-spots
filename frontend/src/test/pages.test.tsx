@@ -179,6 +179,14 @@ describe("App", () => {
     expect(screen.queryByRole("button", { name: /^Research/ })).toBeNull();
   });
 
+  it("a mystery's planner link opens that park", async () => {
+    localStorage.setItem("profile", JSON.stringify({ name: "", research: false }));
+    history.replaceState(null, "", "#tab=planner&month=10&park=zion");
+    render(<App />);
+    const d = await screen.findByRole("dialog", undefined, { timeout: 3000 });
+    expect(d.textContent).toMatch(/Zion/);
+  });
+
   it("the trip planner shows only the best matches, with why #1, chips and the drawer", async () => {
     localStorage.setItem("profile", JSON.stringify({ name: "", research: false }));
     history.replaceState(null, "", "#tab=planner&month=10");
