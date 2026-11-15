@@ -96,3 +96,12 @@ Place, selected parks and units are kept in the browser's localStorage as a conv
 Hovering or focusing a daytime-high, humidity, rain or cloud value on a card shows a year of daily values (`GET /api/parks/{id}/daily`): the 1991–2020 day-of-year average from NASA POWER daily data (smoothed over 15 days, a provisional choice) against the horizon's curve. 2026 shows the measured days; 2027 and 2050 show the average's daily shape shifted by their monthly change, interpolated between mid-month days (rain as a ratio). The daily files are `backend/data/parks/daily/{id}.json`, about 16 kB each.
 
 **Not yet built from Parts 1–4.** USGS gauges and day-of-year medians for waterfalls; USA-NPN growing degree days and bloom data; MCD12Q2 foliage dates; caves as the constant; NPS visitation as a crowding layer; seasonal outlooks; moon phase and light pollution for stargazing.
+
+## Design system sandbox (15 Nov 2026)
+
+A dev-only page for revising the look: `cd frontend && npm run dev`, then open `/design-system.html`. It is a second Vite entry (`frontend/design-system.html` → `src/design-system/`) that `vite build` does not ship.
+
+- **Reads the real system.** It imports `src/styles.css` unchanged and draws every specimen with the app's own classes (or copies of the inline styles where components have no class), so it always shows the current state.
+- **Token editor.** Overrides `:root` custom properties inline, live, saved in localStorage; "Show changed CSS" gives the `:root {}` block to paste into `styles.css` by hand. It never writes source files.
+- **Off-token inventory.** Lists colours hard-coded in components (verdict and difficulty badges, verdict dots, two different "possible" yellows `#b8860b` / `#b7791f`, and a "real" green `#2a7d4f` that differs from `--pine`) as candidates for tokens.
+- **Postcard layer (proposed).** `src/design-system/postcard.css` adds `--pc-*` tokens (defaulting to existing ones) and postcard front/back, stamp, postmark, airmail edge, flip and rack components. The app does not import it yet.
