@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import type { Atlas } from "../detective/model";
 import { PERIOD_LABEL, VERDICT_LABEL } from "../detective/model";
 import { slopeText, useInsights } from "./lib";
-import ParkMap from "./ParkMap";
+import ParkMap from "./MapSwitch";
 
 type RGB = [number, number, number];
 function lerp(a: RGB, b: RGB, t: number): RGB {
