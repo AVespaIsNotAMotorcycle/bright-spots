@@ -8,7 +8,7 @@ import GraceCard from "../research/GraceCard";
 import { installFakeApi, installStorage } from "./fakeApi";
 
 installStorage();
-const researcher = () => localStorage.setItem("profile", JSON.stringify({ name: "Purva", persona: "researcher" }));
+const researcher = () => localStorage.setItem("profile", JSON.stringify({ name: "Purva", research: true }));
 
 beforeEach(() => {
   localStorage.clear();
@@ -18,27 +18,70 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("App", () => {
-  it("shows the sign-up page when there is no profile", async () => {
+  it("shows the Canopy sign-up with a research switch that is off by default", async () => {
     render(<App />);
-    expect(await screen.findByText(/Researcher/)).toBeTruthy();
+    expect(await screen.findByText("Go when the park is at its best.")).toBeTruthy();
+    const sw = screen.getByRole("switch", { name: /research tools too/i });
+    expect(sw.getAttribute("aria-checked")).toBe("false");
+    fireEvent.click(sw);
+    fireEvent.click(screen.getByRole("button", { name: "Get started" }));
+    expect(JSON.parse(localStorage.getItem("profile")!)).toEqual({ name: "", research: true });
   });
 
-  it("opens the researcher field station with grouped nav and real data", async () => {
+  it("with research on, the nav has the five tabs and a Research menu with every research tool", async () => {
+    researcher();
+    render(<App />);
+    const nav = await screen.findByRole("navigation", { name: "Main" });
+    expect([...nav.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["Home", "Plan", "Cases", "Saved", "Passport"]);
+    fireEvent.click(screen.getByRole("button", { name: /^Research/ }));
+    const items = screen.getAllByRole("menuitem").map((b) => b.textContent);
+    expect(items).toEqual(["Trend Atlas", "Topo Map", "Analog Sites", "Park Families", "Odd One Out", "Season Shifts", "Head-to-Head", "Robustness", "Campfire"]);
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("menu")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /^Research/ }));
+    fireEvent.mouseDown(document.body);
+    expect(screen.queryByRole("menu")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /^Research/ }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Topo Map" }));
+    expect(location.hash).toContain("tab=map");
+  });
+
+  it("with research off, there is no Research menu and a research URL falls back to Home with a hint", async () => {
+    localStorage.setItem("profile", JSON.stringify({ name: "Sam", research: false }));
+    history.replaceState(null, "", "#tab=atlas");
+    render(<App />);
+    expect(await screen.findByText(/part of the research tools/)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /^Research/ })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Turn them on" }));
+    expect(JSON.parse(localStorage.getItem("profile")!).research).toBe(true);
+    expect(await screen.findByRole("button", { name: /^Research/ })).toBeTruthy();
+  });
+
+  it("the profile menu switches research tools on and off", async () => {
+    localStorage.setItem("profile", JSON.stringify({ name: "Sam", research: false }));
+    render(<App />);
+    await screen.findByRole("navigation", { name: "Main" });
+    fireEvent.click(screen.getByRole("button", { name: "S" }));
+    fireEvent.click(screen.getByRole("menuitemcheckbox"));
+    expect(JSON.parse(localStorage.getItem("profile")!)).toEqual({ name: "Sam", research: true });
+    expect(screen.getByRole("button", { name: /^Research/ })).toBeTruthy();
+  });
+
+  it("opens the researcher field station with real data", async () => {
     researcher();
     render(<App />);
     expect(await screen.findByText("Welcome back, Purva")).toBeTruthy();
-    expect(screen.getByText(/🧭 Explore/)).toBeTruthy();
-    expect(screen.getByText(/🥊 Compare/)).toBeTruthy();
     expect(await screen.findByText(/Anomaly of the week/)).toBeTruthy();
     expect(screen.getAllByText(/NASA data up to Oct 2026/).length).toBeGreaterThan(0);
   });
 
-  it("arrow keys move between researcher tools", async () => {
+  it("arrow keys move between research tools", async () => {
     researcher();
+    history.replaceState(null, "", "#tab=atlas");
     render(<App />);
-    await screen.findByText("Welcome back, Purva");
+    await screen.findByRole("navigation", { name: "Main" });
     fireEvent.keyDown(window, { key: "ArrowRight" });
-    expect(location.hash).toContain("tab=atlas");
+    expect(location.hash).toContain("tab=map");
   });
 
   it("the Campfire has no Cite this, and shows example notes when empty", async () => {
@@ -64,19 +107,18 @@ describe("App", () => {
     localStorage.setItem("profile", JSON.stringify({ name: "", persona: "student" }));
     render(<App />);
     expect(await screen.findByText(/Who changes most like/, undefined, { timeout: 3000 })).toBeTruthy();
-    expect(screen.getByText(/Explorer mode/)).toBeTruthy();
   });
 
   it("an old visitor profile gets the merged Explorer tabs and passport", async () => {
     localStorage.setItem("profile", JSON.stringify({ name: "Sam", persona: "visitor" }));
     render(<App />);
     expect(await screen.findByText(/0 of \d+ parks stamped/, undefined, { timeout: 3000 })).toBeTruthy();
-    for (const t of ["🗓 Trip Planner", "♥ Saved", "🔍 Cases", "🧭 Park Explorer", "🎫 Passport"]) expect(screen.getByText(t)).toBeTruthy();
-    expect(screen.queryByRole("switch")).toBeNull();
+    for (const t of ["Plan", "Saved", "Cases", "Passport"]) expect(screen.getByText(t)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /^Research/ })).toBeNull();
   });
 
   it("the trip planner shows only the best matches, with why #1, chips and the drawer", async () => {
-    localStorage.setItem("profile", JSON.stringify({ name: "", persona: "explorer" }));
+    localStorage.setItem("profile", JSON.stringify({ name: "", research: false }));
     history.replaceState(null, "", "#tab=planner&month=10");
     render(<App />);
     expect(await screen.findByText(/Why #1\?/, undefined, { timeout: 3000 })).toBeTruthy();
@@ -101,17 +143,19 @@ describe("App", () => {
   });
 
   it("Explorer always sees plain words: no factor scores, simple Park Explorer", async () => {
-    localStorage.setItem("profile", JSON.stringify({ name: "", persona: "explorer" }));
+    localStorage.setItem("profile", JSON.stringify({ name: "", research: false }));
     history.replaceState(null, "", "#tab=planner&month=10");
     render(<App />);
     await screen.findByText(/Why #1\?/, undefined, { timeout: 3000 });
     expect(screen.queryAllByText(/\/100 ×/)).toHaveLength(0);
-    fireEvent.click(screen.getByText("🧭 Park Explorer"));
+    fireEvent.click(screen.getByRole("button", { name: "Home" }));
+    history.pushState(null, "", "#tab=explore");
+    fireEvent(window, new HashChangeEvent("hashchange"));
     expect(await screen.findByText("Pick a question", undefined, { timeout: 3000 })).toBeTruthy();
   });
 
   it("Clear all lists every park A to Z with no ranks or scores", async () => {
-    localStorage.setItem("profile", JSON.stringify({ name: "", persona: "explorer" }));
+    localStorage.setItem("profile", JSON.stringify({ name: "", research: false }));
     history.replaceState(null, "", "#tab=planner&month=10");
     render(<App />);
     await screen.findByText(/Why #1\?/, undefined, { timeout: 3000 });
@@ -125,7 +169,7 @@ describe("App", () => {
   });
 
   it("a mood sets the chips", async () => {
-    localStorage.setItem("profile", JSON.stringify({ name: "", persona: "explorer" }));
+    localStorage.setItem("profile", JSON.stringify({ name: "", research: false }));
     history.replaceState(null, "", "#tab=planner");
     render(<App />);
     fireEvent.click(await screen.findByRole("button", { name: /Leaf peeping/ }, { timeout: 3000 }));
@@ -133,7 +177,7 @@ describe("App", () => {
   });
 
   it("a solved case stamps its parks in the passport", async () => {
-    localStorage.setItem("profile", JSON.stringify({ name: "", persona: "explorer" }));
+    localStorage.setItem("profile", JSON.stringify({ name: "", research: false }));
     localStorage.setItem("detective.progress", JSON.stringify({ "crater-lake-warming": { pts: 5, max: 5, stars: 3 } }));
     history.replaceState(null, "", "#tab=passport");
     render(<App />);

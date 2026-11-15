@@ -33,7 +33,7 @@
   display: block;
   background: var(--bg);
   color: var(--text);
-  font: 400 15px/1.55 Inter, system-ui, sans-serif;
+  font: 400 15px/1.55 var(--font-body), sans-serif;
 }
 
 a {

@@ -14,7 +14,7 @@ import type { NavState } from "./useNav";
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 interface Props {
-  persona: Persona;
+  research: boolean;
   name: string;
   science?: boolean;
   atlas: Atlas | null;
@@ -109,7 +109,8 @@ function ResearcherHome({ atlas, onGo, name }: Pick<Props, "atlas" | "onGo" | "n
   );
 }
 
-export default function Home({ persona, name, atlas, onGo, science }: Props) {
+export default function Home({ research, name, atlas, onGo, science }: Props) {
+  const persona: Persona = research ? "researcher" : "explorer";
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
       {persona !== "researcher" && <Hero persona={persona} name={name} />}

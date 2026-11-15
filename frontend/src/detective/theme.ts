@@ -1,15 +1,15 @@
 // Earth palette and SVG backgrounds shared by Student and Researcher cards.
 // Earth palette used by these cards.
 export const E = {
-  pine: "#2d5a27",
-  moss: "#6b7f3a",
-  sage: "#a9b88a",
-  sand: "#e9dcc0",
-  clay: "#c98a54",
-  rust: "#8b3a1a",
-  bark: "#4a3726",
-  dusk: "#3d5a73",
-  cream: "#f7f1e3",
+  pine: "#5B6B3A",
+  moss: "#5B6B3A",
+  sage: "#A9B39A",
+  sand: "#F4EFE6",
+  clay: "#B5643C",
+  rust: "#B5643C",
+  bark: "#3B2F25",
+  dusk: "#4F6A7A",
+  cream: "#FBF8F2",
 };
 
 /** Words for a run of right answers, shown on the quiz card. */

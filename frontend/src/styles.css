@@ -1,60 +1,62 @@
-/* ═══════════════════════════════════════════════════════════════
-   Park Trend Detective — National Parks Theme
-   Palette: Forest green · Canyon rust · Sandstone · Night sky
-   ═══════════════════════════════════════════════════════════════ */
-
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Inter:wght@400;500;600&display=swap');
+/* Canopy: earthy, flat and calm. Tokens first; old names stay valid and map onto them. */
 
 :root {
   color-scheme: light;
-  accent-color: var(--pine);
+  accent-color: var(--moss);
 
-  /* Core palette */
-  --pine:         #2d5a27;   /* deep forest green */
-  --pine-light:   #3d7a35;
-  --pine-tint:    rgba(45, 90, 39, 0.10);
-  --pine-band:    rgba(45, 90, 39, 0.25);
-  --on-pine:      #f5f0e8;
+  /* Canopy tokens */
+  --sand:   #F4EFE6;
+  --paper:  #FBF8F2;
+  --stone:  #DDD5C7;
+  --bark:   #3B2F25;
+  --bark-2: #6B5D4F;
+  --moss:   #5B6B3A;
+  --clay:   #B5643C;
+  --sage:   #A9B39A;
+  --radius: 14px;
 
-  --rust:         #8b3a1a;   /* canyon rust */
-  --rust-tint:    rgba(139, 58, 26, 0.10);
-  --on-rust:      #f5f0e8;
+  /* Old names, remapped */
+  --pine:         var(--moss);
+  --pine-light:   #6F7F4A;
+  --pine-tint:    rgba(91, 107, 58, 0.10);
+  --pine-band:    rgba(91, 107, 58, 0.25);
+  --on-pine:      #FBF8F2;
 
-  --sky:          #1a3a5c;   /* night sky */
-  --sky-tint:     rgba(26, 58, 92, 0.08);
+  --rust:         var(--clay);
+  --rust-tint:    rgba(181, 100, 60, 0.10);
+  --on-rust:      #FBF8F2;
 
-  /* Neutrals — sandstone/parchment */
-  --bg:           #f0ebe0;
-  --surface:      #faf7f2;
-  --surface-2:    #e8e0d0;
-  --surface-3:    #ddd4c0;
-  --border:       #ccc0a8;
-  --grid:         #ddd5c0;
+  --sky:          #4F6A7A;
+  --sky-tint:     rgba(79, 106, 122, 0.08);
 
-  /* Text */
-  --text:         #261e14;
-  --text-muted:   #6b5d49;
-  --text-faint:   #9a8870;
+  --bg:           var(--sand);
+  --surface:      var(--paper);
+  --surface-2:    #EFE9DD;
+  --surface-3:    var(--stone);
+  --border:       var(--stone);
+  --grid:         #E7E0D3;
 
-  /* Semantic aliases (keeps existing components working) */
-  --accent:       var(--pine);
-  --accent-2:     var(--rust);
+  --text:         var(--bark);
+  --text-muted:   var(--bark-2);
+  --text-faint:   #9A8C7C;
+
+  --accent:       var(--moss);
+  --accent-2:     var(--clay);
   --accent-tint:  var(--pine-tint);
   --accent-band:  var(--pine-band);
-  --neutral-ink:  #4a5568;
-  --chart-neutral:#9a8870;
+  --neutral-ink:  #4A5568;
+  --chart-neutral:#9A8C7C;
   --on-accent:    var(--on-pine);
-  --warning:      var(--rust);
-  --error:        #9c2f10;
+  --warning:      var(--clay);
+  --error:        #9C3F1E;
 
-  /* Shadows */
-  --shadow-sm:    0 1px 4px rgba(38, 30, 20, 0.08);
-  --shadow-md:    0 4px 16px rgba(38, 30, 20, 0.12);
-  --shadow-lg:    0 8px 32px rgba(38, 30, 20, 0.16);
+  /* Flat: almost no shadow */
+  --shadow-sm:    none;
+  --shadow-md:    0 2px 10px rgba(59, 47, 37, 0.08);
+  --shadow-lg:    0 8px 28px rgba(59, 47, 37, 0.14);
 
-  /* Typography */
-  --font-display: 'Playfair Display', Georgia, serif;
-  --font-body:    'Inter', system-ui, sans-serif;
+  --font-display: 'Gloock', Georgia, serif;
+  --font-body:    'Outfit', system-ui, sans-serif;
 }
 
 /* ── Reset ── */
@@ -63,11 +65,13 @@
 body {
   margin: 0;
   background: var(--bg);
-  /* Subtle topographic-line texture via SVG background */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpath d='M0 30 Q15 20 30 30 Q45 40 60 30' fill='none' stroke='%23ccc0a8' stroke-width='0.6' opacity='0.4'/%3E%3Cpath d='M0 50 Q15 40 30 50 Q45 60 60 50' fill='none' stroke='%23ccc0a8' stroke-width='0.6' opacity='0.4'/%3E%3Cpath d='M0 10 Q15 0 30 10 Q45 20 60 10' fill='none' stroke='%23ccc0a8' stroke-width='0.6' opacity='0.4'/%3E%3C/svg%3E");
   color: var(--text);
   font: 400 15px/1.6 var(--font-body);
+  -webkit-font-smoothing: antialiased;
 }
+
+/* Gloock has one weight: never fake a bold. */
+h1, h2, h3, .title, .headline, .park-card-title, [style*="font-display"] { font-weight: 400 !important; font-synthesis: none; }
 
 a { color: var(--pine); }
 
@@ -84,30 +88,22 @@ button, input, select { font: inherit; color: inherit; }
 
 /* ── Header / topbar ── */
 .topbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 0 16px;
-  margin-bottom: 28px;
-  border-bottom: 2px solid var(--pine);
-  position: relative;
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; gap: 28px;
+  min-height: 56px; margin: 0 -16px 28px; padding: 0 16px;
+  background: var(--sand);
+  border-bottom: 1px solid var(--stone);
 }
-
-
-.title {
-  font: 800 26px/1.1 var(--font-display);
-  margin: 0;
-  color: var(--pine);
-  letter-spacing: -0.01em;
+.brand { display: inline-flex; align-items: center; gap: 8px; background: none; border: 0; padding: 0; cursor: pointer; color: inherit; }
+.nav-tabs { display: flex; align-items: stretch; align-self: stretch; gap: 22px; flex: 1; min-width: 0; }
+.nav-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 1px solid var(--stone); background: var(--paper); color: var(--moss);
+  font: 500 14px var(--font-body); cursor: pointer; display: grid; place-items: center; padding: 0;
 }
-
-.title::before {
-  content: "⛰ ";
-  font-family: var(--font-body);
-  font-size: 20px;
-}
+.avatar:hover { border-color: var(--moss); }
+.notice { border: 1px solid var(--stone); background: var(--paper); border-radius: var(--radius); padding: 10px 14px; margin: 0 0 16px; font-size: 13px; color: var(--bark-2); }
 
 /* ── Typography ── */
 .headline {
@@ -118,10 +114,10 @@ button, input, select { font: inherit; color: inherit; }
 
 .section-title {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--rust);
+  color: var(--bark-2);
   margin: 0;
 }
 
@@ -143,9 +139,8 @@ button, input, select { font: inherit; color: inherit; }
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius);
   padding: 20px;
-  box-shadow: var(--shadow-sm);
 }
 
 .card-head {
@@ -162,9 +157,9 @@ button, input, select { font: inherit; color: inherit; }
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  border: 1.5px solid currentColor;
+  border: 1px solid currentColor;
   border-radius: 999px;
-  padding: 2px 8px;
+  padding: 1px 8px;
 }
 .tag-measured  { color: var(--pine); }
 .tag-forecast  { color: var(--rust); }
@@ -174,9 +169,9 @@ button, input, select { font: inherit; color: inherit; }
 /* ── Chips ── */
 .chip {
   background: transparent;
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 5px 14px;
+  padding: 4px 12px;
   font-size: 13px;
   color: var(--text-muted);
   cursor: pointer;
@@ -187,7 +182,7 @@ button, input, select { font: inherit; color: inherit; }
   color: var(--pine);
   border-color: var(--pine);
   background: var(--pine-tint);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 /* ── Buttons ── */
@@ -197,20 +192,20 @@ button, input, select { font: inherit; color: inherit; }
   border: 0;
   border-radius: 10px;
   padding: 9px 18px;
-  font-weight: 600;
+  font-weight: 500;
   font-size: 14px;
   cursor: pointer;
-  transition: background 0.15s, box-shadow 0.15s;
-  box-shadow: var(--shadow-sm);
+  transition: background 0.15s;
 }
-.btn:hover { background: var(--pine-light); box-shadow: var(--shadow-md); }
+.btn:hover { background: var(--pine-light); }
 
 .btn-ghost {
   background: transparent;
   color: var(--pine);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 8px 16px;
+  color: var(--bark);
   font-weight: 500;
   cursor: pointer;
   transition: border-color 0.15s;
@@ -243,7 +238,7 @@ button, input, select { font: inherit; color: inherit; }
 .field select,
 .search input {
   background: var(--surface);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 8px 12px;
   width: 120px;
@@ -274,7 +269,7 @@ button, input, select { font: inherit; color: inherit; }
   display: flex; flex-direction: column;
   width: 100%; text-align: left;
   background: none;
-  border: 1.5px solid transparent;
+  border: 1px solid transparent;
   border-radius: 12px;
   padding: 8px;
   cursor: pointer;
@@ -311,7 +306,7 @@ th { position: sticky; top: 0; background: var(--surface); color: var(--text-mut
 .search input {
   width: 100%;
   background: var(--surface);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 10px 14px;
   transition: border-color 0.15s;
@@ -322,7 +317,7 @@ th { position: sticky; top: 0; background: var(--surface); color: var(--text-mut
   top: calc(100% + 4px); left: 0; right: 0;
   list-style: none; margin: 0; padding: 4px;
   background: var(--surface);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: var(--shadow-md);
 }
@@ -377,12 +372,10 @@ th { position: sticky; top: 0; background: var(--surface); color: var(--text-mut
 .stat {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-left: 4px solid var(--pine);
-  border-radius: 14px;
+  border-radius: var(--radius);
   padding: 16px 20px;
-  box-shadow: var(--shadow-sm);
 }
-.stat-value { font-size: 24px; font-weight: 700; color: var(--pine); }
+.stat-value { font-size: 24px; font-weight: 500; color: var(--pine); }
 
 @media (max-width: 800px) {
   .layout { grid-template-columns: 1fr; }
@@ -490,7 +483,7 @@ th { position: sticky; top: 0; background: var(--surface); color: var(--text-mut
 /* Suggestions */
 .pick-head { justify-content: space-between; margin-bottom: 8px; }
 .text-input {
-  background: var(--surface-2); border: 1.5px solid var(--border);
+  background: var(--surface-2); border: 1px solid var(--border);
   border-radius: 10px; padding: 8px 12px; min-width: 12em;
   transition: border-color 0.15s;
 }
@@ -508,7 +501,7 @@ th { position: sticky; top: 0; background: var(--surface); color: var(--text-mut
   grid-template-columns: auto 1fr auto;
   gap: 10px; align-items: center;
   padding: 9px 12px;
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 12px; cursor: pointer;
   transition: all 0.12s;
   background: var(--surface);
@@ -543,7 +536,7 @@ th { position: sticky; top: 0; background: var(--surface); color: var(--text-mut
 /* Ranked list */
 .all-parks > summary { cursor: pointer; list-style-position: inside; font-weight: 600; }
 .all-parks[open] > summary { margin-bottom: 10px; }
-label.park-row { border: 1.5px solid transparent; border-radius: 10px; }
+label.park-row { border: 1px solid transparent; border-radius: 10px; }
 
 @media (max-width: 640px) {
   .card-grid { grid-template-columns: 1fr; }
@@ -564,7 +557,7 @@ td.has-tip:hover, td.has-tip:focus-visible { background: var(--pine-tint); }
   position: fixed; z-index: 50; width: 320px;
   padding: 10px 10px 8px;
   background: var(--surface);
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: var(--shadow-lg);
   pointer-events: none;
@@ -587,29 +580,15 @@ path.yc-series.tag-projected { stroke: var(--sky); stroke-dasharray: 2 2; }
 .yc-swatch.tag-forecast { border-top: 2px dashed var(--rust); }
 .yc-swatch.tag-projected { border-top: 2px dotted var(--sky); }
 
-/* ═══════════════════════════════════════════════════════
-   Nav tab buttons — park ranger badge style
-   ═══════════════════════════════════════════════════════ */
+/* ── Nav: text tabs, underline on the active one ── */
 .nav-tab {
-  padding: 8px 18px;
-  border-radius: 24px;
-  border: 2px solid var(--border);
-  background: var(--surface);
-  color: var(--text-muted);
-  font-weight: 500;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.15s;
-  letter-spacing: 0.01em;
+  position: relative; display: inline-flex; align-items: center;
+  padding: 0 2px; border: 0; background: none; border-radius: 0;
+  color: var(--bark-2); font: 500 14px var(--font-body); cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap;
 }
-.nav-tab:hover { border-color: var(--pine); color: var(--pine); }
-.nav-tab.active {
-  background: var(--pine);
-  color: var(--on-pine);
-  border-color: var(--pine);
-  font-weight: 700;
-  box-shadow: var(--shadow-sm);
-}
+.nav-tab:hover { color: var(--bark); }
+.nav-tab.active, .nav-tab[aria-current="page"] { color: var(--bark); border-bottom-color: var(--moss); }
 
 /* ── Park suggestions: aligned score columns, reason line, trend pill ── */
 .suggestion {
@@ -670,14 +649,11 @@ path.yc-series.tag-projected { stroke: var(--sky); stroke-dasharray: 2 2; }
 
 
 /* ═══════════════════════════════════════════════════════
-   Phones (≤ 640px): one column, nav scrolls sideways, nothing wider than the screen
+   Phones (≤ 640px): one column, nothing wider than the screen
    ═══════════════════════════════════════════════════════ */
 @media (max-width: 640px) {
   .app { padding: 0 10px 48px; }
-  .topbar { padding: 12px 0 10px; margin-bottom: 16px; gap: 10px; }
-  .title { font-size: 21px; }
-  .topbar nav { flex-wrap: nowrap !important; overflow-x: auto; width: 100%; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
-  .topbar nav > * { flex-shrink: 0; }
+  .topbar { margin: 0 -10px 16px; padding: 0 10px; gap: 12px; }
   .st-menu-list { position: fixed; left: 10px; right: 10px; top: auto; }
   .st-hero { padding: 16px 14px 48px !important; }
   .st-hero h2 { font-size: 24px !important; }
@@ -692,3 +668,41 @@ path.yc-series.tag-projected { stroke: var(--sky); stroke-dasharray: 2 2; }
   img, svg { max-width: 100%; }
 }
 
+/* Narrow screens: the main tabs move to a fixed bottom bar. */
+@media (max-width: 719px) {
+  .nav-tabs {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 45; flex: none; align-self: auto;
+    justify-content: space-around; gap: 0;
+    background: var(--sand); border-top: 1px solid var(--stone);
+    padding: 0 4px env(safe-area-inset-bottom);
+  }
+  .nav-tabs .nav-tab { flex: 1; justify-content: center; min-height: 52px; font-size: 13px; border-bottom: 0; border-top: 2px solid transparent; margin: -1px 0 0; }
+  .nav-tabs .nav-tab.active { border-top-color: var(--moss); }
+  .nav-right { gap: 8px; }
+  .app { padding-bottom: 80px; }
+}
+
+/* ── Dropdown menus (Research, profile) ── */
+.menu { position: relative; display: inline-flex; align-items: center; height: 100%; }
+.menu > .nav-tab { height: 100%; }
+.menu-list {
+  position: absolute; z-index: 60; top: calc(100% + 4px); min-width: 210px; padding: 6px;
+  background: var(--paper); border: 1px solid var(--stone); border-radius: var(--radius);
+  box-shadow: var(--shadow-md); display: flex; flex-direction: column; gap: 2px;
+}
+.menu-list.left { left: 0; }
+.menu-list.right { right: 0; }
+.menu-list button { text-align: left; border: 0; background: none; padding: 8px 10px; border-radius: 8px; cursor: pointer; color: var(--bark); font-size: 14px; }
+.menu-list button:hover, .menu-list button:focus-visible, .menu-list button.on { background: var(--sand); }
+.menu-head { padding: 6px 10px; font-size: 12px; color: var(--bark-2); border-bottom: 1px solid var(--stone); margin-bottom: 4px; }
+@media (max-width: 640px) { .menu-list.left { position: fixed; left: 10px; right: 10px; top: 60px; } }
+
+/* ── Sign-in ── */
+.signin { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; background: var(--sand) center/cover no-repeat; position: relative; }
+.signin::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(244,239,230,.55), rgba(244,239,230,.9)); }
+.signin-card { position: relative; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 18px; padding: 32px 28px; background: var(--paper); border: 1px solid var(--stone); border-radius: var(--radius); }
+.switch { display: flex; align-items: center; gap: 12px; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; font: inherit; color: var(--bark); }
+.switch-track { width: 38px; height: 22px; border-radius: 999px; background: var(--stone); position: relative; flex: none; transition: background .15s; }
+.switch-track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--paper); transition: transform .15s; }
+.switch[aria-checked="true"] .switch-track { background: var(--moss); }
+.switch[aria-checked="true"] .switch-track::after { transform: translateX(16px); }

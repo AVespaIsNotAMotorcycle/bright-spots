@@ -41,9 +41,9 @@ export async function drawTripCard(p: TripPark, unit: Unit, changed: string | nu
   ctx.fillRect(0, 380, W, 380);
 
   ctx.fillStyle = "#fff";
-  ctx.font = "800 30px Inter, system-ui, sans-serif";
+  ctx.font = "800 30px Outfit, system-ui, sans-serif";
   ctx.fillText(`${season.emoji}  ${MONTHS_LONG[p.best_month - 1].toUpperCase()} TRIP`, 64, 610);
-  ctx.font = "800 84px 'Playfair Display', Georgia, serif";
+  ctx.font = "400 84px Gloock, Georgia, serif";
   ctx.fillText(p.park.short, 64, 705, W - 300);
 
   // Score ring.
@@ -59,14 +59,14 @@ export async function drawTripCard(p: TripPark, unit: Unit, changed: string | nu
   ctx.stroke();
   ctx.fillStyle = "#fff";
   ctx.textAlign = "center";
-  ctx.font = "900 64px Inter, system-ui, sans-serif";
+  ctx.font = "900 64px Outfit, system-ui, sans-serif";
   ctx.fillText(String(Math.round(p.score ?? 0)), cx, cy + 22);
   ctx.textAlign = "left";
 
   ctx.fillStyle = "#2d5a27";
-  ctx.font = "800 34px Inter, system-ui, sans-serif";
+  ctx.font = "800 34px Outfit, system-ui, sans-serif";
   ctx.fillText("Why it fits", 64, 840);
-  ctx.font = "500 36px Inter, system-ui, sans-serif";
+  ctx.font = "500 36px Outfit, system-ui, sans-serif";
   const good = p.reasons.filter((x) => x.score != null && x.score >= 0.6).sort((a, b) => b.score! - a.score!).slice(0, 5);
   good.forEach((x, i) => {
     ctx.fillStyle = "#261e14";
@@ -74,11 +74,11 @@ export async function drawTripCard(p: TripPark, unit: Unit, changed: string | nu
   });
   if (changed) {
     ctx.fillStyle = "#8b3a1a";
-    ctx.font = "600 30px Inter, system-ui, sans-serif";
+    ctx.font = "600 30px Outfit, system-ui, sans-serif";
     wrap(ctx, `What changed? ${changed}`, 64, 1215, W - 128, 40);
   }
   ctx.fillStyle = "#6b5d49";
-  ctx.font = "500 24px Inter, system-ui, sans-serif";
+  ctx.font = "500 24px Outfit, system-ui, sans-serif";
   ctx.fillText("Park Trend Detective · NASA POWER climate data" + (photo ? ` · Photo: ${photo.credit.slice(0, 40)} (${photo.license})` : ""), 64, H - 40, W - 128);
   return new Promise((res) => c.toBlob(res, "image/png"));
 }
