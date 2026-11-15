@@ -97,17 +97,18 @@
      a body shadow, a wide ambient falloff, and a 1px edge. Warm umber, not grey, because
      shadows on sand pick up its colour. */
   --shadow-color:  52, 38, 20;
-  --shadow-sm:     0 1px 1px rgba(var(--shadow-color), 0.10),
-                   0 2px 4px -1px rgba(var(--shadow-color), 0.10),
+  /* Kept tight: paper resting on a table casts a short, crisp shadow, not a wide soft one. */
+  --shadow-sm:     0 1px 1px rgba(var(--shadow-color), 0.12),
+                   0 1px 2px rgba(var(--shadow-color), 0.08),
                    0 0 0 1px rgba(var(--shadow-color), 0.05);
-  --shadow-md:     0 1px 2px rgba(var(--shadow-color), 0.12),
-                   0 4px 8px -2px rgba(var(--shadow-color), 0.12),
-                   0 14px 24px -8px rgba(var(--shadow-color), 0.18),
-                   0 0 0 1px rgba(var(--shadow-color), 0.05);
-  --shadow-lg:     0 2px 3px rgba(var(--shadow-color), 0.12),
-                   0 10px 18px -6px rgba(var(--shadow-color), 0.18),
-                   0 28px 48px -16px rgba(var(--shadow-color), 0.30),
-                   0 0 0 1px rgba(var(--shadow-color), 0.05);
+  --shadow-md:     0 1px 1px rgba(var(--shadow-color), 0.14),
+                   0 2px 3px -1px rgba(var(--shadow-color), 0.12),
+                   0 3px 6px -3px rgba(var(--shadow-color), 0.14),
+                   0 0 0 1px rgba(var(--shadow-color), 0.06);
+  --shadow-lg:     0 1px 1px rgba(var(--shadow-color), 0.14),
+                   0 2px 4px -1px rgba(var(--shadow-color), 0.14),
+                   0 6px 10px -5px rgba(var(--shadow-color), 0.20),
+                   0 0 0 1px rgba(var(--shadow-color), 0.06);
   /* Recessed: inputs, tracks and trays sit below the surface. */
   --shadow-inset:  inset 0 1px 2px rgba(var(--shadow-color), 0.16), inset 0 0 0 1px rgba(var(--shadow-color), 0.03);
   /* Light catching the top edge of a raised control. */
