@@ -93,7 +93,7 @@ export function CaseList({ onSelect }: { onSelect: (c: Case) => void }) {
                 </span>
               )}
               <span style={{ fontSize: 13, color: "var(--accent)", fontWeight: 600 }}>
-                {c.steps.length} steps →
+                Play →
               </span>
             </div>
           </button>
@@ -359,30 +359,6 @@ function DataStep({
   );
 }
 
-// ── Progress bar ──────────────────────────────────────────────────────────
-
-function ProgressBar({ current, total }: { current: number; total: number }) {
-  return (
-    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-      {Array.from({ length: total }).map((_, i) => (
-        <div
-          key={i}
-          style={{
-            height: 4,
-            flex: 1,
-            borderRadius: 2,
-            background: i <= current ? "var(--accent)" : "var(--border)",
-            transition: "background 0.2s",
-          }}
-        />
-      ))}
-      <span style={{ fontSize: 11, color: "var(--text-muted)", whiteSpace: "nowrap", marginLeft: 4 }}>
-        {current + 1}/{total}
-      </span>
-    </div>
-  );
-}
-
 // ── Main component ────────────────────────────────────────────────────────
 
 export default function StudentDetective({
@@ -497,8 +473,6 @@ export default function StudentDetective({
           </div>
         </div>
       </div>
-
-      <ProgressBar current={stepIndex} total={activeCase.steps.length} />
 
       {/* Step */}
       <div

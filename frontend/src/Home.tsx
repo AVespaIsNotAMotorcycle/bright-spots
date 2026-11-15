@@ -112,7 +112,7 @@ function StudentHome({ atlas, onGo }: Pick<Props, "atlas" | "onGo">) {
               <strong>{c.title}</strong>
               <span className="small muted">{c.subtitle}</span>
               <span className="micro" style={{ color: "var(--rust)", fontWeight: 600 }}>
-                {c.difficulty} · {c.steps.length} steps
+                {c.difficulty}
               </span>
             </button>
           ))}
