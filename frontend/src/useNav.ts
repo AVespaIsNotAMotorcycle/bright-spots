@@ -26,7 +26,7 @@ export interface NavState {
   q: string | null;
 }
 
-function parseHash(): NavState {
+export function parseHash(): NavState {
   const p = new URLSearchParams(location.hash.slice(1));
   return {
     tab:    (p.get("tab") as NavState["tab"]) ?? null,
@@ -41,7 +41,7 @@ function parseHash(): NavState {
   };
 }
 
-function toHash(s: Partial<NavState>): string {
+export function toHash(s: Partial<NavState>): string {
   const p = new URLSearchParams();
   if (s.tab)    p.set("tab", s.tab);
   if (s.caseId) p.set("case", s.caseId);
