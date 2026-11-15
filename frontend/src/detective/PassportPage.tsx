@@ -5,7 +5,7 @@ import { loadProgress } from "./games";
 import { PARK_NAMES } from "./parkNames";
 import { caseForPark, casesByPark, stamps } from "./stamps";
 import { E, TOPO } from "./theme";
-import photos from "./parkPhotos.json";
+import { PHOTOS } from "./photos";
 
 // Stamp: the park's photo in a round frame. Stamped = full colour with an ink ring;
 // not yet = faded grey behind a dashed ring.
@@ -39,7 +39,6 @@ const CSS = `
 /** A small random-looking tilt that stays the same for each park. */
 const tilt = (id: string) => ((id.charCodeAt(0) * 7 + id.charCodeAt(id.length - 1) * 3) % 17) - 8;
 const caseById = (id: string) => CASES.find((c) => c.id === id);
-const PHOTOS = photos as Record<string, { file: string; credit: string; license: string; source: string }>;
 
 function Stamp({ park, solved, onClick, title }: { park: string; solved: string[]; onClick: () => void; title: string }) {
   const on = solved.length > 0;

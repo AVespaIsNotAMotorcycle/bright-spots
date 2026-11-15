@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Atlas } from "../atlas/model";
 import { loadProgress } from "../detective/games";
+import { PhotoCredit, photoOf } from "../detective/photos";
 import { caseForPark } from "../detective/stamps";
 import TrendBadges from "./TrendBadges";
 import YearChart from "./YearChart";
@@ -289,9 +290,22 @@ export function ParkCard({
   onCase?: (caseId: string) => void;
 }) {
   const c = onCase && p.park.code ? caseForPark(p.park.code, loadProgress()) : undefined;
+  const photo = photoOf(p.park.code);
   const changed = whatChanged(atlas, p.park.id, plan.month, unit === "F", science);
   return (
     <article className="card park-card" aria-labelledby={`card-${p.park.id}`}>
+      {photo && (
+        <div
+          className="park-card-photo"
+          style={{
+            margin: "-20px -20px 12px", height: 150, borderRadius: "inherit", borderBottomLeftRadius: 0, borderBottomRightRadius: 0,
+            background: `linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,.45)), url("${photo.file}") center / cover no-repeat`,
+            position: "relative",
+          }}
+        >
+          <PhotoCredit photo={photo} style={{ position: "absolute", right: 10, bottom: 8, color: "rgba(255,255,255,.9)", textShadow: "0 1px 3px rgba(0,0,0,.7)" }} />
+        </div>
+      )}
       <header className="park-card-head">
         <div>
           <h3 id={`card-${p.park.id}`} className="park-card-title">

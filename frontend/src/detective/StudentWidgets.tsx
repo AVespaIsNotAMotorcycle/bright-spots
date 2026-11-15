@@ -5,6 +5,7 @@ import type { Atlas } from "./model";
 import { CASES } from "./cases";
 import type { Case } from "./cases";
 import { bestAnswerStreak, dayStreak, loadProgress, parkName, rankTitle, useTrends } from "./games";
+import { PhotoCredit, photoOf } from "./photos";
 import { setSound, soundOn, play } from "./sound";
 import TrendChart from "./TrendChart";
 
@@ -232,6 +233,7 @@ export function ParkOfTheDay({ atlas, onExplore }: { atlas: Atlas; onExplore: (p
   const series = data?.series["tmax_c"]?.["annual"];
   const per = cell.sen! * 1.8;
   const name = parkName(cell.park_id);
+  const photo = photoOf(cell.park_id);
   const right = guess === truth;
   const pick = (g: Guess) => {
     setGuess(g);
@@ -252,17 +254,25 @@ export function ParkOfTheDay({ atlas, onExplore }: { atlas: Atlas; onExplore: (p
       <style>{WIDGET_CSS}</style>
       <div
         style={{
-          background: `${RIDGE} bottom / 100% 60px no-repeat, linear-gradient(180deg, #f0c98f 0%, #d9a066 45%, #8a9a5b 100%)`,
-          color: E.cream, padding: "20px 24px 54px", position: "relative",
+          background: photo
+            ? `linear-gradient(180deg, rgba(31,42,36,.15) 0%, rgba(31,42,36,.7) 100%), url("${photo.file}") center / cover no-repeat`
+            : `${RIDGE} bottom / 100% 60px no-repeat, linear-gradient(180deg, #f0c98f 0%, #d9a066 45%, #8a9a5b 100%)`,
+          color: E.cream, padding: photo ? "96px 24px 18px" : "20px 24px 54px", position: "relative",
         }}
       >
-        <span aria-hidden style={{ position: "absolute", right: 22, top: 14, fontSize: 34 }}>🌄</span>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: E.bark }}>
+        {!photo && <span aria-hidden style={{ position: "absolute", right: 22, top: 14, fontSize: 34 }}>🌄</span>}
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: photo ? E.cream : E.bark }}>
           Field guide · Park of the day
         </div>
-        <h3 style={{ margin: "4px 0 0", fontFamily: "var(--font-display)", fontSize: 32, color: E.bark, textShadow: "0 1px 0 rgba(255,255,255,.4)" }}>
+        <h3
+          style={{
+            margin: "4px 0 0", fontFamily: "var(--font-display)", fontSize: 32, color: photo ? "#fff" : E.bark,
+            textShadow: photo ? "0 2px 8px rgba(0,0,0,.55)" : "0 1px 0 rgba(255,255,255,.4)",
+          }}
+        >
           {name}
         </h3>
+        {photo && <PhotoCredit photo={photo} style={{ position: "absolute", right: 12, top: 10, color: "rgba(255,255,255,.85)", textShadow: "0 1px 3px rgba(0,0,0,.7)" }} />}
       </div>
 
       {!guess ? (

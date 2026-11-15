@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { loadAtlas, type Atlas } from "../atlas/model";
+import { photoOf } from "../detective/photos";
 import BestDaysStrip from "./BestDaysStrip";
 import LocationPicker from "./LocationPicker";
 import TrendBadges from "./TrendBadges";
@@ -85,11 +86,21 @@ function Suggestion({
 }) {
   const hz = HORIZONS.find((h) => h.key === year)!;
   const h = p[year];
+  const photo = photoOf(p.park.code);
   return (
     <li>
       <label className={`suggestion ${selected ? "selected" : ""}`}>
         <input type="checkbox" checked={selected} onChange={onToggle} />
         <span className="suggestion-name">
+          {photo && (
+            <img
+              src={photo.file}
+              alt=""
+              loading="lazy"
+              title={`Photo: ${photo.credit} (${photo.license}), Wikimedia Commons`}
+              style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", verticalAlign: "middle", marginRight: 8 }}
+            />
+          )}
           {p.park.short}
           <span className="micro muted">
             {" "}
