@@ -143,9 +143,6 @@ export default function Families({
     return l1 ? FAMILY_COLORS.concat(["#6b8e23", "#a0522d", "#708090", "#c71585", "#2f4f4f"])[ecoNames.indexOf(l1)] : "#bbb";
   };
   const pretty = (s: string) => s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-  const xs = Object.values(fam.parks).map((p) => p.x);
-  const ys = Object.values(fam.parks).map((p) => p.y);
-  const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
 
   return (
     <div className="panel-stack st-page">

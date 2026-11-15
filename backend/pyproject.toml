@@ -19,6 +19,7 @@ dev = [
     "httpx>=0.27",
     "respx>=0.23.1",
     "pytest-asyncio>=1.5.0",
+    "ruff>=0.17.5",
 ]
 prep = [
     "netcdf4>=1.7.5.1.post1",
@@ -30,6 +31,18 @@ prep = [
     "requests>=2.32",
     "geopandas>=1.0",
 ]
+
+[tool.ruff]
+line-length = 130
+target-version = "py311"
+
+[tool.ruff.lint]
+# Errors, pyflakes, import order and bug-prone patterns. Kept small so it stays green.
+select = ["E", "F", "W", "I", "B"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*" = ["E402"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

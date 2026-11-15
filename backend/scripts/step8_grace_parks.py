@@ -33,8 +33,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from app.datasets import bundled  # noqa: E402
 from step3_trends import trend_stats  # noqa: E402
+
+from app.datasets import bundled  # noqa: E402
 
 MIN_MONTHS = 6
 OUT = ROOT / "data" / "trends" / "grace.json"
@@ -72,7 +73,7 @@ def main() -> None:
 
     # FDR across parks, each 1-degree cell once.
     cells = {}
-    for pid, r in rows.items():
+    for r in rows.values():
         if r.get("p") is not None:
             cells.setdefault(tuple(r["cell"]), r["p"])
     keys = list(cells)

@@ -55,7 +55,10 @@ export default function MapView({
   const counts = useMemo(() => {
     let up = 0, down = 0, none = 0;
     for (const c of cells.values()) {
-      if (c.verdict === "real" && c.sen != null) c.sen > 0 ? up++ : down++;
+      if (c.verdict === "real" && c.sen != null) {
+        if (c.sen > 0) up++;
+        else down++;
+      }
       else none++;
     }
     return { up, down, none };

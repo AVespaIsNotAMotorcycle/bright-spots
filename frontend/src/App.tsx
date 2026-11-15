@@ -23,6 +23,8 @@ import { PARK_NAMES } from "./detective/parkNames";
 import { PERSONAS, TAB_LABEL, loadProfile, saveProfile, type Profile, type Tab } from "./profile";
 import { useNav, type NavState } from "./useNav";
 
+const HOME_ONLY: Tab[] = ["home"];
+
 // Researcher nav: a few top buttons, with the many tools folded into two menus.
 const NAV_GROUPS: (Tab | { label: string; tabs: Tab[] })[] = [
   "home",
@@ -89,7 +91,7 @@ export default function App() {
 
   // Each persona only gets its own tabs; a URL for another persona's tab
   // falls back to Home.
-  const allowedTabs: Tab[] = profile ? PERSONAS[profile.persona].tabs : ["home"];
+  const allowedTabs: Tab[] = profile ? PERSONAS[profile.persona].tabs : HOME_ONLY;
   const tab: Tab = nav.tab && allowedTabs.includes(nav.tab) ? nav.tab : "home";
 
   useEffect(() => {
@@ -147,7 +149,6 @@ export default function App() {
   }
 
   const info = PERSONAS[profile.persona];
-  const exploreTab: Tab = profile.persona === "researcher" ? "atlas" : "explore";
 
   return (
     <div className="app">

@@ -56,7 +56,7 @@ def best_days(
     measured = 0
     days = []
     for i in range(start, start + n):
-        def val(var: str):
+        def val(var: str, i: int = i):  # bind this loop's day explicitly
             v = series.get(var)
             v = v[i] if v is not None else None
             if v is None and var in normal:
