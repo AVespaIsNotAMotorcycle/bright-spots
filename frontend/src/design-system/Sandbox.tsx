@@ -491,8 +491,8 @@ export default function Sandbox() {
                 ))}
               </div>
             </Specimen>
-            <Specimen label="Elevation: --shadow-sm · --shadow-md · --shadow-lg">
-              {["sm", "md", "lg"].map((s) => (
+            <Specimen label="Elevation: --shadow-sm · --shadow-md · --shadow-lg · --shadow-inset (recessed)">
+              {["sm", "md", "lg", "inset"].map((s) => (
                 <div key={s} className="ds-specimen" style={{ alignItems: "center" }}>
                   <div className="ds-shadow" style={{ boxShadow: `var(--shadow-${s})` }} />
                   <span className="ds-label">--shadow-{s}</span>

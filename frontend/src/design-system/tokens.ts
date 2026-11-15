@@ -18,6 +18,7 @@ export const TOKEN_GROUPS: TokenGroup[] = [
       { name: "--pine-hover", note: "button hover · 5.37:1" },
       { name: "--pine-press", note: "button active · 6.47:1" },
       { name: "--pine-ink", note: "links, titles, small text" },
+      { name: "--pine-edge", note: "lip under raised pine buttons" },
       { name: "--pine-tint", note: "success fill" },
       { name: "--pine-band", note: "meter range band" },
       { name: "--on-pine" },
@@ -29,6 +30,7 @@ export const TOKEN_GROUPS: TokenGroup[] = [
     tokens: [
       { name: "--glacier", note: "selected borders, chart: forecast" },
       { name: "--glacier-ink", note: "selected text, filled nav/segment · 5.79:1" },
+      { name: "--glacier-edge", note: "lip under raised selected keys" },
       { name: "--glacier-tint", note: "selected and info fill" },
       { name: "--glacier-band" },
       { name: "--on-glacier", note: "on --glacier-ink only" },
@@ -57,10 +59,10 @@ export const TOKEN_GROUPS: TokenGroup[] = [
     tokens: [
       { name: "--bg", note: "page, under topo texture" },
       { name: "--surface", note: "cards, inputs: pure white" },
-      { name: "--surface-2", note: "hover, segmented track" },
-      { name: "--surface-3", note: "disabled fill" },
+      { name: "--surface-2", note: "hover, code blocks" },
+      { name: "--surface-3", note: "recessed trays, disabled fill" },
       { name: "--border", note: "dividers, hairlines" },
-      { name: "--border-strong", note: "control outlines" },
+      { name: "--border-strong", note: "control outlines · 3.32:1" },
       { name: "--grid", note: "meter and slider tracks" },
     ],
   },
@@ -68,8 +70,8 @@ export const TOKEN_GROUPS: TokenGroup[] = [
     title: "Text",
     tokens: [
       { name: "--text", note: "deep charcoal" },
-      { name: "--text-muted", note: "secondary" },
-      { name: "--text-faint", note: "labels, placeholders · 4.22:1" },
+      { name: "--text-muted", note: "secondary · 8.15:1" },
+      { name: "--text-faint", note: "labels, placeholders · 5.98:1" },
     ],
   },
   {
@@ -110,7 +112,15 @@ export const TOKEN_GROUPS: TokenGroup[] = [
   {
     title: "Elevation",
     nonColour: true,
-    tokens: [{ name: "--shadow-sm" }, { name: "--shadow-md" }, { name: "--shadow-lg" }],
+    note: "Layered warm shadows: contact + body + ambient + 1px edge. Raised keys add --highlight and a 2px edge colour; recessed wells use --shadow-inset.",
+    tokens: [
+      { name: "--shadow-color", note: "r, g, b of the umber shadow" },
+      { name: "--shadow-sm", note: "chips, suggestions, keys" },
+      { name: "--shadow-md", note: "cards, stats, hover" },
+      { name: "--shadow-lg", note: "postcard, popovers, tooltips" },
+      { name: "--shadow-inset", note: "inputs, tracks, trays, pressed" },
+      { name: "--highlight", note: "top-edge light on raised keys" },
+    ],
   },
   {
     title: "Typography",
