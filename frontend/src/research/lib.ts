@@ -58,6 +58,14 @@ export interface Insights {
     features: { variable: string; period: string }[];
     families: FamilyInfo[];
     parks: Record<string, { family: number; agreement: number; x: number; y: number }>;
+    ecoregions: {
+      parks: Record<string, { l1: string | null; l2: string | null; l3: string | null }>;
+      n_with_ecoregion: number;
+      n_ecoregions: number;
+      ari: number;
+      p: number;
+      by_family: Record<string, Record<string, string[]>>;
+    } | null;
   };
   opposites: OppGroup[];
 }

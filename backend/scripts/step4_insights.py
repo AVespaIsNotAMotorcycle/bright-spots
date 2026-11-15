@@ -184,15 +184,55 @@ def opposites(parks):
     return out[:80]
 
 
+def ari(a, b):
+    """Adjusted Rand index between two labelings (1 = same grouping, about 0 = chance)."""
+    a, b = np.asarray(a), np.asarray(b)
+    n = len(a)
+    ua, ia = np.unique(a, return_inverse=True)
+    ub, ib = np.unique(b, return_inverse=True)
+    m = np.zeros((len(ua), len(ub)))
+    for x, y in zip(ia, ib):
+        m[x, y] += 1
+    c2 = lambda v: v * (v - 1) / 2  # noqa: E731
+    sum_ij = c2(m).sum()
+    sa, sb = c2(m.sum(1)).sum(), c2(m.sum(0)).sum()
+    exp = sa * sb / c2(n)
+    mx = (sa + sb) / 2
+    return float((sum_ij - exp) / (mx - exp)) if mx != exp else 0.0
+
+
+def ecoregion_overlay(fam):
+    path = DATA / "ecoregions.json"
+    if not path.exists():
+        return None
+    eco = json.loads(path.read_text())
+    ids = [pid for pid in fam["parks"] if eco.get(pid, {}).get("l1")]
+    fl = [fam["parks"][pid]["family"] for pid in ids]
+    el = [eco[pid]["l1"] for pid in ids]
+    obs = ari(fl, el)
+    rng = np.random.default_rng(7)
+    perm = [ari(fl, rng.permutation(el)) for _ in range(2000)]
+    pval = float((np.sum(np.array(perm) >= obs) + 1) / (len(perm) + 1))
+    table = {}
+    for pid, f, e in zip(ids, fl, el):
+        table.setdefault(str(f), {}).setdefault(e, []).append(pid)
+    return {"parks": eco, "n_with_ecoregion": len(ids), "n_ecoregions": len(set(el)),
+            "ari": round(obs, 3), "p": round(pval, 4), "by_family": table}
+
+
 def main():
     parks = load_parks()
     meta = [{"id": pid, "name": p["park"]["name"], "state": p["park"].get("state"),
              "lat": p["park"]["lat"], "lon": p["park"]["lon"]} for pid, p in parks.items()]
     fam = families(parks)
     opp = opposites(parks)
+    fam["ecoregions"] = ecoregion_overlay(fam)
     (DATA / "insights.json").write_text(json.dumps(
         {"parks": meta, "families": fam, "opposites": opp}, ensure_ascii=False))
     print(f"{len(parks)} parks; families: {[(f['id'], f['size'], f['stability'], f['name']) for f in fam['families']]}")
+    e = fam["ecoregions"]
+    if e:
+        print(f"ecoregion overlay: ARI={e['ari']} p={e['p']} over {e['n_with_ecoregion']} parks, {e['n_ecoregions']} ecoregions")
     print(f"opposite-trend groups: {len(opp)} ({sum(g['tier'] == 'strong' for g in opp)} strong)")
 
 

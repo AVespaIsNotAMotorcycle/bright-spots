@@ -14,6 +14,7 @@ export default function Families({
 }) {
   const { data, error } = useInsights();
   const [open, setOpen] = useState<number | null>(null);
+  const [colorBy, setColorBy] = useState<"family" | "eco">("family");
 
   if (error) return <p className="error">Could not load families: {error}. Run step4_insights.py.</p>;
   if (!data) return <p className="muted">Loading families…</p>;
@@ -21,6 +22,13 @@ export default function Families({
   const fam = data.families;
   const nameOf = (id: string) => data.parks.find((p) => p.id === id)?.name ?? id;
   const colorFor = (n: number) => FAMILY_COLORS[(n - 1) % FAMILY_COLORS.length];
+  const eco = fam.ecoregions;
+  const ecoNames = eco ? Array.from(new Set(Object.values(eco.parks).map((e) => e.l1).filter((x): x is string => !!x))).sort() : [];
+  const ecoColor = (id: string) => {
+    const l1 = eco?.parks[id]?.l1;
+    return l1 ? FAMILY_COLORS.concat(["#6b8e23", "#a0522d", "#708090", "#c71585", "#2f4f4f"])[ecoNames.indexOf(l1)] : "#bbb";
+  };
+  const pretty = (s: string) => s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
   const xs = Object.values(fam.parks).map((p) => p.x);
   const ys = Object.values(fam.parks).map((p) => p.y);
   const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
@@ -34,10 +42,23 @@ export default function Families({
           the park's year-to-year scatter. Parks with similar fingerprints share a family (average-linkage clustering).
           Family names compare a family with the average park, so "slow-warming" still means warming, only slower.
         </p>
+        {eco && (
+          <div className="row gap-8" style={{ margin: "8px 0" }}>
+            <span className="small muted">Colour dots by</span>
+            {(["family", "eco"] as const).map((k) => (
+              <button key={k} className={`nav-tab${colorBy === k ? " active" : ""}`} onClick={() => setColorBy(k)}>
+                {k === "family" ? "Family" : "EPA ecoregion"}
+              </button>
+            ))}
+          </div>
+        )}
         <ParkMap
           parks={data.parks}
-          colorOf={(id) => colorFor(fam.parks[id]?.family ?? 1)}
-          tip={(id) => `Family ${fam.parks[id]?.family}, ${Math.round((fam.parks[id]?.agreement ?? 0) * 100)}% agreement`}
+          colorOf={(id) => (colorBy === "eco" ? ecoColor(id) : colorFor(fam.parks[id]?.family ?? 1))}
+          tip={(id) =>
+            colorBy === "eco"
+              ? pretty(eco?.parks[id]?.l1 ?? "no ecoregion found")
+              : `Family ${fam.parks[id]?.family}, ${Math.round((fam.parks[id]?.agreement ?? 0) * 100)}% agreement`}
           onPick={onOpenPark}
           selected={open ? fam.families.find((f) => f.id === open)?.parks ?? [] : []}
         />
@@ -96,6 +117,37 @@ export default function Families({
           </div>
         ))}
       </div>
+
+      {eco && (
+        <div className="card">
+          <h3 style={{ marginTop: 0 }}>Do families follow ecoregions?</h3>
+          <p className="small">
+            Partly. Matching families to EPA Level I ecoregions over {eco.n_with_ecoregion} parks and {eco.n_ecoregions}{" "}
+            ecoregions gives an adjusted Rand index of <b>{eco.ari}</b> (0 is chance, 1 is identical groups). Shuffling the
+            ecoregions 2,000 times beat that only {eco.p < 0.001 ? "about once in 2,000 tries" : `${(eco.p * 100).toFixed(1)}% of the time`}
+            {" "}(p = {eco.p}). So where a park sits explains some of how it changes, but far from all. Alaska, Hawaiʻi and
+            island parks are left out because the ecoregion layer has no polygon at their centre point. Elevation is not
+            tested yet.
+          </p>
+          <div className="table-wrap">
+            <table className="detail-table" style={{ fontSize: 12 }}>
+              <thead><tr><th>Family</th><th>Ecoregions of its parks</th></tr></thead>
+              <tbody>
+                {Object.entries(eco.by_family).sort().map(([f, byEco]) => (
+                  <tr key={f}>
+                    <td>Family {f}</td>
+                    <td>
+                      {Object.entries(byEco).sort((a, b) => b[1].length - a[1].length).map(([e, ps]) => (
+                        <div key={e}><b>{pretty(e)}</b> ({ps.length}): <span className="muted">{ps.map(nameOf).join(", ")}</span></div>
+                      ))}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       <div className="card">
         <h3 style={{ marginTop: 0 }}>Fingerprint space</h3>

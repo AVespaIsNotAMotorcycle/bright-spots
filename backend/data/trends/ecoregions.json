@@ -1,0 +1,317 @@
+{
+"acad": {
+"l1": "EASTERN TEMPERATE FORESTS",
+"l2": "MIXED WOOD PLAINS",
+"l3": "Acadian Plains and Hills"
+},
+"arch": {
+"l1": "NORTH AMERICAN DESERTS",
+"l2": "COLD DESERTS",
+"l3": "Colorado Plateaus"
+},
+"badl": {
+"l1": "GREAT PLAINS",
+"l2": "WEST-CENTRAL SEMI-ARID PRAIRIES",
+"l3": "Northwestern Great Plains"
+},
+"bibe": {
+"l1": "NORTH AMERICAN DESERTS",
+"l2": "WARM DESERTS",
+"l3": "Chihuahuan Deserts"
+},
+"bisc": {
+"l1": null,
+"l2": null,
+"l3": null
+},
+"blca": {
+"l1": "NORTH AMERICAN DESERTS",
+"l2": "COLD DESERTS",
+"l3": "Colorado Plateaus"
+},
+"brca": {
+"l1": "NORTH AMERICAN DESERTS",
+"l2": "COLD DESERTS",
+"l3": "Colorado Plateaus"
+},
+"cany": {
+"l1": "NORTH AMERICAN DESERTS",
+"l2": "COLD DESERTS",
+"l3": "Colorado Plateaus"
+},
+"care": {
+"l1": "NORTH AMERICAN DESERTS",
+"l2": "COLD DESERTS",
+"l3": "Colorado Plateaus"
+},
+"cave": {
+"l1": "TEMPERATE SIERRAS",
+"l2": "UPPER GILA MOUNTAINS",
+"l3": "Arizona/New Mexico Mountains"
+},
+"chir": {
+"l1": "SOUTHERN SEMI-ARID HIGHLANDS",
+"l2": "WESTERN SIERRA MADRE PIEDMONT",
+"l3": "Madrean Archipelago"
+},
+"chis": {
+"l1": "MEDITERRANEAN CALIFORNIA",
+"l2": "MEDITERRANEAN CALIFORNIA",
+"l3": "Southern California/Northern Baja Coast"
+},
+"cong": {
+"l1": "EASTERN TEMPERATE FORESTS",
+"l2": "SOUTHEASTERN USA PLAINS",
+"l3": "Southeastern Plains"
+},
+"crla": {
+"l1": "NORTHWESTERN FORESTED MOUNTAINS",
+"l2": "WESTERN CORDILLERA",
+"l3": "Cascades"
+},
+"cuva": {
+"l1": "EASTERN TEMPERATE FORESTS",
+"l2": "MIXED WOOD PLAINS",
+"l3": "Erie Drift Plain"
+},
+"dena": {
+"l1": null,
+"l2": null,
+"l3": null
+},
+"deva": {
+"l1": "NORTH AMERICAN DESERTS",
+"l2": "WARM DESERTS",
+"l3": "Mojave Basin and Range"
+},
+"drto": {
+"l1": null,
+"l2": null,
+"l3": null
+},
+"ever": {
+"l1": "TROPICAL WET FORESTS",
+"l2": "EVERGLADES",
+"l3": "Southern Florida Coastal Plain"
+},
+"gaar": {
+"l1": null,
+"l2": null,
+"l3": null
+},
+"glac": {
+"l1": "NORTHWESTERN FORESTED MOUNTAINS",
+"l2": "WESTERN CORDILLERA",
+"l3": "Canadian Rockies"
+},
+"glba": {
+"l1": null,
+"l2": null,
+"l3": null
+},
+"grba": {
+"l1": "NORTH AMERICAN DESERTS",
+"l2": "COLD DESERTS",
+"l3": "Central Basin and Range"
+},
+"grca": {
+"l1": "NORTH AMERICAN DESERTS",
+"l2": "COLD DESERTS",
+"l3": "Arizona/New Mexico Plateau"
+},
+"grsa": {
+"l1": "NORTHWESTERN FORESTED MOUNTAINS",
+"l2": "WESTERN CORDILLERA",
+"l3": "Southern Rockies"
+},
+"grsm": {
+"l1": "EASTERN TEMPERATE FORESTS",
+"l2": "OZARK/OUACHITA-APPALACHIAN FORESTS",
+"l3": "Blue Ridge"
+},
+"grte": {
+"l1": "NORTHWESTERN FORESTED MOUNTAINS",
+"l2": "WESTERN CORDILLERA",
+"l3": "Middle Rockies"
+},
+"gumo": {
+"l1": "TEMPERATE SIERRAS",
+"l2": "UPPER GILA MOUNTAINS",
+"l3": "Arizona/New Mexico Mountains"
+},
+"hale": {
+"l1": null,
+"l2": null,
+"l3": null
+},
+"havo": {
+"l1": null,
+"l2": null,
+"l3": null
+},
+"hosp": {
+"l1": "EASTERN TEMPERATE FORESTS",
+"l2": "OZARK/OUACHITA-APPALACHIAN FORESTS",
+"l3": "Ouachita Mountains"
+},
+"indu": {
+"l1": "EASTERN TEMPERATE FORESTS",
+"l2": "MIXED WOOD PLAINS",
+"l3": "Southern Michigan/Northern Indiana Drift Plains"
+},
+"isro": {
+"l1": null,
+"l2": null,
+"l3": null
+},
+"jeff": {
+"l1": "EASTERN TEMPERATE FORESTS",
+"l2": "SOUTHEASTERN USA PLAINS",
+"l3": "Interior River Valleys and Hills"
+},
+"jotr": {
+"l1": "NORTH AMERICAN DESERTS",
+"l2": "WARM DESERTS",
+"l3": "Mojave Basin and Range"
+},
+"katm": {
+"l1": null,
+"l2": null,
+"l3": null
+},
+"kefj": {
+"l1": null,
+"l2": null,
+"l3": null
+},
+"kova": {
+"l1": null,
+"l2": null,
+"l3": null
+},
+"lacl": {
+"l1": null,
+"l2": null,
+"l3": null
+},
+"lavo": {
+"l1": "NORTHWESTERN FORESTED MOUNTAINS",
+"l2": "WESTERN CORDILLERA",
+"l3": "Cascades"
+},
+"maca": {
+"l1": "EASTERN TEMPERATE FORESTS",
+"l2": "SOUTHEASTERN USA PLAINS",
+"l3": "Interior Plateau"
+},
+"meve": {
+"l1": "NORTH AMERICAN DESERTS",
+"l2": "COLD DESERTS",
+"l3": "Colorado Plateaus"
+},
+"mora": {
+"l1": "NORTHWESTERN FORESTED MOUNTAINS",
+"l2": "WESTERN CORDILLERA",
+"l3": "Cascades"
+},
+"neri": {
+"l1": "EASTERN TEMPERATE FORESTS",
+"l2": "OZARK/OUACHITA-APPALACHIAN FORESTS",
+"l3": "Central Appalachians"
+},
+"noca": {
+"l1": "NORTHWESTERN FORESTED MOUNTAINS",
+"l2": "WESTERN CORDILLERA",
+"l3": "North Cascades"
+},
+"npsa": {
+"l1": null,
+"l2": null,
+"l3": null
+},
+"olym": {
+"l1": "NORTHWESTERN FORESTED MOUNTAINS",
+"l2": "WESTERN CORDILLERA",
+"l3": "North Cascades"
+},
+"pefo": {
+"l1": "NORTH AMERICAN DESERTS",
+"l2": "COLD DESERTS",
+"l3": "Arizona/New Mexico Plateau"
+},
+"pinn": {
+"l1": "MEDITERRANEAN CALIFORNIA",
+"l2": "MEDITERRANEAN CALIFORNIA",
+"l3": "Central California Foothills and Coastal Mountains"
+},
+"redw": {
+"l1": "MARINE WEST COAST FOREST",
+"l2": "MARINE WEST COAST FOREST",
+"l3": "Coast Range"
+},
+"romo": {
+"l1": "NORTHWESTERN FORESTED MOUNTAINS",
+"l2": "WESTERN CORDILLERA",
+"l3": "Southern Rockies"
+},
+"sagu": {
+"l1": "SOUTHERN SEMI-ARID HIGHLANDS",
+"l2": "WESTERN SIERRA MADRE PIEDMONT",
+"l3": "Madrean Archipelago"
+},
+"seki": {
+"l1": "NORTHWESTERN FORESTED MOUNTAINS",
+"l2": "WESTERN CORDILLERA",
+"l3": "Sierra Nevada"
+},
+"shen": {
+"l1": "EASTERN TEMPERATE FORESTS",
+"l2": "OZARK/OUACHITA-APPALACHIAN FORESTS",
+"l3": "Blue Ridge"
+},
+"thro": {
+"l1": "GREAT PLAINS",
+"l2": "WEST-CENTRAL SEMI-ARID PRAIRIES",
+"l3": "Northwestern Great Plains"
+},
+"viis": {
+"l1": null,
+"l2": null,
+"l3": null
+},
+"voya": {
+"l1": "NORTHERN FORESTS",
+"l2": "MIXED WOOD SHIELD",
+"l3": "Northern Lakes and Forests"
+},
+"whsa": {
+"l1": "NORTH AMERICAN DESERTS",
+"l2": "WARM DESERTS",
+"l3": "Chihuahuan Deserts"
+},
+"wica": {
+"l1": "NORTHWESTERN FORESTED MOUNTAINS",
+"l2": "WESTERN CORDILLERA",
+"l3": "Middle Rockies"
+},
+"wrst": {
+"l1": null,
+"l2": null,
+"l3": null
+},
+"yell": {
+"l1": "NORTHWESTERN FORESTED MOUNTAINS",
+"l2": "WESTERN CORDILLERA",
+"l3": "Middle Rockies"
+},
+"yose": {
+"l1": "NORTHWESTERN FORESTED MOUNTAINS",
+"l2": "WESTERN CORDILLERA",
+"l3": "Sierra Nevada"
+},
+"zion": {
+"l1": "NORTH AMERICAN DESERTS",
+"l2": "COLD DESERTS",
+"l3": "Colorado Plateaus"
+}
+}
