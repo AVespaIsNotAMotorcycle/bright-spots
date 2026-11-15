@@ -254,7 +254,7 @@ export const TRIP_CSS = `
 .tp-drawer{box-shadow:none;border-left:1px solid var(--stone)}
 .tp-tray{background:var(--paper);color:var(--bark);border:1px solid var(--stone);border-radius:var(--radius);box-shadow:none}
 /* Step 1: preferences, one centred column. */
-.tp-prefs{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.tp-prefs{display:flex;flex-direction:column;gap:18px}
 .tp-prefs-card{background:var(--paper);border:1px solid var(--stone);border-radius:var(--radius);padding:18px 20px;display:flex;flex-direction:column;gap:18px}
 .tp-prefs-head{display:flex;justify-content:space-between;align-items:center}
 .tp-prefs-head h2{margin:0;font-family:var(--font-display);color:var(--pine);font-size:22px}
@@ -281,7 +281,9 @@ export const TRIP_CSS = `
 .tp-pick-name{min-width:0;display:flex;flex-direction:column}
 .tp-pick-name b{font-weight:600}
 .tp-pick-name small{font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tp-cards{display:flex;flex-direction:column;gap:16px;min-width:0}
+/* Two cards side by side once there is room for two 400px columns. */
+.tp-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,400px),1fr));gap:16px;align-items:start;min-width:0}
+.tp-cards>.tp-note,.tp-cards>.tp-empty{grid-column:1/-1}
 .tp-empty{border:2px dashed var(--stone);border-radius:var(--radius);padding:28px;text-align:center;color:var(--text-muted);margin:0}
 @media (max-width:900px){
   .tp-list{position:static;max-height:50vh}

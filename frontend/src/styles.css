@@ -89,9 +89,12 @@ button, input, select { font: inherit; color: inherit; }
 
 /* ── App shell ── */
 .app {
+  padding: 0 16px 64px;
+}
+/* The header spans the screen; the page content stays at a readable width. */
+.app > main {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 16px 64px;
 }
 
 /* ── Header / topbar ── */
