@@ -86,8 +86,12 @@ export default function SavedPage({ unit, onPlan, onExplore }: { unit: Unit; onP
                 unit={unit}
                 trend={p ? trendTag(atlas, p.park.id, p.best_month, unit === "F") : null}
                 npsCode={p?.park.code ?? null}
-                onPlan={() => onPlan(c === "kica" ? "kings-canyon" : c, p?.ok ? p.best_month : undefined)}
-                onTrends={() => onExplore(trendCode(c))}
+                actions={
+                  <>
+                    <button className="sv-btn" onClick={() => onPlan(c === "kica" ? "kings-canyon" : c, p?.ok ? p.best_month : undefined)}>Plan</button>
+                    <button className="sv-btn" onClick={() => onExplore(trendCode(c))}>Trends</button>
+                  </>
+                }
                 onRemove={() => toggle(c)}
               />
             );

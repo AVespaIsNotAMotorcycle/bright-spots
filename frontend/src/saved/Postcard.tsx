@@ -1,4 +1,5 @@
-// A saved park as a one-sided postcard: photo on the left, the park's numbers on the right.
+// A park as a one-sided postcard: photo on the left, the park's numbers on the right,
+// one column per horizon. Used by Saved (all three horizons) and Plan (this year and next year).
 // Layout from the design-system sandbox; colours, fonts and corners are Canopy's own.
 import { HORIZON_LABEL, MONTHS, temp, type HorizonKey, type Trip, type TripPark, type Unit } from "../planner/trip/tripModel";
 import type { TrendTag } from "../planner/whatChanged";
@@ -6,11 +7,12 @@ import { PhotoCredit, photoOf } from "../detective/photos";
 import { parkKey } from "../detective/parkKey";
 import "./postcard.css";
 
-const HORIZONS: { key: HorizonKey; stamp: "measured" | "forecast" | "projected" }[] = [
-  { key: "this_year", stamp: "measured" },
-  { key: "next_year", stamp: "forecast" },
-  { key: "y2050", stamp: "projected" },
-];
+const STAMP: Record<HorizonKey, "measured" | "forecast" | "projected"> = {
+  this_year: "measured",
+  next_year: "forecast",
+  y2050: "projected",
+};
+const ALL_HORIZONS: HorizonKey[] = ["this_year", "next_year", "y2050"];
 
 const compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
 const pct = (v: number | null | undefined) => (v == null ? "–" : `${Math.round(v)}%`);
@@ -49,12 +51,17 @@ interface Props {
   trend: TrendTag | null;
   /** The NPS page, e.g. "zion". */
   npsCode: string | null;
-  onPlan: () => void;
-  onTrends: () => void;
+  /** The columns, left to right. Default: this year, next year and 2050. */
+  horizons?: HorizonKey[];
+  /** Buttons under the table. */
+  actions: React.ReactNode;
   onRemove: () => void;
+  /** What the × does, for screen readers. Default "Remove {name}". */
+  removeLabel?: string;
 }
 
-export default function Postcard({ name, p, trip, unit, trend, npsCode, onPlan, onTrends, onRemove }: Props) {
+export default function Postcard({ name, p, trip, unit, trend, npsCode, horizons = ALL_HORIZONS, actions, onRemove, removeLabel }: Props) {
+  const HORIZONS = horizons.map((key) => ({ key, stamp: STAMP[key] }));
   const key = p ? parkKey(p.park) : "";
   const photo = photoOf(key);
   const bugs = p?.fits?.next_year?.bugs != null;
@@ -77,7 +84,7 @@ export default function Postcard({ name, p, trip, unit, trend, npsCode, onPlan, 
               <h3 className="pc-title">{name}</h3>
               {meta}
             </div>
-            <button type="button" className="pc-remove" onClick={onRemove} aria-label={`Remove ${name}`}>×</button>
+            <button type="button" className="pc-remove" onClick={onRemove} aria-label={removeLabel ?? `Remove ${name}`}>×</button>
           </header>
 
           {trend && (
@@ -96,7 +103,7 @@ export default function Postcard({ name, p, trip, unit, trend, npsCode, onPlan, 
                 {p.ok ? <>Best for you: <b>{MONTHS[p.best_month - 1]}</b></> : <>Misses one of your musts all year. Closest: <b>{MONTHS[p.best_month - 1]}</b></>}
               </p>
               <table className="pc-table">
-                <colgroup><col className="pc-label-col" /><col /><col /><col /></colgroup>
+                <colgroup><col className="pc-label-col" />{HORIZONS.map((h) => <col key={h.key} />)}</colgroup>
                 <thead>
                   <tr>
                     <td />
@@ -157,10 +164,7 @@ export default function Postcard({ name, p, trip, unit, trend, npsCode, onPlan, 
             <span className="pc-key"><span className="pc-bar" aria-hidden="true"><span style={{ width: "70%" }} /></span>Fit to your preferences</span>
             {npsCode && <a href={`https://www.nps.gov/${npsCode}/`} target="_blank" rel="noreferrer">nps.gov →</a>}
           </div>
-          <div className="pc-acts">
-            <button className="sv-btn" onClick={onPlan}>Plan</button>
-            <button className="sv-btn" onClick={onTrends}>Trends</button>
-          </div>
+          <div className="pc-acts">{actions}</div>
         </div>
       </article>
     </div>
