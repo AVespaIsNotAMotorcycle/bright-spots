@@ -77,11 +77,7 @@ function Months({ state, set }: Pick<Props, "state" | "set">) {
           );
         })}
       </div>
-      <p className="tp-note">
-        {state.months.length === 0
-          ? "Any time: each park uses its best month of the year."
-          : "Tap a season for all 3 months, tap again to clear. Shift-click picks a range. Seasons are for the north; American Samoa's are flipped."}
-      </p>
+      {state.months.length === 0 && <p className="tp-note">Any time: each park uses its best month of the year.</p>}
     </section>
   );
 }
@@ -164,9 +160,6 @@ export default function TripSettings({ state, set, unit, setUnit }: Props) {
       <Feel state={state} set={set} unit={unit} />
       <Chips title="I'm into" kind="want" chips={WANTS} value={state.want} onChange={(want) => set({ want })} />
       <Chips title="Avoid" kind="avoid" chips={AVOIDS} value={state.avoid} onChange={(avoid) => set({ avoid })} />
-      <p className="tp-note" style={{ marginTop: -8 }}>
-        Tap once: nice to have. Twice: must have (parks that fail are hidden). Three times: off. “est.” means an estimate from weather.
-      </p>
       <details className="tp-more">
         <summary>More settings</summary>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>

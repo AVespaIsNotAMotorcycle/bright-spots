@@ -210,7 +210,6 @@ export default function TripPlanner({ unit, setUnit, month, park, q, stage, scie
         <style>{TRIP_CSS}</style>
         <section className="tp-hero" style={heroPhoto ? ({ "--tp-hero": `url("${heroPhoto.file}")` } as React.CSSProperties) : undefined}>
           <h1>Where should you go?</h1>
-          <p>Tell us what you like, then see the parks that fit. Every score comes from NASA climate data.</p>
           <div className="tp-moods" role="group" aria-label="Trip moods">
             {MOODS.map((m) => (
               <button key={m.id} className="tp-mood" aria-pressed={mood === m.id}

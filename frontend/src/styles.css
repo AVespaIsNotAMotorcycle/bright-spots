@@ -13,7 +13,7 @@
   --moss:   #5B6B3A;
   --clay:   #B5643C;
   --sage:   #A9B39A;
-  --radius: 14px;
+  --radius: 0;      /* hard edges everywhere */
 
   /* Old names, remapped */
   --pine:         var(--moss);
@@ -29,7 +29,7 @@
   --sky:          #4F6A7A;
   --sky-tint:     rgba(79, 106, 122, 0.08);
 
-  --bg:           var(--sand);
+  --bg:           #EBE5DA;   /* page: the paper cards sit on it */
   --surface:      var(--paper);
   --surface-2:    #EFE9DD;
   --surface-3:    var(--stone);
@@ -50,8 +50,10 @@
   --warning:      var(--clay);
   --error:        #9C3F1E;
 
-  /* Flat: almost no shadow */
-  --shadow-sm:    none;
+  /* Paper cards: a crisp contact shadow plus a short soft one, and a faint grain. */
+  --shadow-paper: 0 1px 1px rgba(59, 47, 37, 0.16), 0 2px 6px rgba(59, 47, 37, 0.12);
+  --paper-grain:  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.2 0 0 0 0 0.15 0 0 0 0 0.08 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
+  --shadow-sm:    var(--shadow-paper);
   /* One light shadow, only for things that float (menus, pop-ups, dialogs). */
   --shadow-float: 0 4px 14px rgba(59, 47, 37, 0.10);
   --shadow-md:    var(--shadow-float);
@@ -66,7 +68,11 @@
 
 body {
   margin: 0;
-  background: var(--bg);
+  background-color: var(--bg);
+  /* Paper grain over topographic lines (the earlier Park Trend Detective page). */
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.2 0 0 0 0 0.15 0 0 0 0 0.08 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpath d='M0 30 Q15 20 30 30 Q45 40 60 30' fill='none' stroke='%23c9c0b0' stroke-width='0.6' opacity='0.55'/%3E%3Cpath d='M0 50 Q15 40 30 50 Q45 60 60 50' fill='none' stroke='%23c9c0b0' stroke-width='0.6' opacity='0.55'/%3E%3Cpath d='M0 10 Q15 0 30 10 Q45 20 60 10' fill='none' stroke='%23c9c0b0' stroke-width='0.6' opacity='0.55'/%3E%3C/svg%3E");
   color: var(--text);
   font: 400 15px/1.6 var(--font-body);
   -webkit-font-smoothing: antialiased;
@@ -749,3 +755,21 @@ path.yc-series.tag-projected { stroke: var(--sky); stroke-dasharray: 2 2; }
 .stamp-measured { color: var(--moss); transform: rotate(-1.5deg); }
 .stamp-forecast { color: var(--bark-2); transform: rotate(1deg); }
 .stamp-projected { color: var(--clay); transform: rotate(-0.5deg); }
+
+/* ── Paper: hard edges and cards that sit on the page ─────────────────────────
+   Every corner is square; !important also beats inline styles. SVG shapes (score
+   rings, map dots) are drawn, not rounded, so they keep their form. */
+*, *::before, *::after { border-radius: 0 !important; }
+input[type="range"]::-webkit-slider-thumb { border-radius: 0 !important; }
+input[type="range"]::-moz-range-thumb { border-radius: 0 !important; }
+
+/* html + :is() outranks the single-class rules in later stylesheets (planner, postcard),
+   whose background shorthand would otherwise drop the grain. */
+html :is(.card, .notice, .tile-btn, .signin-card, .postcard, .st-card, .menu-list,
+         .tp-prefs-card, .tp-list, .tp-go, .tp-why, .tp-drawer) {
+  background-color: var(--paper);
+  background-image: var(--paper-grain);
+  box-shadow: var(--shadow-paper);
+}
+html .tp-hero h1 + .tp-moods { margin-top: 14px; }
+

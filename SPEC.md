@@ -93,6 +93,8 @@ Plan is two steps, each its own URL (`/plan` and `/plan?step=1`), so the back bu
 
 Saved uses the same card with a third column for 2050.
 
+Look: hard edges everywhere (no rounded corners); cards are paper (a faint grain and a short drop shadow) on a sand page with paper grain over wavy topographic lines.
+
 Place, selected parks and units are kept in the browser's localStorage as a convenience only.
 
 Hovering or focusing a daytime-high, humidity, rain or cloud value on a card shows a year of daily values (`GET /api/parks/{id}/daily`): the 1991–2020 day-of-year average from NASA POWER daily data (smoothed over 15 days, a provisional choice) against the horizon's curve. 2026 shows the measured days; 2027 and 2050 show the average's daily shape shifted by their monthly change, interpolated between mid-month days (rain as a ratio). The daily files are `backend/data/parks/daily/{id}.json`, about 16 kB each.
