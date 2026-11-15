@@ -1,0 +1,10 @@
+# Render Blueprint: one free web service built from the Dockerfile.
+services:
+  - type: web
+    name: canopy
+    runtime: docker
+    plan: free
+    branch: feat/personas-research-tools
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    autoDeploy: true

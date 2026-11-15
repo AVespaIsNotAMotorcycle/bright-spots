@@ -10,6 +10,28 @@ interface Account {
   research: boolean;
   salt: string;
   hash: string;
+  /** The user's own app data (stamps, saved parks, trip settings), kept while logged out. */
+  data?: Record<string, string>;
+}
+
+/** Per-user keys: put away on log out, brought back on log in. */
+export const USER_KEYS = [
+  "detective.progress", "detective.days", "detective.bestStreak", "detective.sound",
+  "wishlist", "trip.state", "planner.unit", "born", "station.saved",
+];
+
+function snapshot(): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const k of USER_KEYS) {
+    const v = localStorage.getItem(k);
+    if (v != null) out[k] = v;
+  }
+  return out;
+}
+
+function restore(data: Record<string, string> | undefined) {
+  for (const k of USER_KEYS) localStorage.removeItem(k);
+  for (const [k, v] of Object.entries(data ?? {})) if (USER_KEYS.includes(k)) localStorage.setItem(k, v);
 }
 
 type Store = Record<string, Account>;
@@ -50,7 +72,8 @@ export async function signUp(name: string, email: string, password: string, rese
   const store = load();
   if (store[e]) return "An account with this email already exists. Log in instead.";
   const salt = hex(crypto.getRandomValues(new Uint8Array(16)).buffer);
-  store[e] = { name: name.trim(), research, salt, hash: await hashPassword(password, salt) };
+  // A guest who signs up keeps what they did as a guest.
+  store[e] = { name: name.trim(), research, salt, hash: await hashPassword(password, salt), data: snapshot() };
   save(store);
   return { name: name.trim(), research, email: e };
 }
@@ -61,7 +84,27 @@ export async function logIn(email: string, password: string): Promise<Profile | 
   const acct = load()[e];
   // Same message for both cases, so the form does not reveal which emails exist.
   if (!acct || (await hashPassword(password, acct.salt)) !== acct.hash) return "Email or password is wrong.";
+  try {
+    restore(acct.data);
+  } catch {
+    /* storage unavailable */
+  }
   return { name: acct.name, research: acct.research, email: e };
+}
+
+/** Log out: save this user's data into their account, then clear it from the screen. Guests keep theirs. */
+export function logOutAccount(p: Profile | null) {
+  if (!p?.email) return;
+  try {
+    const store = load();
+    if (store[p.email]) {
+      store[p.email] = { ...store[p.email], data: snapshot() };
+      save(store);
+    }
+    restore({});
+  } catch {
+    /* storage unavailable */
+  }
 }
 
 /** Keep the account in step when the user edits their name or research switch. */

@@ -77,6 +77,22 @@ The app runs from committed files in `backend/data/`. Rebuilding them is only
 needed to refresh the data; run the `backend/scripts/step*.py` scripts in
 order (step 1 needs an Earth Engine account).
 
+## Deploy for free (Render)
+
+The `Dockerfile` builds the React app and serves it from FastAPI, so the whole app is
+one web service. `render.yaml` describes it for Render's free plan.
+
+1. Sign in at [render.com](https://render.com) with GitHub.
+2. New → Blueprint → pick this repo. Render reads `render.yaml`.
+3. Click Apply. The first build takes a few minutes.
+4. Open the `https://canopy-….onrender.com` link.
+
+Free services sleep after 15 minutes idle; the next visit takes about a minute to wake.
+Open the link once before a demo. Delete the service in Render when you are done.
+
+Accounts are demo accounts stored in each browser (passwords hashed with PBKDF2).
+They do not sync between devices.
+
 ## Main API routes
 
 | Route | What it returns |

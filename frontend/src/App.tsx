@@ -1,7 +1,7 @@
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import ErrorBoundary from "./ErrorBoundary";
 import Landing from "./Landing";
-import { updateAccount } from "./auth";
+import { logOutAccount, updateAccount } from "./auth";
 import type { Atlas } from "./detective/model";
 import type { Unit } from "./planner/PrefsPanel";
 import { StationStrip } from "./research/station";
@@ -175,6 +175,7 @@ export default function App() {
   }
 
   function logOut() {
+    logOutAccount(profile);
     setProfile(null);
     saveProfile(null);
     navigate({ tab: "home" });

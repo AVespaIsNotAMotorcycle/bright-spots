@@ -44,8 +44,13 @@ describe("App", () => {
     expect(JSON.parse(localStorage.getItem("profile")!)).toEqual({ name: "Ana", research: false, email: "ana@example.com" });
     expect(localStorage.getItem("accounts")).not.toContain("parks-2026");
 
+    localStorage.setItem("wishlist", JSON.stringify(["zion"]));
     fireEvent.click(screen.getByRole("button", { name: "A" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Log out" }));
+    // Logged out: back on the sign-in page, and Ana's saved parks are put away.
+    expect(await screen.findByRole("button", { name: "Continue as a guest" })).toBeTruthy();
+    expect(localStorage.getItem("profile")).toBeNull();
+    expect(localStorage.getItem("wishlist")).toBeNull();
     fireEvent.click(await screen.findByRole("tab", { name: "Log in" }));
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "ana@example.com" } });
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "wrong-pass" } });
@@ -54,6 +59,19 @@ describe("App", () => {
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "parks-2026" } });
     fireEvent.click(screen.getByRole("button", { name: "Log in" }));
     await screen.findByRole("navigation", { name: "Main" }, { timeout: 3000 });
+    expect(await screen.findByText("Welcome, Ana", undefined, { timeout: 3000 })).toBeTruthy();
+    expect(JSON.parse(localStorage.getItem("wishlist")!)).toEqual(["zion"]);
+  });
+
+  it("a guest can open the sign-in page from the profile menu and keeps their data", async () => {
+    localStorage.setItem("profile", JSON.stringify({ name: "", research: false }));
+    localStorage.setItem("wishlist", JSON.stringify(["acadia"]));
+    render(<App />);
+    await screen.findByRole("navigation", { name: "Main" });
+    fireEvent.click(screen.getByRole("button", { name: "?" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Sign up or log in" }));
+    expect(await screen.findByRole("tab", { name: "Sign up" })).toBeTruthy();
+    expect(JSON.parse(localStorage.getItem("wishlist")!)).toEqual(["acadia"]);
   });
 
   it("with research on, the nav has the five tabs and a Research menu with every research tool", async () => {

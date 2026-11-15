@@ -1,11 +1,14 @@
 import asyncio
+import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import httpx
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import FileResponse
 
 from app.community.router import router as community_router
 from app.config import settings
@@ -51,3 +54,19 @@ def hello() -> dict[str, str]:
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+# Hosted mode: serve the built frontend from the same server, so one free web service runs the app.
+# Set STATIC_DIR to the Vite build folder (the Dockerfile does). Unknown paths fall back to index.html.
+_static = os.environ.get("STATIC_DIR")
+if _static and Path(_static, "index.html").is_file():
+    _root = Path(_static).resolve()
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def spa(path: str) -> FileResponse:
+        if path.startswith("api/"):
+            raise HTTPException(status_code=404)
+        file = (_root / path).resolve()
+        if path and file.is_file() and file.is_relative_to(_root):
+            return FileResponse(file)
+        return FileResponse(_root / "index.html")
