@@ -174,7 +174,7 @@ export default function ParkDrawer({ p, trip, state, unit, science = false, plai
             {rows.map((r) => (
               <div key={r.key} className="tp-barrow" title={r.key === "temperature" ? "NASA POWER" : SOURCE_LABEL[CHIP[r.key]?.source ?? "nasa"]}>
                 <span>
-                  {EMOJI(r.key)} <b>{LABEL(r.key)}</b>{r.level === "must" ? " (must)" : ""}{CHIP[r.key]?.source === "estimate" ? " · est." : ""}
+                  {EMOJI(r.key)} <b>{LABEL(r.key)}</b>{r.level === "must" ? " (must)" : r.kind === "base" ? " · always counted" : ""}{CHIP[r.key]?.source === "estimate" ? " · est." : ""}
                   <span className="muted"> · {reasonText(r, unit)}</span>
                   {science && <> <Sci r={r} /></>}
                 </span>

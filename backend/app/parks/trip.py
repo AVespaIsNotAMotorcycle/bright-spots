@@ -42,6 +42,37 @@ ROOT = Path(__file__).resolve().parents[2] / "data"
 HORIZONS = ("this_year", "next_year", "y2050")
 MUST_MIN = 0.5
 W_TEMP, W_NICE, W_MUST = 2.0, 1.0, 1.5
+# Always counted, so parks in the same warmth band do not all tie at 100:
+# rainy days, gray skies and muggy air, each at this weight, unless the user picked that chip.
+BASE_KEYS = ("rain", "gray", "muggy")
+W_BASE = 0.5
+EDGE = 0.7  # warmth score at the edge of the picked range; 1.0 only in the middle
+TEMP_FALLOFF = 8.0  # °C past the edge where the warmth score reaches 0
+
+
+def merge_bands(bands: list[tuple[float, float]]) -> list[tuple[float, float]]:
+    """Join touching or overlapping bands: Mild 15-24 + Warm 24-30 is one 15-30 range."""
+    out: list[list[float]] = []
+    for lo, hi in sorted(bands):
+        if out and lo <= out[-1][1]:
+            out[-1][1] = max(out[-1][1], hi)
+        else:
+            out.append([lo, hi])
+    return [(a, b) for a, b in out]
+
+
+def warmth(t: float, bands: list[tuple[float, float]]) -> float:
+    """1 in the middle of the picked range, EDGE at its ends, then down to 0 over TEMP_FALLOFF."""
+    best = 0.0
+    for lo, hi in merge_bands(bands):
+        c, h = (lo + hi) / 2, max((hi - lo) / 2, 0.5)
+        if lo <= t <= hi:
+            s = 1 - (1 - EDGE) * ((t - c) / h) ** 2
+        else:
+            d = lo - t if t < lo else t - hi
+            s = EDGE * clamp01(1 - d / TEMP_FALLOFF)
+        best = max(best, s)
+    return best
 SYNODIC = 29.530588853
 NEW_MOON_REF = dt.datetime(2000, 1, 6, 18, 14)  # a known new moon (UTC)
 STRONG_FALL = {"EASTERN TEMPERATE FORESTS", "NORTHERN FORESTS"}
@@ -309,10 +340,20 @@ def _evaluate(ctx: Ctx, tp: TripPrefs) -> dict:
     reasons, total, weight, failed = [], 0.0, 0.0, []
     t = ctx.v.get("tmax")
     if t is not None:
-        s = max(temp_score(t, lo, hi) for lo, hi in tp.bands)
+        s = warmth(t, tp.bands)
         reasons.append({"key": "temperature", "kind": "feel", "level": "nice", "score": round(s, 3), "value": t, "weight": W_TEMP})
         total += W_TEMP * s
         weight += W_TEMP
+    for key in BASE_KEYS:
+        if key in tp.avoids:
+            continue
+        r = AVOIDS[key](ctx)
+        if r is None:
+            continue
+        s, val = r
+        reasons.append({"key": key, "kind": "base", "level": "nice", "score": round(s, 3), "value": val, "weight": W_BASE})
+        total += W_BASE * s
+        weight += W_BASE
     for kind, chosen, table in (("want", tp.wants, WANTS), ("avoid", tp.avoids, AVOIDS)):
         for key, level in chosen.items():
             r = table[key](ctx)

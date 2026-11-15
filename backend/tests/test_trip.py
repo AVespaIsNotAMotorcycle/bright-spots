@@ -83,3 +83,36 @@ def test_fire_is_unknown_outside_the_firms_file():
 def test_bad_input():
     assert client.get("/api/parks/trip", params={"months": "13"}).status_code == 422
     assert client.get("/api/parks/trip", params={"months": "1", "bands": "30:10"}).status_code == 422
+
+
+def test_touching_bands_merge_into_one_range():
+    from app.parks.trip import merge_bands
+
+    assert merge_bands([(24, 30), (15, 24)]) == [(15, 30)]
+    assert merge_bands([(0, 15), (24, 30)]) == [(0, 15), (24, 30)]
+
+
+def test_warmth_peaks_in_the_middle_so_parks_do_not_tie():
+    from app.parks.trip import EDGE, warmth
+
+    comfy = [(15, 24), (24, 30)]
+    assert warmth(22.5, comfy) == 1.0
+    assert warmth(15, comfy) == EDGE
+    assert warmth(20, comfy) > warmth(28, comfy) > warmth(31, comfy) > 0
+    assert warmth(40, comfy) == 0.0
+
+
+def test_rain_gray_and_muggy_always_count_unless_picked():
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+
+    c = TestClient(app)
+    r = c.get("/api/parks/trip", params={"months": "7", "bands": "15:24,24:30"}).json()
+    top = r["parks"][0]
+    assert {x["key"] for x in top["reasons"] if x["kind"] == "base"} <= {"rain", "gray", "muggy"}
+    scores = [p["score"] for p in r["parks"] if p["score"] is not None]
+    assert scores.count(max(scores)) <= 3  # no 30-way tie at 100
+    r2 = c.get("/api/parks/trip", params={"months": "7", "bands": "15:30", "avoid": "rain"}).json()
+    rows = r2["parks"][0]["reasons"]
+    assert [x["kind"] for x in rows if x["key"] == "rain"] == ["avoid"]

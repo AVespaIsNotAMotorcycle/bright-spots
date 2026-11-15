@@ -8,7 +8,7 @@ export type Unit = "F" | "C";
 
 export interface Reason {
   key: string;
-  kind: "feel" | "want" | "avoid";
+  kind: "feel" | "want" | "avoid" | "base";
   level: Level;
   score: number | null;
   value: number | null;
