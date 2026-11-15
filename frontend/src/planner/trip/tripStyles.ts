@@ -18,8 +18,10 @@ export const TRIP_CSS = `
 .tp-mood[aria-pressed=true]{background:#f3c969;color:#261e14;border-color:#f3c969}
 /* Months */
 .tp-seasons{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+/* The season sits apart from its months, so it reads as a button, not a column header. */
+.tp-season-col{display:flex;flex-direction:column;gap:6px;min-width:0}
+.tp-season-col>.tp-season{margin-bottom:10px}
 .tp-season{border:0;border-radius:12px 12px 4px 4px;padding:6px 4px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
-.tp-months{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
 .tp-month{border:1.5px solid transparent;border-radius:10px;padding:9px 0;font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:transform .1s}
 .tp-month:hover{transform:translateY(-1px)}
 .tp-month[aria-pressed=true]{box-shadow:inset 0 0 0 2px currentColor;font-weight:800}

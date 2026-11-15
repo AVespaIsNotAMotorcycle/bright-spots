@@ -51,31 +51,34 @@ function Months({ state, set }: Pick<Props, "state" | "set">) {
     last.current = m;
     set({ months: next.sort((a, b) => a - b) });
   };
+  // Each month's next occurrence, so Dec this year and Feb next year are labelled right.
+  const upcoming = new Map(nextTwelve().map((x) => [x.m, x]));
   const exactly = (ms: number[]) => ms.length === state.months.length && ms.every((m) => state.months.includes(m));
   return (
     <section aria-labelledby="tp-when">
       <h3 className="tp-h" id="tp-when">
         When are you going? <small>{state.months.length === 0 ? "any time" : state.months.length > 1 ? "best month wins" : "tap more to compare"}</small>
       </h3>
+      {/* One column per season: its button, then its own three months (Dec, Jan, Feb under Winter). */}
       <div className="tp-seasons">
         {SEASONS.map((s) => (
-          <button key={s.id} className="tp-season" aria-pressed={exactly(s.months)} onClick={() => set({ months: exactly(s.months) ? [] : [...s.months].sort((a, b) => a - b) })}
-            title={`Pick all of ${s.label.toLowerCase()}`}>
-            {s.label}
-          </button>
-        ))}
-      </div>
-      <div className="tp-months" role="group" aria-label="Months">
-        {nextTwelve().map(({ m, y, now }) => {
-          const on = state.months.includes(m);
-          return (
-            <button key={m} className="tp-month" aria-pressed={on} onClick={(e) => pick(m, e)}
-              aria-label={`${MONTHS_LONG[m - 1]} ${y}`} title={`${MONTHS_LONG[m - 1]} ${y}${now ? " (this month)" : ""}`}>
-              {MONTHS[m - 1]}
-              <small className="tp-month-y">{now ? "now" : `'${String(y).slice(2)}`}</small>
+          <div key={s.id} className="tp-season-col" role="group" aria-label={`${s.label} months`}>
+            <button className="tp-season" aria-pressed={exactly(s.months)} onClick={() => set({ months: exactly(s.months) ? [] : [...s.months].sort((a, b) => a - b) })}
+              title={`Pick all of ${s.label.toLowerCase()}`}>
+              {s.label}
             </button>
-          );
-        })}
+            {s.months.map((m) => {
+              const { y, now } = upcoming.get(m)!;
+              return (
+                <button key={m} className="tp-month" aria-pressed={state.months.includes(m)} onClick={(e) => pick(m, e)}
+                  aria-label={`${MONTHS_LONG[m - 1]} ${y}`} title={`${MONTHS_LONG[m - 1]} ${y}${now ? " (this month)" : ""}`}>
+                  {MONTHS[m - 1]}
+                  <small className="tp-month-y">{now ? "now" : `'${String(y).slice(2)}`}</small>
+                </button>
+              );
+            })}
+          </div>
+        ))}
       </div>
       {state.months.length === 0 && <p className="tp-note">Any time: each park uses its best month of the year.</p>}
     </section>
