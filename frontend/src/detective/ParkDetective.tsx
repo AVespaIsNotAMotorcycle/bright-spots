@@ -14,6 +14,66 @@ interface Props {
   simple?: boolean;
 }
 
+const VAR_ICON: Record<string, string> = {
+  tmax_c: "☀️", tmin_c: "🌙", tmean_c: "🌡️", hot90_days: "🔥", hot100_days: "🌵", prcp_mm: "🌧️",
+};
+
+const VERDICT_PILL: Record<string, { t: string; bg: string; c: string }> = {
+  real: { t: "Confirmed trend", bg: "#dfe8cf", c: "#2d5a27" },
+  possible: { t: "Possible trend", bg: "#f3e2c0", c: "#7a5a1c" },
+  none: { t: "No clear trend", bg: "#e7e0d0", c: "#5b4a36" },
+};
+
+/** Student card: icon, title, the big number and a verdict pill on top; chart below. */
+function StudentTrendCard({
+  t, meta, fahrenheit, children,
+}: { t: TrendRow; meta: { label: string; unit: string }; fahrenheit: boolean; children: React.ReactNode }) {
+  const isTemp = meta.unit.includes("°");
+  const toF = isTemp && fahrenheit;
+  const slope = toF ? t.sen_per_decade_f ?? (t.sen_per_decade != null ? t.sen_per_decade * 1.8 : null) : t.sen_per_decade;
+  const unit = isTemp ? (toF ? "°F" : "°C") : meta.unit === "days" ? " days" : ` ${meta.unit}`;
+  const pill = VERDICT_PILL[t.verdict] ?? VERDICT_PILL.none;
+  const up = (slope ?? 0) > 0;
+  const color = t.verdict === "none" ? "var(--text-muted)" : up ? "var(--rust)" : "var(--sky)";
+  const shown = slope == null ? "–" : `${up ? "+" : slope < 0 ? "−" : ""}${Math.abs(slope) >= 10 ? Math.abs(slope).toFixed(0) : Math.abs(slope).toFixed(2)}${unit}`;
+  return (
+    <div
+      className="card"
+      style={{ display: "flex", flexDirection: "column", gap: 12, borderTop: `4px solid ${pill.c}`, paddingTop: 16 }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <span
+          aria-hidden
+          style={{
+            fontSize: 22, width: 42, height: 42, borderRadius: 12, display: "grid", placeItems: "center",
+            background: "var(--surface-2)", flexShrink: 0,
+          }}
+        >
+          {VAR_ICON[t.variable] ?? "📈"}
+        </span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 700, fontSize: 15 }}>{meta.label}</div>
+          <div className="micro muted">Whole year, 1981 to now</div>
+        </div>
+        <span
+          style={{
+            background: pill.bg, color: pill.c, borderRadius: 999, padding: "3px 10px", fontSize: 11.5, fontWeight: 700,
+            display: "inline-flex", alignItems: "center", gap: 5, whiteSpace: "nowrap",
+          }}
+        >
+          <span aria-hidden style={{ width: 6, height: 6, borderRadius: "50%", background: pill.c }} />
+          {pill.t}
+        </span>
+      </div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+        <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 30, color, lineHeight: 1 }}>{shown}</span>
+        <span className="small muted">every 10 years</span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
 export default function ParkDetective({
   parkId,
   parkName,
@@ -82,10 +142,9 @@ export default function ParkDetective({
             if (!meta || !series) return null;
             const isTemp = meta.unit.includes("°");
             return (
-              <div key={t.variable} className="card" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <TrendChart series={series} trend={t} unit={isTemp && useFahrenheit ? "°F" : meta.unit} label={meta.label} parkName={parkName} parkId={parkId} />
-                <ExplainerCard parkName={parkName} trend={t} meta={meta} period="annual" periodLabel="the whole year" useFahrenheit={useFahrenheit} simple />
-              </div>
+              <StudentTrendCard key={t.variable} t={t} meta={meta} fahrenheit={useFahrenheit}>
+                <TrendChart simple series={series} trend={t} unit={isTemp && useFahrenheit ? "°F" : meta.unit} label={meta.label} parkName={parkName} parkId={parkId} />
+              </StudentTrendCard>
             );
           })}
         </div>

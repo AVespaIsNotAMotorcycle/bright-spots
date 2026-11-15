@@ -1,8 +1,9 @@
 // Yearly time-series chart with a Sen's slope trend line overlay.
 import {
+  Area,
   CartesianGrid,
+  ComposedChart,
   Line,
-  LineChart,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -23,6 +24,8 @@ interface Props {
   parkId?: string;
   /** Show the "Explain it to me" button. Default true. */
   explain?: boolean;
+  /** Student look: no title row, soft grid, shaded area, plain-words legend. */
+  simple?: boolean;
 }
 
 function senLine(
@@ -35,7 +38,7 @@ function senLine(
   return years.map((y) => ({ year: y, fit: trend.mean! + slope * (y - mid) }));
 }
 
-export default function TrendChart({ series: raw, trend: rawTrend, unit, label, parkName, parkId, explain = true }: Props) {
+export default function TrendChart({ series: raw, trend: rawTrend, unit, label, parkName, parkId, explain = true, simple = false }: Props) {
   // The data files hold °C. When a chart is labelled °F, convert here so numbers match the label.
   const toF = unit === "°F";
   const conv = (v: number) => (toF ? v * 1.8 + 32 : v);
@@ -71,7 +74,7 @@ export default function TrendChart({ series: raw, trend: rawTrend, unit, label, 
 
   return (
     <div style={{ width: "100%", fontSize: 12 }}>
-      <div
+      {!simple && <div
         style={{
           marginBottom: 4,
           fontWeight: 600,
@@ -80,10 +83,18 @@ export default function TrendChart({ series: raw, trend: rawTrend, unit, label, 
         }}
       >
         {label}
-      </div>
-      <ResponsiveContainer width="100%" height={180}>
-        <LineChart data={data} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
-          <CartesianGrid stroke="var(--grid)" strokeDasharray="3 3" />
+      </div>}
+      <ResponsiveContainer width="100%" height={simple ? 170 : 180}>
+        <ComposedChart data={data} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
+          {simple && (
+            <defs>
+              <linearGradient id="tc-fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.22} />
+                <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+          )}
+          <CartesianGrid stroke="var(--grid)" strokeDasharray="3 3" vertical={!simple} />
           <XAxis
             dataKey="year"
             tick={{ fill: "var(--text-muted)", fontSize: 11 }}
@@ -116,13 +127,16 @@ export default function TrendChart({ series: raw, trend: rawTrend, unit, label, 
               strokeWidth={1}
             />
           )}
+          {simple && (
+            <Area type="monotone" dataKey="value" stroke="none" fill="url(#tc-fill)" baseValue={domainLo} isAnimationActive={false} />
+          )}
           {/* Raw yearly values */}
           <Line
             type="monotone"
             dataKey="value"
             stroke="var(--accent)"
             strokeWidth={1.5}
-            dot={{ r: 2.5, fill: "var(--accent)" }}
+            dot={simple ? { r: 2, fill: "var(--accent)", strokeWidth: 0 } : { r: 2.5, fill: "var(--accent)" }}
             activeDot={{ r: 4 }}
             name={label}
             connectNulls={false}
@@ -137,7 +151,7 @@ export default function TrendChart({ series: raw, trend: rawTrend, unit, label, 
             strokeDasharray="6 3"
             name="Trend"
           />
-        </LineChart>
+        </ComposedChart>
       </ResponsiveContainer>
       <div
         style={{
@@ -148,9 +162,18 @@ export default function TrendChart({ series: raw, trend: rawTrend, unit, label, 
           color: "var(--text-muted)",
         }}
       >
-        <span style={{ color: "var(--accent)" }}>— yearly values</span>
-        <span style={{ color: "var(--accent-2)" }}>— — trend (Sen's slope)</span>
-        <span>· · long-run mean</span>
+        {simple ? (
+          <>
+            <span style={{ color: "var(--accent)" }}>● each dot is one year</span>
+            <span style={{ color: "var(--accent-2)" }}>- - - the long-term direction</span>
+          </>
+        ) : (
+          <>
+            <span style={{ color: "var(--accent)" }}>— yearly values</span>
+            <span style={{ color: "var(--accent-2)" }}>— — trend (Sen's slope)</span>
+            <span>· · long-run mean</span>
+          </>
+        )}
       </div>
       {explain && (
         <ExplainButton
