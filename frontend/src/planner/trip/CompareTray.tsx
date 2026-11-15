@@ -1,7 +1,7 @@
 // Compare up to 3 parks side by side; the best value in each row gets a trophy.
 import { useState } from "react";
 import { photoOf } from "../../detective/photos";
-import { EMOJI, LABEL, MONTHS, reasonText, type TripPark, type Unit } from "./tripModel";
+import { LABEL, MONTHS, reasonText, type TripPark, type Unit } from "./tripModel";
 
 export const MAX_COMPARE = 3;
 
@@ -17,16 +17,16 @@ export default function CompareTray({ parks, unit, onRemove, onClear }: {
     return xs.length > 1 && xs[0] - xs[1] >= margin ? xs[0] : null;
   };
   const rows: { label: string; cells: { text: string; score: number | null }[] }[] = [
-    { label: "⭐ Score", cells: parks.map((p) => ({ text: String(Math.round(p.score ?? 0)), score: p.score })) },
-    { label: "📅 Best month", cells: parks.map((p) => ({ text: MONTHS[p.best_month - 1], score: null })) },
+    { label: "Score", cells: parks.map((p) => ({ text: String(Math.round(p.score ?? 0)), score: p.score })) },
+    { label: "Best month", cells: parks.map((p) => ({ text: MONTHS[p.best_month - 1], score: null })) },
     ...keys.map((k) => ({
-      label: `${EMOJI(k)} ${LABEL(k)}`,
+      label: LABEL(k),
       cells: parks.map((p) => {
         const r = p.reasons.find((x) => x.key === k);
         return { text: r ? reasonText(r, unit) : "–", score: r?.score ?? null };
       }),
     })),
-    { label: "⏳ Score change by 2050", cells: parks.map((p) => ({ text: p.change_2050 == null ? "–" : `${p.change_2050 > 0 ? "+" : ""}${Math.round(p.change_2050)}`, score: p.change_2050 })) },
+    { label: "Score change by 2050", cells: parks.map((p) => ({ text: p.change_2050 == null ? "–" : `${p.change_2050 > 0 ? "+" : ""}${Math.round(p.change_2050)}`, score: p.change_2050 })) },
   ];
   return (
     <>
@@ -50,7 +50,7 @@ export default function CompareTray({ parks, unit, onRemove, onClear }: {
             </thead>
             <tbody>
               {rows.map((r) => {
-                const top = best(r.cells.map((c) => c.score), r.label.startsWith("⭐") || r.label.startsWith("⏳") ? 2 : 0.05);
+                const top = best(r.cells.map((c) => c.score), r.label.startsWith("Score") ? 2 : 0.05);
                 return (
                   <tr key={r.label}>
                     <th scope="row">{r.label}</th>

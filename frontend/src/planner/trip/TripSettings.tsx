@@ -61,7 +61,7 @@ function Months({ state, set }: Pick<Props, "state" | "set">) {
         {SEASONS.map((s) => (
           <button key={s.id} className="tp-season" aria-pressed={exactly(s.months)} onClick={() => set({ months: exactly(s.months) ? [] : [...s.months].sort((a, b) => a - b) })}
             title={`Pick all of ${s.label.toLowerCase()}`}>
-            {s.emoji} {s.label}
+            {s.label}
           </button>
         ))}
       </div>
@@ -100,7 +100,6 @@ function Feel({ state, set, unit }: Pick<Props, "state" | "set" | "unit">) {
                 const feels = state.custom ? [f.id] : has ? state.feels.filter((x) => x !== f.id) : [...state.feels, f.id];
                 set({ custom: null, feels });
               }}>
-              <b>{f.emoji}</b>
               {f.label}
               <small>{f.id === "cool" ? `< ${temp(f.hi, unit)}` : f.id === "hot" ? `> ${temp(f.lo, unit)}` : `${temp(f.lo, unit)}–${temp(f.hi, unit)}`}</small>
             </button>
@@ -145,7 +144,6 @@ function Chips({ title, chips, value, onChange, kind }: {
                 else delete next[c.key];
                 onChange(next);
               }}>
-              <span aria-hidden>{c.emoji}</span>
               {c.label}
               {c.source === "estimate" && <span className="tp-src" aria-hidden>est.</span>}
               {l && <span className="lvl">{l === "must" ? kind === "avoid" ? "never" : "must" : kind === "avoid" ? "avoid" : "nice"}</span>}

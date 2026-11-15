@@ -2,7 +2,7 @@
 import { photoOf } from "../../detective/photos";
 import type { Case } from "../../detective/cases";
 import type { TrendTag } from "../whatChanged";
-import { EMOJI, LABEL, MONTHS, goldMonth, reasonText, scoreColor, seasonOf, type Reason, type TripPark, type Unit } from "./tripModel";
+import { LABEL, MONTHS, goldMonth, reasonText, scoreColor, seasonOf, type Reason, type TripPark, type Unit } from "./tripModel";
 
 export function ScoreRing({ score, size = 62, light = true }: { score: number | null; size?: number; light?: boolean }) {
   const r = size / 2 - 5;
@@ -45,14 +45,12 @@ export function Badges({ p, caseFor }: { p: TripPark; caseFor?: Case }) {
   const drop = p.change_2050 != null && p.change_2050 <= -10;
   return (
     <div className="tp-badges">
-      {drop && <span className="tp-badge warn" title="Same month, 2050 climate model average (WorldClim CMIP6): temperature and rain change. Score points, not degrees">⏳ Go before it changes: {Math.round(p.change_2050!)} points by 2050</span>}
-      {shift && <span className="tp-badge warn" title="Best month of the whole year, now vs the 2050 model">📆 Best month moves {MONTHS[p.best_now! - 1]} → {MONTHS[p.best_2050! - 1]} by 2050</span>}
-      {caseFor && <span className="tp-badge case">🔍 {caseFor.title}</span>}
+      {drop && <span className="tp-badge warn" title="Same month, 2050 climate model average (WorldClim CMIP6): temperature and rain change. Score points, not degrees">Go before it changes: {Math.round(p.change_2050!)} points by 2050</span>}
+      {shift && <span className="tp-badge warn" title="Best month of the whole year, now vs the 2050 model">Best month moves {MONTHS[p.best_now! - 1]} → {MONTHS[p.best_2050! - 1]} by 2050</span>}
+      {caseFor && <span className="tp-badge case">{caseFor.title}</span>}
     </div>
   );
 }
-
-const medal = ["🥇", "🥈", "🥉"];
 
 /** Science switch: the factor's own score and weight, and q for trends. */
 export function Sci({ r }: { r: Reason }) {
@@ -89,13 +87,13 @@ export function TopCard({ p, i, onOpen, heart, dates, why, trend }: {
       onClick={onOpen} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onOpen())}>
       <div className="tp-photo" style={{ backgroundImage: photo ? `url("${photo.file}")` : undefined }}
         title={photo ? `Photo: ${photo.credit} (${photo.license}), Wikimedia Commons` : undefined}>
-        <span className="tp-medal" aria-hidden>{medal[i]}</span>
+        <span className="tp-medal" aria-hidden>#{i + 1}</span>
         <div className="tp-name">{p.park.short}<small>{p.park.states.join(", ")} · best in {MONTHS[p.best_month - 1]}</small></div>
         <div className="tp-ring"><ScoreRing score={p.score} /></div>
       </div>
       <div className="tp-body tp-simple">
         <span>
-          {dates && <p className="tp-card-dates">📅 <b>{dates}</b></p>}
+          {dates && <p className="tp-card-dates"><b>{dates}</b></p>}
           {why && <p className="small muted" style={{ margin: "2px 0 0" }}>{why}</p>}
           {trend && <p style={{ margin: "6px 0 0" }}><Trend t={trend} /></p>}
         </span>
@@ -142,7 +140,7 @@ export function Row({ p, rank, unit, onOpen, actions, plain = false, trend }: {
     return (
       <div className="tp-row plain" role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onOpen())}
         aria-label={`${p.park.short}. Open details`}>
-        {photo ? <img src={photo.file} alt="" loading="lazy" /> : <span style={{ fontSize: 32 }}>🏞️</span>}
+        {photo ? <img src={photo.file} alt="" loading="lazy" /> : <span style={{ width: 56 }} />}
         <span style={{ minWidth: 0 }}>
           <b>{p.park.short}</b>
           <div className="small muted">{p.park.states.join(", ")}</div>
@@ -155,13 +153,13 @@ export function Row({ p, rank, unit, onOpen, actions, plain = false, trend }: {
     <div className={`tp-row${p.ok ? "" : " off"}`} role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onOpen())}
       aria-label={`${rank}. ${p.park.short}, ${p.ok ? `score ${Math.round(p.score ?? 0)}` : "misses one of your musts"}`}>
       <span className="muted small" style={{ textAlign: "right" }}>{rank}</span>
-      {photo ? <img src={photo.file} alt="" loading="lazy" /> : <span style={{ fontSize: 32 }}>🏞️</span>}
+      {photo ? <img src={photo.file} alt="" loading="lazy" /> : <span style={{ width: 56 }} />}
       <span style={{ minWidth: 0 }}>
         <b>{p.park.short}</b> <span className="micro muted">{p.park.states.join(", ")} · {MONTHS[p.best_month - 1]}</span>
         <div className="small muted" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {p.ok
-            ? best.map((r) => `${EMOJI(r.key)} ${reasonText(r, unit)}`).join(" · ")
-            : `Misses: ${p.failed.map((k) => `${EMOJI(k)} ${LABEL(k)}`).join(", ")}`}
+            ? best.map((r) => reasonText(r, unit)).join(" · ")
+            : `Misses: ${p.failed.map((k) => LABEL(k)).join(", ")}`}
         </div>
         <Trend t={trend} small />
       </span>

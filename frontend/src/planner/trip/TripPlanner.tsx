@@ -205,9 +205,9 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
         </button>
         <button className="tp-act" aria-pressed={inCmp} disabled={!inCmp && compare.length >= MAX_COMPARE}
           onClick={() => setCompare((x) => (inCmp ? x.filter((y) => y !== c) : [...x, c]))}>
-          {inCmp ? "✓ Comparing" : "🗂 Compare"}
+          {inCmp ? "✓ Comparing" : "Compare"}
         </button>
-        <button className="tp-act" onClick={() => shareTripCard(p, unit, changed(p))} title="Download or share a picture of this trip">🖼 Trip card</button>
+        <button className="tp-act" onClick={() => shareTripCard(p, unit, changed(p))} title="Download or share a picture of this trip">Trip card</button>
       </>
     );
   };
@@ -251,7 +251,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
       </aside>
 
       <div className="tp-main">
-        <button className="btn tp-edit" onClick={() => setSheet(true)}>⚙ Edit trip · {monthsText}</button>
+        <button className="btn tp-edit" onClick={() => setSheet(true)}>Edit trip · {monthsText}</button>
 
         <section className="tp-hero" style={heroPhoto ? ({ "--tp-hero": `url("${heroPhoto.file}")` } as React.CSSProperties) : undefined}>
           <h1>Where should you go?</h1>
@@ -264,7 +264,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
                   setMood(m.id);
                   play("tick");
                 }}>
-                {m.emoji} {m.label}
+                {m.label}
               </button>
             ))}
           </div>
@@ -285,10 +285,10 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
               ))}
             </div>}
             <div className="tp-seg" role="group" aria-label="View">
-              <button aria-pressed={view === "list"} onClick={() => setView("list")}>☰ List</button>
-              <button aria-pressed={view === "map"} onClick={() => setView("map")}>🗺 Map</button>
+              <button aria-pressed={view === "list"} onClick={() => setView("list")}>List</button>
+              <button aria-pressed={view === "map"} onClick={() => setView("map")}>Map</button>
             </div>
-            <button className="tp-act" onClick={surprise} disabled={!matches.length}>🎲 Surprise me</button>
+            <button className="tp-act" onClick={surprise} disabled={!matches.length}>Surprise me</button>
           </div>
         </div>
 

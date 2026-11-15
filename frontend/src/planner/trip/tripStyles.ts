@@ -59,7 +59,7 @@ export const TRIP_CSS = `
 .tp-card:hover,.tp-card:focus-visible{transform:translateY(-3px);box-shadow:var(--shadow-md)}
 .tp-photo{height:150px;position:relative;background:#cfc3a8 center/cover no-repeat}
 .tp-photo::after{content:"";position:absolute;inset:0;background:rgba(20,28,22,.32)}
-.tp-medal{position:absolute;left:12px;top:10px;font-size:28px;z-index:1;filter:drop-shadow(0 2px 3px rgba(0,0,0,.4))}
+.tp-medal{position:absolute;left:12px;top:10px;font-size:13px;font-weight:700;color:#fff;background:rgba(0,0,0,.5);padding:2px 9px;border-radius:999px;z-index:1}
 .tp-name{position:absolute;left:14px;right:84px;bottom:10px;z-index:1;color:#fff;font-family:var(--font-display);font-weight:800;font-size:22px;line-height:1.1;text-shadow:0 2px 6px rgba(0,0,0,.5)}
 .tp-name small{display:block;font-family:var(--font-body);font-size:12px;font-weight:600;opacity:.9}
 .tp-ring{position:absolute;right:10px;bottom:8px;z-index:1}
@@ -163,7 +163,6 @@ export const TRIP_CSS = `
 .tp-cmp{width:100%;border-collapse:collapse;font-size:13px}
 .tp-cmp th,.tp-cmp td{padding:7px 8px;border-bottom:1px solid var(--grid);text-align:left;vertical-align:top}
 .tp-cmp td.win{background:var(--pine-tint);font-weight:700}
-.tp-cmp td.win::after{content:" 🏆"}
 @keyframes tpslide{from{transform:translateX(40px);opacity:0}}
 @keyframes tpfade{from{opacity:0}}
 /* Custom slider (same as the old planner's) */

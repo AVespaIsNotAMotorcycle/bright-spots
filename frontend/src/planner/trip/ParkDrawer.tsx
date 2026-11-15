@@ -88,12 +88,12 @@ function Days({ list, picked, unit, loading }: { list: BestDays[]; picked: numbe
   if (loading) return <p className="tp-note">Finding the best dates…</p>;
   const ranked = [...list].filter((b) => b.window).sort((a, b) => b.window!.mean - a.window!.mean || a.month - b.month);
   const best = ranked[0];
-  if (!best) return <p className="small" style={{ margin: 0 }}>📅 No dates to show.</p>;
+  if (!best) return <p className="small" style={{ margin: 0 }}>No dates to show.</p>;
   const hi = stretchHigh(best);
   const byMonth = [...ranked].sort((a, b) => picked.indexOf(a.month) - picked.indexOf(b.month));
   return (
     <div>
-      <div className="tp-h">📅 Best dates</div>
+      <div className="tp-h">Best dates</div>
       <p className="tp-dates">{fmtWindow(best)} <small>score {Math.round(best.window!.mean)}{hi != null && ` · about ${temp(hi, unit)} highs`}</small></p>
       {isFlat(best) && <p className="small muted" style={{ margin: 0 }}>Any day in {MONTHS_LONG[best.month - 1]} works about as well.</p>}
       {byMonth.length > 1 && (
@@ -168,7 +168,7 @@ export default function ParkDrawer({ p, trip, state, unit, science = false, plai
           <div className="tp-h">Every check, scored for {HORIZON_LABEL(trip.horizon, trip)}</div>
           {science && (
             <p className="tp-note" style={{ marginTop: 0 }}>
-              🔬 Score = sum of (factor × weight) ÷ sum of weights × 100 ={" "}
+              Score = sum of (factor × weight) ÷ sum of weights × 100 ={" "}
               <b>{Math.round(p.score ?? 0)}</b>. Weights: daytime high 2, must 1.5, nice 1, and rain, gray sky and muggy air 0.5 each. A must below 50 hides the park.
             </p>
           )}
@@ -203,7 +203,7 @@ export default function ParkDrawer({ p, trip, state, unit, science = false, plai
 
         {state.want.stars && (
           <div className="tp-sec">
-            <div className="tp-h">🌑 New moon</div>
+            <div className="tp-h">New moon</div>
             <p className="small" style={{ margin: 0 }}>
               {moons.length ? `${MONTHS_LONG[p.best_month - 1]} ${moons.join(" and ")}: the darkest nights are a few days either side.` : "No new moon this month."}{" "}
               Night is {(24 - p.day_length).toFixed(1)} hours long here.
@@ -213,7 +213,7 @@ export default function ParkDrawer({ p, trip, state, unit, science = false, plai
           </div>
         )}
         <div className="tp-sec" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {caseFor && onCase && <button className="btn" onClick={() => onCase(caseFor)}>🔍 Solve “{caseFor.title}” before you go</button>}
+          {caseFor && onCase && <button className="btn" onClick={() => onCase(caseFor)}>Solve “{caseFor.title}” before you go</button>}
           {p.park.code && <a className="btn-ghost" href={`https://www.nps.gov/${p.park.code}/`} target="_blank" rel="noreferrer">{p.park.short} on nps.gov ↗</a>}
         </div>
         <div className="tp-sec" style={{ borderBottom: 0 }}>
