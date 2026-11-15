@@ -5,14 +5,22 @@ import { PERIOD_LABEL, VERDICT_LABEL } from "../detective/model";
 import { slopeText, useInsights } from "./lib";
 import ParkMap from "./ParkMap";
 
-function mix(a: [number, number, number], b: [number, number, number], t: number): string {
-  const c = a.map((v, i) => Math.round(v + (b[i] - v) * t));
-  return `rgb(${c[0]},${c[1]},${c[2]})`;
+type RGB = [number, number, number];
+function lerp(a: RGB, b: RGB, t: number): RGB {
+  return a.map((v, i) => Math.round(v + (b[i] - v) * t)) as RGB;
+}
+const css = (c: RGB) => `rgb(${c[0]},${c[1]},${c[2]})`;
+/** Colour ramp through several stops, t in 0..1. */
+function ramp(stops: RGB[], t: number): RGB {
+  const x = Math.min(0.999, Math.max(0, t)) * (stops.length - 1);
+  const i = Math.floor(x);
+  return lerp(stops[i], stops[i + 1], x - i);
 }
 
-const GREY: [number, number, number] = [190, 180, 160];
-const UP: [number, number, number] = [139, 58, 26];     // rust: rising
-const DOWN: [number, number, number] = [26, 58, 92];    // night sky: falling
+const NONE: RGB = [150, 170, 140];                                   // sage: no clear change
+const UP: RGB[] = [[255, 214, 102], [250, 140, 40], [214, 60, 30], [140, 20, 40]];   // gold > orange > red > maroon
+const DOWN: RGB[] = [[150, 220, 220], [60, 160, 210], [30, 90, 190], [40, 40, 120]]; // aqua > blue > indigo
+const rampCss = (stops: RGB[]) => `linear-gradient(90deg, ${stops.map(css).join(",")})`;
 
 export default function MapView({
   atlas,
@@ -56,13 +64,13 @@ export default function MapView({
 
   const colorOf = (id: string) => {
     const c = cells.get(id);
-    if (!c || c.sen == null || c.verdict === "short" || c.verdict === "flat") return mix(GREY, GREY, 0);
-    if (onlyReal && c.verdict !== "real") return mix(GREY, GREY, 0);
-    const strength = 0.35 + 0.65 * Math.min(1, Math.abs(c.sen) / maxAbs);
-    const base = c.sen >= 0 ? UP : DOWN;
-    if (c.verdict === "real") return mix(GREY, base, strength);
-    if (c.verdict === "possible") return mix(GREY, base, strength * 0.5);
-    return mix(GREY, GREY, 0);
+    if (!c || c.sen == null || c.verdict === "short" || c.verdict === "flat") return css(NONE);
+    if (onlyReal && c.verdict !== "real") return css(NONE);
+    const t = Math.min(1, Math.abs(c.sen) / maxAbs);
+    const stops = c.sen >= 0 ? UP : DOWN;
+    if (c.verdict === "real") return css(ramp(stops, 0.25 + 0.75 * t));
+    if (c.verdict === "possible") return css(lerp(NONE, ramp(stops, 0.2 + 0.5 * t), 0.65));
+    return css(NONE);
   };
   const tip = (id: string) => {
     const c = cells.get(id);
@@ -74,8 +82,9 @@ export default function MapView({
       <div className="card">
         <h2 className="section-title">National trend map</h2>
         <p className="panel-intro">
-          One dot per park. Dark rust means a real rise, dark blue a real fall. Pale dots are possible but unproven
-          trends. Grey means no clear change.
+          Each park is drawn with its real boundary. Warm colours (gold to maroon) mean a real rise, cool colours
+          (aqua to indigo) a real fall. Washed-out colours are possible but unproven trends. Sage green means no clear
+          change. Big parks show as shapes, small ones as dots.
         </p>
         <div className="row gap-12" style={{ flexWrap: "wrap", margin: "10px 0" }}>
           <label className="field">
@@ -105,8 +114,16 @@ export default function MapView({
           onPick={onOpenPark}
           radius={(id) => (cells.get(id)?.verdict === "real" ? 8 : 5.5)}
         />
+        <div className="row small" style={{ gap: 8, alignItems: "center", marginTop: 10, flexWrap: "wrap" }}>
+          <span>falling</span>
+          <span style={{ width: 130, height: 12, borderRadius: 6, background: rampCss([...DOWN].reverse()) }} />
+          <span style={{ width: 14, height: 12, borderRadius: 6, background: css(NONE) }} title="no clear change" />
+          <span style={{ width: 130, height: 12, borderRadius: 6, background: rampCss(UP) }} />
+          <span>rising</span>
+          <span className="muted">(bigger change = stronger colour; scale is per map)</span>
+        </div>
         <p className="small" style={{ marginTop: 8 }}>
-          <b style={{ color: "var(--rust)" }}>{counts.up}</b> rising · <b style={{ color: "var(--sky)" }}>{counts.down}</b> falling ·{" "}
+          <b style={{ color: "#d63c1e" }}>{counts.up}</b> rising · <b style={{ color: "#1e5abe" }}>{counts.down}</b> falling ·{" "}
           <b>{counts.none}</b> no clear change (real = passes the false-discovery-rate test, q &lt; 0.05).
         </p>
       </div>
