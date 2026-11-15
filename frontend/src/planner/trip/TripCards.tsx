@@ -63,8 +63,10 @@ export function Sci({ r }: { r: Reason }) {
   );
 }
 
-export function TopCard({ p, i, unit, picked, caseFor, onOpen, actions, science = false }: {
+export function TopCard({ p, i, unit, picked, caseFor, onOpen, actions, science = false, dates }: {
   p: TripPark; i: number; unit: Unit; picked: number[]; caseFor?: Case; onOpen: () => void; actions: React.ReactNode; science?: boolean;
+  /** Best 5-day stretch in the picked months, e.g. "Feb 3–9". */
+  dates?: string;
 }) {
   const photo = photoOf(p.park.code);
   const top = p.reasons.filter((r) => r.score != null).sort((a, b) => (b.level === "must" ? 1 : 0) - (a.level === "must" ? 1 : 0) || Math.abs(b.score! - 0.5) - Math.abs(a.score! - 0.5)).slice(0, 4);
@@ -78,6 +80,7 @@ export function TopCard({ p, i, unit, picked, caseFor, onOpen, actions, science 
         <div className="tp-ring"><ScoreRing score={p.score} /></div>
       </div>
       <div className="tp-body">
+        {dates && <p className="tp-card-dates">📅 Best dates: <b>{dates}</b></p>}
         <ul className="tp-reasons">
           {top.map((r) => (
             <li key={r.key}>

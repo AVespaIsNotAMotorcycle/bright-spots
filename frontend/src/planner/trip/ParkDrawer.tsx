@@ -4,7 +4,8 @@ import { loadAtlas, type Atlas } from "../../atlas/model";
 import type { Case } from "../../detective/cases";
 import { useTrends } from "../../detective/games";
 import { PhotoCredit, photoOf } from "../../detective/photos";
-import { fetchBestDays, type BestDays } from "../model";
+import type { BestDays } from "../model";
+import { fetchDates, fmtWindow } from "./bestDates";
 import { whatChanged } from "../whatChanged";
 import { Badges, MonthStrip, ScoreRing, Sci } from "./TripCards";
 import {
@@ -14,7 +15,6 @@ import {
   LABEL,
   MONTHS_LONG,
   SOURCE_LABEL,
-  bandsOf,
   reasonText,
   scoreColor,
   temp,
@@ -71,28 +71,54 @@ function ThenNow({ p, trip, unit }: { p: TripPark; trip: Trip; unit: Unit }) {
   );
 }
 
-function Days({ bd, unit }: { bd: BestDays | undefined; unit: Unit }) {
-  if (!bd) return <p className="tp-note">Finding the best days…</p>;
-  if (!bd.days) return <p className="tp-note">{bd.note}</p>;
+/** One picked month: 31 day squares, the best stretch outlined, dates under it. */
+function MonthDays({ bd, unit, top }: { bd: BestDays; unit: Unit; top: boolean }) {
+  if (!bd.days) return <p className="tp-note">{MONTHS_LONG[bd.month - 1]}: {bd.note}</p>;
   const scores = bd.days.map((d) => d.score).filter((s): s is number => s != null);
-  const flat = scores.length && Math.max(...scores) - Math.min(...scores) < 3;
+  const flat = scores.length > 0 && Math.max(...scores) - Math.min(...scores) < 3;
+  const w = bd.window;
+  const inW = (d: number) => !!w && d >= w.start && d <= w.end;
+  return (
+    <div className={`tp-md${top ? " top" : ""}`}>
+      <div className="tp-md-head">
+        <b>{MONTHS_LONG[bd.month - 1]}</b>
+        <span>{w ? <>best <b>{fmtWindow(bd)}</b> · {Math.round(w.mean)}</> : "no clear stretch"}</span>
+      </div>
+      <div className="tp-days" role="img" aria-label={`${MONTHS_LONG[bd.month - 1]}: best stretch ${fmtWindow(bd) ?? "none"}`}>
+        {bd.days.map((d) => (
+          <span key={d.day} className={inW(d.day) ? "in" : ""}
+            title={`${MONTHS_LONG[bd.month - 1].slice(0, 3)} ${d.day}: score ${d.score == null ? "–" : Math.round(d.score)}, high ${d.tmax == null ? "–" : temp(d.tmax, unit)}`}
+            style={{ background: scoreColor(d.score) }} />
+        ))}
+      </div>
+      <div className="tp-days-ax" aria-hidden><span>1</span><span>15</span><span>{bd.days.length}</span></div>
+      {flat && <p className="tp-note" style={{ margin: "2px 0 0" }}>Every day fits about the same. The stretch is only a little better.</p>}
+    </div>
+  );
+}
+
+function Days({ list, picked, unit, loading }: { list: BestDays[]; picked: number[]; unit: Unit; loading: boolean }) {
+  if (loading) return <p className="tp-note">Finding the best dates…</p>;
+  const ranked = [...list].filter((b) => b.window).sort((a, b) => b.window!.mean - a.window!.mean || a.month - b.month);
+  const best = ranked[0];
+  const byMonth = [...list].sort((a, b) => picked.indexOf(a.month) - picked.indexOf(b.month));
   return (
     <div>
-      <div className="tp-h">Day by day</div>
-      {flat ? (
-        <p className="small" style={{ margin: 0 }}>✓ Every day of {MONTHS_LONG[bd.month - 1]} fits about the same (score {Math.round(scores[0])}). Go any time.</p>
+      <div className="tp-h">📅 Best dates {picked.length > 1 && <small>in your {picked.length} months</small>}</div>
+      {best ? (
+        <p className="tp-dates">{fmtWindow(best)} <small>score {Math.round(best.window!.mean)}</small></p>
       ) : (
-        <>
-          <div className="tp-days" role="img" aria-label={`Best stretch ${bd.window ? `${bd.window.start} to ${bd.window.end}` : "none"}`}>
-            {bd.days.map((d) => (
-              <span key={d.day} title={`${d.day}: score ${d.score == null ? "–" : Math.round(d.score)}, high ${d.tmax == null ? "–" : temp(d.tmax, unit)}`}
-                style={{ background: scoreColor(d.score), outline: bd.window && d.day >= bd.window.start && d.day <= bd.window.end ? "2px solid #f3c969" : undefined }} />
-            ))}
-          </div>
-          {bd.window && <p className="small" style={{ margin: "6px 0 0" }}>Best stretch: <b>{MONTHS_LONG[bd.month - 1].slice(0, 3)} {bd.window.start}–{bd.window.end}</b></p>}
-        </>
+        <p className="small" style={{ margin: 0 }}>No dates to show.</p>
       )}
-      <p className="tp-note">{bd.note}</p>
+      {ranked.length > 1 && (
+        <p className="small muted" style={{ margin: "0 0 8px" }}>
+          Next best: {ranked.slice(1, 3).map((b) => fmtWindow(b)).join(", ")}
+        </p>
+      )}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {byMonth.map((b) => <MonthDays key={b.month} bd={b} unit={unit} top={b === best} />)}
+      </div>
+      {list[0] && <p className="tp-note">Best 5-day stretch for your settings. {list[0].note}</p>}
     </div>
   );
 }
@@ -102,7 +128,7 @@ export default function ParkDrawer({ p, trip, state, unit, science = false, case
   onClose: () => void; onCase?: (c: Case) => void; actions: React.ReactNode;
 }) {
   const atlas = useAtlas();
-  const [bd, setBd] = useState<BestDays | undefined>();
+  const [bd, setBd] = useState<BestDays[] | undefined>();
   const ref = useRef<HTMLDivElement>(null);
   const photo = photoOf(p.park.code);
   const changed = whatChanged(atlas, p.park.id, p.best_month, unit === "F", science);
@@ -110,17 +136,14 @@ export default function ParkDrawer({ p, trip, state, unit, science = false, case
 
   useEffect(() => {
     const ctl = new AbortController();
-    const bands = bandsOf(state);
     setBd(undefined);
-    fetchBestDays({
-      month: p.best_month, tLo: Math.min(...bands.map((b) => b[0])), tHi: Math.max(...bands.map((b) => b[1])),
-      rhMax: null, dewMax: state.avoid.muggy ? 16 : null, rainMax: null,
-      avoidBugs: !!state.avoid.bugs, stars: !!state.want.stars, snowmelt: !!state.want.waterfalls, scenario: state.scenario,
-    }, [p.park.id], state.horizon, ctl.signal)
-      .then((r) => setBd(r[p.park.id]))
-      .catch(() => undefined);
+    // Only months that pass every must; if none do, the month the card names.
+    const ok = state.months.filter((m) => p.month_scores[m - 1]?.ok);
+    fetchDates(state, ok.length ? ok : [p.best_month], [p.park.id], ctl.signal)
+      .then((r) => setBd(Object.values(r).map((x) => x[p.park.id]).filter((b): b is BestDays => !!b)))
+      .catch(() => !ctl.signal.aborted && setBd([]));
     return () => ctl.abort();
-  }, [p.park.id, p.best_month, state]);
+  }, [p.park.id, p.best_month, p.month_scores, state]);
 
   useEffect(() => {
     ref.current?.focus();
@@ -146,6 +169,7 @@ export default function ParkDrawer({ p, trip, state, unit, science = false, case
           <div style={{ marginTop: 10 }}><Badges p={p} caseFor={caseFor} /></div>
           <div className="tp-actions" style={{ marginTop: 10 }}>{actions}</div>
         </div>
+        <div className="tp-sec"><Days list={bd ?? []} loading={!bd} picked={state.months} unit={unit} /></div>
         <div className="tp-sec">
           <div className="tp-h">Every check, scored for {HORIZON_LABEL(trip.horizon, trip)}</div>
           {science && (
@@ -170,7 +194,7 @@ export default function ParkDrawer({ p, trip, state, unit, science = false, case
           </div>
         </div>
         <div className="tp-sec">
-          <div className="tp-h">All year <small>gold = best month · dots = your months · stripes = fails a must</small></div>
+          <div className="tp-h">All year <small>gold = best month · dots = your months · faded = fails a must</small></div>
           <MonthStrip p={p} picked={state.months} />
         </div>
         <div className="tp-sec"><ThenNow p={p} trip={trip} unit={unit} /></div>
@@ -180,7 +204,7 @@ export default function ParkDrawer({ p, trip, state, unit, science = false, case
             <p className="small" style={{ margin: 0 }}>{changed} <span className="muted">NASA POWER daytime high, Sen's slope.</span></p>
           </div>
         )}
-        <div className="tp-sec"><Days bd={bd} unit={unit} /></div>
+
         {state.want.stars && (
           <div className="tp-sec">
             <div className="tp-h">🌑 New moon</div>

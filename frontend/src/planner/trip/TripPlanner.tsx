@@ -35,6 +35,7 @@ import {
   type Unit,
 } from "./tripModel";
 import { whatChanged } from "../whatChanged";
+import { fetchDates, fmtWindow, rankStretches, type DatesByMonth } from "./bestDates";
 import { loadAtlas, type Atlas } from "../../atlas/model";
 
 const TOP = 3;
@@ -135,6 +136,20 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
   const rankOf = useMemo(() => new Map((trip?.parks ?? []).map((p, i) => [p.park.id, i + 1])), [trip]);
   const nFilters = filterCount(state);
   const rest = (trip?.parks ?? []).filter((p) => !shown.includes(p));
+
+  // Best dates for the top 3, across every picked month.
+  const [dates, setDates] = useState<DatesByMonth>({});
+  const topIds = shown.slice(0, TOP).map((p) => p.park.id).join(",");
+  useEffect(() => {
+    if (!trip || !topIds) return;
+    const ctl = new AbortController();
+    fetchDates(state, state.months, topIds.split(","), ctl.signal).then(setDates).catch(() => undefined);
+    return () => ctl.abort();
+  }, [trip, topIds]); // eslint-disable-line react-hooks/exhaustive-deps
+  const datesOf = (p: TripPark) => {
+    const b = rankStretches(dates, p.park.id).find((x) => p.month_scores[x.month - 1]?.ok);
+    return fmtWindow(b) ?? undefined;
+  };
 
   // Open the park a case sent us to, once.
   useEffect(() => {
@@ -292,7 +307,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
             <div className="tp-why"><b>Why #1?</b> {whySentence(shown[0], unit)}</div>
             <div className="tp-top3">
               {shown.slice(0, TOP).map((p, i) => (
-                <TopCard key={p.park.id} p={p} i={i} unit={unit} picked={state.months} caseFor={caseOf(p)} science={science}
+                <TopCard key={p.park.id} p={p} i={i} unit={unit} picked={state.months} caseFor={caseOf(p)} science={science} dates={datesOf(p)}
                   onOpen={() => setOpen(code(p))} actions={actions(p)} />
               ))}
             </div>
