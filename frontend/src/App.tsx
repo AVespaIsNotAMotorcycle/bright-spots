@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import ErrorBoundary from "./ErrorBoundary";
 import Home from "./Home";
 import Landing from "./Landing";
 import Detective from "./detective/Detective";
@@ -194,6 +195,7 @@ export default function App() {
         </nav>
       </header>
       <main>
+        <ErrorBoundary key={tab} what="This page">
         {profile.persona === "researcher" && tab !== "home" && (
           <StationStrip
             title={TAB_LABEL[tab].replace(/^\S+\s/, "")}
@@ -287,6 +289,7 @@ export default function App() {
             <Planner unit={unit} setUnit={setUnit} month={nav.month} />
           </PlannerShadow>
         )}
+        </ErrorBoundary>
       </main>
     </div>
   );

@@ -65,6 +65,27 @@ def get_atlas() -> dict:
         raise HTTPException(503, detail=str(e)) from e
 
 
+@lru_cache(maxsize=1)
+def _grace() -> dict:
+    p = DATA / "grace.json"
+    if not p.exists():
+        raise FileNotFoundError("grace.json not found — run scripts/step8_grace_parks.py first")
+    return json.loads(p.read_text())
+
+
+@router.get("/grace/{park_id}")
+def get_grace(park_id: str) -> dict:
+    """GRACE/GRACE-FO total water storage for one park: yearly means and the trend test."""
+    try:
+        g = _grace()
+    except FileNotFoundError as e:
+        raise HTTPException(503, detail=str(e)) from e
+    row = g["parks"].get(park_id)
+    if row is None:
+        raise HTTPException(404, detail=f"No GRACE data for park '{park_id}'")
+    return {"meta": g["meta"], "park_id": park_id, **row}
+
+
 @router.get("/parks/{park_id}")
 def get_park_trends(park_id: str) -> dict:
     """All trends and yearly series for one park."""

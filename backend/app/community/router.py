@@ -39,6 +39,13 @@ CREATE TABLE IF NOT EXISTS votes (
   voter   TEXT NOT NULL,
   PRIMARY KEY (post_id, voter)
 );
+CREATE TABLE IF NOT EXISTS reports (
+  post_id  INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  reporter TEXT NOT NULL,
+  reason   TEXT NOT NULL,
+  created  REAL NOT NULL,
+  PRIMARY KEY (post_id, reporter)
+);
 CREATE INDEX IF NOT EXISTS posts_parent ON posts(parent_id);
 """
 
@@ -110,20 +117,34 @@ class VoteIn(BaseModel):
     voter: str = Field(pattern=_ID)
 
 
-# Per-address cap on new notes, so one browser cannot flood the board.
+class ReportIn(BaseModel):
+    reporter: str = Field(pattern=_ID)
+    reason: Literal["spam", "rude", "wrong", "other"] = "other"
+
+
+# Per-address caps over 10 minutes, so one browser cannot flood the board.
 MAX_POSTS_PER_10_MIN = 10
+MAX_VOTES_PER_10_MIN = 60
+MAX_REPORTS_PER_10_MIN = 20
+# A note with this many reports from different browsers is hidden until someone reviews it.
+HIDE_AT_REPORTS = 3
 _recent: dict[str, list[float]] = {}
 
 
-def _allow(ip: str) -> bool:
+def _allow(ip: str, kind: str = "post", limit: int = MAX_POSTS_PER_10_MIN) -> bool:
+    key = f"{kind}:{ip}"
     now = time.monotonic()
-    hits = [t for t in _recent.get(ip, []) if now - t < 600]
-    if len(hits) >= MAX_POSTS_PER_10_MIN:
-        _recent[ip] = hits
+    hits = [t for t in _recent.get(key, []) if now - t < 600]
+    if len(hits) >= limit:
+        _recent[key] = hits
         return False
     hits.append(now)
-    _recent[ip] = hits
+    _recent[key] = hits
     return True
+
+
+def _ip(request: Request) -> str:
+    return request.client.host if request.client else "?"
 
 
 _SELECT = """
@@ -150,7 +171,7 @@ def list_posts(
     limit: int = 50,
 ) -> list[Post]:
     limit = max(1, min(limit, 100))
-    where = ["p.parent_id IS NULL"]
+    where = ["p.parent_id IS NULL", f"(SELECT COUNT(*) FROM reports r WHERE r.post_id = p.id) < {HIDE_AT_REPORTS}"]
     args: dict[str, object] = {"me": me, "limit": limit}
     if park:
         where.append("p.park_id = :park")
@@ -165,7 +186,8 @@ def list_posts(
             ids = {p.id: p for p in tops}
             named = {f"i{n}": pid for n, pid in enumerate(ids)}
             marks = ",".join(f":{k}" for k in named)
-            for r in con.execute(f"{_SELECT} WHERE p.parent_id IN ({marks}) ORDER BY p.created", {"me": me, **named}):
+            hidden = f"(SELECT COUNT(*) FROM reports r WHERE r.post_id = p.id) < {HIDE_AT_REPORTS}"
+            for r in con.execute(f"{_SELECT} WHERE p.parent_id IN ({marks}) AND {hidden} ORDER BY p.created", {"me": me, **named}):
                 reply = _row(r, me)
                 ids[reply.parent_id].replies.append(reply)  # type: ignore[index]
     return tops
@@ -173,8 +195,7 @@ def list_posts(
 
 @router.post("/posts", response_model=Post, status_code=201)
 def create_post(p: PostIn, request: Request) -> Post:
-    ip = request.client.host if request.client else "?"
-    if not _allow(ip):
+    if not _allow(_ip(request)):
         raise HTTPException(429, "Too many notes. Please wait a few minutes.")
     with _db() as con:
         if p.parent_id is not None:
@@ -193,7 +214,9 @@ def create_post(p: PostIn, request: Request) -> Post:
 
 
 @router.post("/posts/{post_id}/vote")
-def toggle_vote(post_id: int, v: VoteIn) -> dict[str, int | bool]:
+def toggle_vote(post_id: int, v: VoteIn, request: Request) -> dict[str, int | bool]:
+    if not _allow(_ip(request), "vote", MAX_VOTES_PER_10_MIN):
+        raise HTTPException(429, "Too many votes. Please wait a few minutes.")
     with _db() as con:
         if con.execute("SELECT 1 FROM posts WHERE id = ?", (post_id,)).fetchone() is None:
             raise HTTPException(404, "That note is gone.")
@@ -213,3 +236,19 @@ def delete_post(post_id: int, owner: str) -> None:
         if row["owner"] != owner:
             raise HTTPException(403, "You can only delete your own notes.")
         con.execute("DELETE FROM posts WHERE id = ?", (post_id,))
+
+
+@router.post("/posts/{post_id}/report")
+def report_post(post_id: int, rep: ReportIn, request: Request) -> dict[str, bool]:
+    """Flag a note. Repeat reports from one browser count once; enough reports hide the note."""
+    if not _allow(_ip(request), "report", MAX_REPORTS_PER_10_MIN):
+        raise HTTPException(429, "Too many reports. Please wait a few minutes.")
+    with _db() as con:
+        if con.execute("SELECT 1 FROM posts WHERE id = ?", (post_id,)).fetchone() is None:
+            raise HTTPException(404, "That note is gone.")
+        con.execute(
+            "INSERT OR IGNORE INTO reports (post_id, reporter, reason, created) VALUES (?, ?, ?, ?)",
+            (post_id, rep.reporter, rep.reason, time.time()),
+        )
+        n = con.execute("SELECT COUNT(*) FROM reports WHERE post_id = ?", (post_id,)).fetchone()[0]
+    return {"reported": True, "hidden": n >= HIDE_AT_REPORTS}

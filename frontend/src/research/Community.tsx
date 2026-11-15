@@ -179,6 +179,11 @@ function Note({
 }) {
   const [votes, setVotes] = useState({ n: p.votes, on: p.voted });
   const [replying, setReplying] = useState(false);
+  const [reporting, setReporting] = useState<"pick" | "done" | null>(null);
+  const report = (reason: string) =>
+    send(`/api/community/posts/${p.id}/report`, "POST", { reporter: browserId(), reason })
+      .then((r: { hidden: boolean }) => { setReporting("done"); if (r.hidden) onChanged(); })
+      .catch(() => setReporting(null));
   useEffect(() => setVotes({ n: p.votes, on: p.voted }), [p.votes, p.voted]);
   const k = KIND[p.kind];
   const vote = () =>
@@ -217,6 +222,19 @@ function Note({
         <div className="micro" style={{ display: "flex", gap: 10 }}>
           {replyProps && <button className="link-btn" onClick={() => setReplying((r) => !r)}>💬 Reply{p.replies.length ? ` (${p.replies.length})` : ""}</button>}
           {p.mine && <button className="link-btn" onClick={del}>Delete</button>}
+          {!p.mine && reporting === null && <button className="link-btn" onClick={() => setReporting("pick")}>⚑ Report</button>}
+          {reporting === "pick" && (
+            <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
+              Why?
+              {(["spam", "rude", "wrong", "other"] as const).map((r) => (
+                <button key={r} className="link-btn" onClick={() => report(r)}>
+                  {r === "wrong" ? "misleading" : r}
+                </button>
+              ))}
+              <button className="link-btn" onClick={() => setReporting(null)}>cancel</button>
+            </span>
+          )}
+          {reporting === "done" && <span style={{ color: E.moss }}>Reported. 3 reports hide a note.</span>}
         </div>
         {p.replies.length > 0 && (
           <div style={{ marginLeft: 6, paddingLeft: 12, borderLeft: `3px solid ${E.sand}` }}>

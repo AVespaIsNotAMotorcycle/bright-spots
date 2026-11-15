@@ -1,6 +1,6 @@
 // Analog sites: parks whose climate trends match a park's, optionally in the same EPA ecoregion,
 // with a feature-by-feature table of what matches and what differs, and each park's baseline climate.
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Atlas } from "../detective/model";
 import { PERIOD_LABEL } from "../detective/model";
 import { ParkSelect } from "./Compare";
@@ -29,6 +29,41 @@ function Score({ s }: { s: number }) {
       </div>
       <b className="small" style={{ color: E.bark, minWidth: 44, textAlign: "right" }}>{s > 0 ? "+" : ""}{s.toFixed(2)}</b>
     </div>
+  );
+}
+
+interface KClass { code: string; name: string }
+const KOPPEN_TIP =
+  "Köppen-Geiger climate class at the park's centre (0.5° grid), 1991–2020, and the projection for 2041–2070 " +
+  "under the middle emissions path SSP2-4.5. Source: Beck et al. 2023, Scientific Data. Not NASA data.";
+const kCache = new Map<string, Promise<{ now: KClass | null; future: KClass | null } | null>>();
+
+function useKoppen(lat?: number, lon?: number) {
+  const [k, setK] = useState<{ now: KClass | null; future: KClass | null } | null>(null);
+  useEffect(() => {
+    if (lat == null || lon == null) return;
+    const key = `${lat},${lon}`;
+    let p = kCache.get(key);
+    if (!p) {
+      p = fetch(`/api/datasets/koppen/lookup?lat=${lat}&lon=${lon}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      kCache.set(key, p);
+    }
+    let live = true;
+    p.then((x) => live && setK(x));
+    return () => { live = false; };
+  }, [lat, lon]);
+  return k;
+}
+
+export function Koppen({ lat, lon }: { lat?: number; lon?: number }) {
+  const k = useKoppen(lat, lon);
+  if (!k?.now) return null;
+  return (
+    <span className="micro" style={{ color: E.bark }}>
+      Köppen <b>{k.now.code}</b> {k.now.name.toLowerCase()}
+      {k.future && k.future.code !== k.now.code ? <> → <b>{k.future.code}</b> by 2041–70</> : null}
+      <Tip text={KOPPEN_TIP} />
+    </span>
   );
 }
 
@@ -72,6 +107,7 @@ export default function Analogs({
 
   if (!atlas || !ins) return <p className="muted">Loading…</p>;
   const name = (id: string) => ins.parks.find((p) => p.id === id)?.name ?? id;
+  const pos = (id: string) => ins.parks.find((p) => p.id === id);
   const myEco = eco?.[me];
   const ecoLine = (id: string) => {
     const e = eco?.[id];
@@ -102,7 +138,7 @@ export default function Analogs({
         </div>
         <p className="micro" style={{ margin: "10px 0 0", color: E.bark }}>
           <b>{name(me)}</b>: {myEco?.l1 ? `${myEco.l1.toLowerCase()} › ${(myEco.l2 ?? "–").toLowerCase()} › ${myEco.l3 ?? "–"}` : "no EPA ecoregion (outside the lower 48 coverage)"}
-          {" · "}<Baseline id={me} />
+          {" · "}<Baseline id={me} />{" · "}<Koppen lat={pos(me)?.lat} lon={pos(me)?.lon} />
         </p>
       </section>
 
@@ -124,6 +160,7 @@ export default function Analogs({
                 <b style={{ fontFamily: "var(--font-display)", fontSize: 16, color: E.pine }}>#{i + 1} {name(t.park)}</b>
                 <div style={{ margin: "8px 0 6px" }}><Score s={t.score} /></div>
                 <div className="micro" style={{ color: E.bark }}>{ecoLine(t.park)}</div>
+                <div><Koppen lat={pos(t.park)?.lat} lon={pos(t.park)?.lon} /></div>
                 <div style={{ display: "flex", gap: 4, marginTop: 6, minHeight: 18 }}>
                   {sameBadges(t.park).map((b) => (
                     <span key={b} className="micro" style={{ background: E.sand, border: `1px solid ${E.sage}`, borderRadius: 8, padding: "0 6px" }}>
@@ -147,7 +184,7 @@ export default function Analogs({
             </div>
           </div>
           <p className="micro" style={{ color: E.bark, margin: "8px 0" }}>
-            <b>{name(chosen.park)}</b>: <Baseline id={chosen.park} />. Same trends do not mean the same baseline climate or the same cause.
+            <b>{name(chosen.park)}</b>: <Baseline id={chosen.park} /> · <Koppen lat={pos(chosen.park)?.lat} lon={pos(chosen.park)?.lon} />. Same trends do not mean the same baseline climate or the same cause.
           </p>
           <div className="table-wrap" style={{ maxHeight: 380, overflowY: "auto" }}>
             <table className="detail-table" style={{ fontSize: 12 }}>

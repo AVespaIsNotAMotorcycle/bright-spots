@@ -4,6 +4,7 @@ import ExplainerCard from "./ExplainerCard";
 import type { Atlas, ParkTrends, TrendRow } from "./model";
 import { PERIOD_LABEL, fmtQ } from "./model";
 import TrendChart from "./TrendChart";
+import GraceCard from "../research/GraceCard";
 
 interface Props {
   parkId: string;
@@ -457,6 +458,7 @@ export default function ParkDetective({
           />
         </div>
       )}
+      <GraceCard parkId={parkId} parkName={parkName} />
     </div>
   );
 }

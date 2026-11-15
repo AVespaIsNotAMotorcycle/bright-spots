@@ -29,7 +29,8 @@ app = FastAPI(title="Park visit planner", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.frontend_origin],
-    allow_methods=["GET"],
+    # POST/DELETE for the Campfire and "Explain it to me" when the app is hosted without the dev proxy.
+    allow_methods=["GET", "POST", "DELETE"],
     allow_headers=["*"],
 )
 

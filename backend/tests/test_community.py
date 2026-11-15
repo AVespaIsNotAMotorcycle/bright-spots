@@ -64,3 +64,22 @@ def test_top_sort():
     assert ids == [a, b]
     ids = [p["id"] for p in client.get("/api/community/posts").json()]
     assert ids == [b, a]
+
+
+def test_reports_hide_a_note_and_count_once_per_browser():
+    pid = post().json()["id"]
+    rep = lambda who: client.post(f"/api/community/posts/{pid}/report", json={"reporter": who, "reason": "spam"})  # noqa: E731
+    assert rep("reporter-0000001").json() == {"reported": True, "hidden": False}
+    assert rep("reporter-0000001").json()["hidden"] is False  # same browser again: still 1
+    assert rep("reporter-0000002").json()["hidden"] is False
+    assert len(client.get("/api/community/posts").json()) == 1
+    assert rep("reporter-0000003").json()["hidden"] is True
+    assert client.get("/api/community/posts").json() == []
+    assert client.post("/api/community/posts/999/report", json={"reporter": "reporter-0000001"}).status_code == 404
+
+
+def test_vote_rate_limit():
+    pid = post().json()["id"]
+    for i in range(community.MAX_VOTES_PER_10_MIN):
+        assert client.post(f"/api/community/posts/{pid}/vote", json={"voter": f"voter-{i:08d}"}).status_code == 200
+    assert client.post(f"/api/community/posts/{pid}/vote", json={"voter": "voter-late0001"}).status_code == 429

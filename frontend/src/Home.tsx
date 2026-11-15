@@ -5,6 +5,7 @@ import { NextCase, ParkOfTheDay, RankBanner } from "./detective/StudentWidgets";
 import { GuessTheTwin } from "./detective/TwinGame";
 import { PARK_NAMES } from "./detective/Detective";
 import type { Atlas, AtlasCell } from "./detective/model";
+import { Safe } from "./ErrorBoundary";
 import { PERSONAS, type Persona, type Tab } from "./profile";
 import { AnomalyOfWeek, CampfirePreview, Leaderboard, MiniMap, SavedViews, StationHero, ToolTiles, type ToolInfo } from "./research/ResearcherWidgets";
 import { CiteThis, Source } from "./research/station";
@@ -88,10 +89,10 @@ function VisitorHome({ atlas, onGo }: Pick<Props, "atlas" | "onGo">) {
 function StudentHome({ atlas, onGo }: Pick<Props, "atlas" | "onGo">) {
   return (
     <>
-      <RankBanner />
-      <NextCase onPlay={(c) => onGo("student", { caseId: c.id, step: 0 })} />
-      {atlas && <ParkOfTheDay atlas={atlas} onExplore={(park) => onGo("explore", { park })} />}
-      {atlas && <GuessTheTwin atlas={atlas} onExplore={(park) => onGo("explore", { park })} />}
+      <Safe><RankBanner /></Safe>
+      <Safe><NextCase onPlay={(c) => onGo("student", { caseId: c.id, step: 0 })} /></Safe>
+      <Safe>{atlas && <ParkOfTheDay atlas={atlas} onExplore={(park) => onGo("explore", { park })} />}</Safe>
+      <Safe>{atlas && <GuessTheTwin atlas={atlas} onExplore={(park) => onGo("explore", { park })} />}</Safe>
       <div>
         <button className="btn-ghost" onClick={() => onGo("student")}>See all {CASES.length} cases →</button>
       </div>
@@ -113,23 +114,25 @@ const TOOLS: ToolInfo[] = [
 function ResearcherHome({ atlas, onGo, name }: Pick<Props, "atlas" | "onGo" | "name">) {
   return (
     <>
-      <StationHero name={name} atlas={atlas} onGo={(t) => onGo(t as Tab)} />
-      <SavedViews />
+      <Safe><StationHero name={name} atlas={atlas} onGo={(t) => onGo(t as Tab)} /></Safe>
+      <Safe><SavedViews /></Safe>
       {atlas && (
-        <AnomalyOfWeek
-          atlas={atlas}
-          onRobust={(park, v, per) => onGo("robust", { park, v, per })}
-          onCompare={(park, v, per) => onGo("compare", { park, v, per })}
-          onDiscuss={(park, v, per) => onGo("community", { park, v, per })}
-        />
+        <Safe>
+          <AnomalyOfWeek
+            atlas={atlas}
+            onRobust={(park, v, per) => onGo("robust", { park, v, per })}
+            onCompare={(park, v, per) => onGo("compare", { park, v, per })}
+            onDiscuss={(park, v, per) => onGo("community", { park, v, per })}
+          />
+        </Safe>
       )}
       <section>
         <div className="section-title" style={{ marginBottom: 8 }}>Station tools</div>
         <ToolTiles tools={TOOLS} onGo={(t) => onGo(t as Tab)} />
       </section>
-      {atlas && <MiniMap atlas={atlas} onTwins={(park) => onGo("analogs", { park })} />}
-      {atlas && <Leaderboard atlas={atlas} onOpen={(park) => onGo("atlas", { park })} />}
-      <CampfirePreview atlas={atlas} onOpen={() => onGo("community")} />
+      <Safe>{atlas && <MiniMap atlas={atlas} onTwins={(park) => onGo("analogs", { park })} />}</Safe>
+      <Safe>{atlas && <Leaderboard atlas={atlas} onOpen={(park) => onGo("atlas", { park })} />}</Safe>
+      <Safe><CampfirePreview atlas={atlas} onOpen={() => onGo("community")} /></Safe>
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
         <button className="btn" onClick={() => onGo("atlas")}>Open the full atlas →</button>
         <a className="btn-ghost" href="/api/trends/atlas" download="park-trends-atlas.json" style={{ textDecoration: "none" }}>
