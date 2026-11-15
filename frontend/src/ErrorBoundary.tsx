@@ -11,6 +11,10 @@ interface State {
   error: Error | null;
 }
 
+/** A lazy page file could not be fetched (dev server restarted, or a new build went live). */
+const isChunkError = (e: Error | null) =>
+  !!e && /dynamically imported module|Importing a module script failed|error loading dynamically/i.test(e.message);
+
 export default class ErrorBoundary extends Component<Props, State> {
   state: State = { error: null };
 
@@ -28,7 +32,13 @@ export default class ErrorBoundary extends Component<Props, State> {
       <div role="alert" style={{ border: "1px dashed var(--rust)", borderRadius: 12, padding: 16, background: "var(--rust-tint)", color: "var(--text)" }}>
         <b>🍂 {this.props.what ?? "This part"} hit a problem.</b>
         <p className="small muted" style={{ margin: "4px 0 10px" }}>The rest of the app still works. {this.state.error.message}</p>
-        <button className="btn-ghost" onClick={() => this.setState({ error: null })}>Try again</button>
+        {/* A lazy tab that failed to load stays failed until the page reloads. */}
+        <button
+          className="btn-ghost"
+          onClick={() => (isChunkError(this.state.error) ? location.reload() : this.setState({ error: null }))}
+        >
+          Try again
+        </button>
       </div>
     );
   }
