@@ -1,6 +1,6 @@
 // Map of the parks: coloured states, real park boundaries filled with the trend colour,
 // Alaska/Hawaii insets, and a zoom panel that shows the selected park's actual shape.
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ParkMeta } from "./lib";
 
 type Pos = [number, number];
@@ -115,6 +115,13 @@ export default function ParkMap({ parks, colorOf, tip, onPick, selected = [], ra
   const [shapes, setShapes] = useState<Shapes>({});
   const [hover, setHover] = useState<string | null>(null);
   const [chosen, setChosen] = useState<string | null>(null);
+  const [mouse, setMouse] = useState<Pos>([0, 0]);
+  const [pinPos, setPinPos] = useState<Pos>([0, 0]);
+  const wrap = useRef<HTMLDivElement>(null);
+  const track = (e: React.MouseEvent) => {
+    const r = wrap.current?.getBoundingClientRect();
+    if (r) setMouse([e.clientX - r.left, e.clientY - r.top]);
+  };
 
   useEffect(() => {
     fetch("/us-states.json").then((r) => r.json()).then((d: { features: Feature[] }) => setFeatures(d.features)).catch(() => setFeatures([]));
@@ -146,6 +153,11 @@ export default function ParkMap({ parks, colorOf, tip, onPick, selected = [], ra
   }, [parks, shapes]);
 
   const focus = hover ?? chosen;
+  const cardPos = hover ? mouse : pinPos;
+  const cardW = 280;
+  const wrapW = wrap.current?.clientWidth ?? 1000;
+  const cardLeft = cardPos[0] + 16 + cardW > wrapW ? cardPos[0] - 16 - cardW : cardPos[0] + 16;
+  const cardTop = Math.max(4, cardPos[1] - 120);
   const focusPark = parks.find((p) => p.id === focus);
   const frame = (r: Region, label: string) => (
     <g>
@@ -155,7 +167,7 @@ export default function ParkMap({ parks, colorOf, tip, onPick, selected = [], ra
   );
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 270px", gap: 14, alignItems: "start" }}>
+    <div ref={wrap} style={{ position: "relative" }} onMouseMove={track}>
       <div>
         <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto", display: "block", borderRadius: 12, boxShadow: "0 2px 10px rgba(30,50,70,.18)" }} role="img" aria-label="Map of US national parks">
           <defs>
@@ -192,7 +204,10 @@ export default function ParkMap({ parks, colorOf, tip, onPick, selected = [], ra
             const r0 = radius?.(p.id) ?? 6;
             return (
               <g key={p.id} style={{ cursor: "pointer" }} onMouseEnter={() => setHover(p.id)} onMouseLeave={() => setHover(null)}
-                onClick={() => setChosen((c) => (c === p.id ? null : p.id))}>
+                onClick={() => {
+                  setPinPos(mouse);
+                  setChosen((c) => (c === p.id ? null : p.id));
+                }}>
                 <circle cx={pos[0]} cy={pos[1]} r={(sel ? r0 + 3 : r0) + 2.5} fill="#fff" fillOpacity={0.9} />
                 <circle cx={pos[0]} cy={pos[1]} r={sel ? r0 + 3 : r0} fill={colorOf(p.id)} stroke="#26331f" strokeWidth={sel ? 2.2 : 1} />
                 <title>{`${p.name}: ${tip(p.id)}`}</title>
@@ -202,32 +217,31 @@ export default function ParkMap({ parks, colorOf, tip, onPick, selected = [], ra
         </svg>
       </div>
 
-      <aside className="card" style={{ position: "sticky", top: 10, padding: 12 }}>
-        {focusPark ? (
-          <>
-            <h3 style={{ margin: "0 0 2px" }}>{focusPark.name}</h3>
-            <p className="small muted" style={{ margin: "0 0 8px" }}>{focusPark.state}</p>
-            {shapes[focusPark.id] ? (
-              <ParkShape rings={shapes[focusPark.id]} fill={colorOf(focusPark.id)} />
-            ) : (
-              <p className="small muted">No boundary shape available.</p>
-            )}
-            <p className="small" style={{ margin: "8px 0" }}>{tip(focusPark.id)}</p>
-            {onPick && (
-              <button className="btn" style={{ width: "100%" }} onClick={() => onPick(focusPark.id)}>
-                Open this park →
-              </button>
-            )}
-            {chosen === focusPark.id && (
-              <button className="btn-ghost" style={{ width: "100%", marginTop: 6 }} onClick={() => setChosen(null)}>Unpin</button>
-            )}
-          </>
-        ) : (
-          <p className="small muted" style={{ margin: 0 }}>
-            Hover a park to see its real boundary, coloured by the trend. Click a dot to keep it pinned.
-          </p>
-        )}
-      </aside>
+      {focusPark && (
+        <div
+          className="card"
+          style={{
+            position: "absolute", left: cardLeft, top: cardTop, width: cardW, padding: 12, zIndex: 5,
+            boxShadow: "0 8px 24px rgba(20,30,20,.35)", pointerEvents: hover ? "none" : "auto",
+          }}
+        >
+          <h3 style={{ margin: "0 0 2px" }}>{focusPark.name}</h3>
+          <p className="small muted" style={{ margin: "0 0 8px" }}>{focusPark.state}</p>
+          {shapes[focusPark.id] ? (
+            <ParkShape rings={shapes[focusPark.id]} fill={colorOf(focusPark.id)} />
+          ) : (
+            <p className="small muted">No boundary shape available.</p>
+          )}
+          <p className="small" style={{ margin: "8px 0 0" }}>{tip(focusPark.id)}</p>
+          {!hover && chosen === focusPark.id && (
+            <div className="row gap-8" style={{ marginTop: 8 }}>
+              {onPick && <button className="btn" onClick={() => onPick(focusPark.id)}>Open this park →</button>}
+              <button className="btn-ghost" onClick={() => setChosen(null)}>Close</button>
+            </div>
+          )}
+          {hover && onPick && <p className="micro muted" style={{ margin: "6px 0 0" }}>Click to pin and open.</p>}
+        </div>
+      )}
     </div>
   );
 }
