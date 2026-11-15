@@ -5,6 +5,7 @@ import { findTwins, fingerprints, similarity } from "../research/insights";
 import type { Atlas } from "./model";
 import { PERIOD_LABEL } from "./model";
 import { parkName } from "./games";
+import { PhotoCredit, photoOf } from "./photos";
 import { play } from "./sound";
 import { E, Leaves, RIDGE, TOPO, WIDGET_CSS } from "./StudentWidgets";
 
@@ -62,6 +63,7 @@ export function GuessTheTwin({ atlas, onExplore }: { atlas: Atlas; onExplore: (p
   if (!round) return null;
   const name = parkName(round.park);
   const twin = parkName(round.answer);
+  const photo = photoOf(round.park);
   const right = guess === round.answer;
   const pickOne = (id: string) => {
     setGuess(id);
@@ -77,15 +79,20 @@ export function GuessTheTwin({ atlas, onExplore }: { atlas: Atlas; onExplore: (p
     <section style={{ borderRadius: 22, overflow: "hidden", border: `2px solid ${E.sage}`, background: E.cream,
       boxShadow: "0 12px 28px rgba(74,55,38,.12)", position: "relative" }}>
       <style>{WIDGET_CSS}</style>
-      <div style={{ background: `${RIDGE} bottom / 100% 60px no-repeat, linear-gradient(180deg, #cfdcb4 0%, #9db07a 55%, #6b7f3a 100%)`,
-        padding: "20px 24px 54px", position: "relative" }}>
-        <span aria-hidden style={{ position: "absolute", right: 22, top: 14, fontSize: 34 }}>🪞</span>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: E.bark }}>
+      <div style={{
+        background: photo
+          ? `linear-gradient(180deg, rgba(31,42,36,.15) 0%, rgba(31,42,36,.72) 100%), url("${photo.file}") center / cover no-repeat`
+          : `${RIDGE} bottom / 100% 60px no-repeat, linear-gradient(180deg, #cfdcb4 0%, #9db07a 55%, #6b7f3a 100%)`,
+        padding: photo ? "96px 24px 18px" : "20px 24px 54px", position: "relative" }}>
+        <span aria-hidden style={{ position: "absolute", right: 22, bottom: 16, fontSize: 34 }}>🪞</span>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: photo ? E.cream : E.bark }}>
           Field guide · Guess the twin
         </div>
-        <h3 style={{ margin: "4px 0 0", fontFamily: "var(--font-display)", fontSize: 30, color: E.bark }}>
+        <h3 style={{ margin: "4px 0 0", fontFamily: "var(--font-display)", fontSize: 30, color: photo ? "#fff" : E.bark,
+          textShadow: photo ? "0 2px 8px rgba(0,0,0,.55)" : undefined }}>
           Who changes most like {name}?
         </h3>
+        {photo && <PhotoCredit photo={photo} style={{ position: "absolute", right: 12, top: 10, color: "rgba(255,255,255,.85)", textShadow: "0 1px 3px rgba(0,0,0,.7)" }} />}
       </div>
 
       {!guess ? (
@@ -95,14 +102,20 @@ export function GuessTheTwin({ atlas, onExplore }: { atlas: Atlas; onExplore: (p
             Twin parks change in the same ways: the same seasons warm, the same rain goes up or down. Pick one.
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
-            {round.options.map((id) => (
-              <button key={id} className="sw-pick" onClick={() => pickOne(id)}
-                style={{ background: "linear-gradient(150deg,#f3ecd9,#e2d3b1)", border: `2px solid ${E.clay}`, borderRadius: 16,
-                  padding: "16px 10px", cursor: "pointer", color: E.bark, fontWeight: 800, fontSize: 16 }}>
-                <div style={{ fontSize: 30 }}>🏞️</div>
-                {parkName(id)}
-              </button>
-            ))}
+            {round.options.map((id) => {
+              const ph = photoOf(id);
+              return (
+                <button key={id} className="sw-pick" onClick={() => pickOne(id)}
+                  title={ph ? `Photo: ${ph.credit} (${ph.license}), Wikimedia Commons` : undefined}
+                  style={{ background: "linear-gradient(150deg,#f3ecd9,#e2d3b1)", border: `2px solid ${E.clay}`, borderRadius: 16,
+                    padding: ph ? "0 0 14px" : "16px 10px", overflow: "hidden", cursor: "pointer", color: E.bark, fontWeight: 800, fontSize: 16 }}>
+                  {ph
+                    ? <div aria-hidden style={{ height: 120, marginBottom: 12, background: `url("${ph.file}") center / cover no-repeat` }} />
+                    : <div style={{ fontSize: 30 }}>🏞️</div>}
+                  {parkName(id)}
+                </button>
+              );
+            })}
           </div>
           <div style={{ fontSize: 12.5, color: E.moss, fontWeight: 600 }}>New park every day. Answers come from NASA data since 1981.</div>
         </div>
