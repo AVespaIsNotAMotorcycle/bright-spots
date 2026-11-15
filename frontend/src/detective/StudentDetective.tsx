@@ -6,7 +6,8 @@ import TrendChart from "./TrendChart";
 import ExplainerCard from "./ExplainerCard";
 import type { Case, Step } from "./cases";
 import { CASES } from "./cases";
-import { GameStep, GAME_KINDS, loadProgress, saveResult, rankTitle } from "./games";
+import { GameStep, GAME_KINDS, loadProgress, saveResult, rankTitle, makeFact } from "./games";
+import type { DataFact } from "./games";
 import type { CaseResult } from "./games";
 import FlashCard, { themeFor } from "./cardTheme";
 
@@ -379,6 +380,7 @@ export default function StudentDetective({
   const [stepIndex, setStepIndex] = useState(navStep ?? 0);
   const [scores, setScores] = useState<Record<number, { pts: number; max: number }>>({});
   const [result, setResult] = useState<CaseResult | null>(null);
+  const [fact, setFact] = useState<DataFact | null>(null);
 
   // Sync from URL (back/forward landed on student tab with a case in URL).
   useEffect(() => {
@@ -393,11 +395,22 @@ export default function StudentDetective({
     setStepIndex(0);
     setScores({});
     setResult(null);
+    setFact(null);
     onNavChange?.(c.id, 0);
   }
 
   function nextStep() {
     if (!activeCase) return;
+    const cur = activeCase.steps[stepIndex];
+    const isGame = (GAME_KINDS as readonly string[]).includes(cur.kind);
+    if (!fact && isGame && stepIndex < activeCase.steps.length - 1 && stepIndex % 2 === 1) {
+      const f = makeFact(cur, atlas, (stepIndex - 1) / 2);
+      if (f) {
+        setFact(f);
+        return;
+      }
+    }
+    setFact(null);
     if (stepIndex + 1 >= activeCase.steps.length) {
       const vals = Object.values(scores);
       const max = vals.reduce((n, v) => n + v.max, 0);
@@ -415,6 +428,7 @@ export default function StudentDetective({
 
   function backToCases() {
     setResult(null);
+    setFact(null);
     setActiveCase(null);
     setStepIndex(0);
     onNavChange?.(null, null);
@@ -474,7 +488,26 @@ export default function StudentDetective({
       </div>
 
       {/* Step */}
-      <FlashCard key={`${activeCase.id}-${stepIndex}`} step={step} caseId={activeCase.id} index={stepIndex}>
+      <FlashCard key={`${activeCase.id}-${stepIndex}${fact ? "-fact" : ""}`} step={step} caseId={activeCase.id} index={stepIndex}>
+        {fact ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14, alignItems: "flex-start" }}>
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+              {fact.emoji} Data fact
+            </div>
+            <h3 style={{ margin: 0, fontSize: 26, fontWeight: 800 }}>{fact.title}</h3>
+            <p style={{ margin: 0, fontSize: 17, lineHeight: 1.6 }}>{fact.text}</p>
+            <button
+              onClick={nextStep}
+              style={{
+                background: "var(--accent)", color: "var(--on-accent)", border: "none", borderRadius: 8,
+                padding: "10px 20px", cursor: "pointer", fontWeight: 600, fontSize: 14,
+              }}
+            >
+              Next question →
+            </button>
+          </div>
+        ) : (
+          <>
         <div>
           <div
             style={{
@@ -543,6 +576,8 @@ export default function StudentDetective({
             onGoPlanner={onGoPlanner}
             isLast={isLast}
           />
+        )}
+          </>
         )}
       </FlashCard>
     </div>

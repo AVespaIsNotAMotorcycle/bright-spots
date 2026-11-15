@@ -162,6 +162,8 @@ interface GameProps {
   onScore: (pts: number, max: number) => void;
   onNext: () => void;
   nextLabel: string;
+  /** True once the 5-second clock runs out before an answer. */
+  timeUp?: boolean;
 }
 
 function NextBtn({ onNext, label }: { onNext: () => void; label: string }) {
@@ -174,14 +176,21 @@ function NextBtn({ onNext, label }: { onNext: () => void; label: string }) {
 
 // ── Duel: which side is moving faster? ─────────────────────────────────────
 
-function Duel({ step, atlas, onScore, onNext, nextLabel }: GameProps) {
+function Duel({ step, atlas, onScore, onNext, nextLabel, timeUp }: GameProps) {
   const d = step.duel!;
-  const [pick, setPick] = useState<"a" | "b" | null>(null);
+  const [pick, setPick] = useState<"a" | "b" | "none" | null>(null);
   const va = shown(atlas, d.a.variable, cellOf(atlas, d.a)?.sen ?? null) ?? 0;
   const vb = shown(atlas, d.b.variable, cellOf(atlas, d.b)?.sen ?? null) ?? 0;
   const slower = d.pick === "slower";
   const winner: "a" | "b" = (va > vb) !== slower ? "a" : "b";
   const ok = pick === winner;
+
+  useEffect(() => {
+    if (timeUp && !pick) {
+      setPick("none");
+      onScore(0, 1);
+    }
+  }, [timeUp]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function choose(s: "a" | "b") {
     if (pick) return;
@@ -220,7 +229,7 @@ function Duel({ step, atlas, onScore, onNext, nextLabel }: GameProps) {
         ))}
       </div>
       {pick && (
-        <Reveal ok={ok} head={ok ? "✓ Sharp eye!" : "✗ Close, but no."}>
+        <Reveal ok={ok} head={ok ? "✓ Sharp eye!" : pick === "none" ? "⏰ Time's up!" : "✗ Close, but no."}>
           <span>{factText(step, atlas)}</span>
         </Reveal>
       )}
@@ -231,7 +240,7 @@ function Duel({ step, atlas, onScore, onNext, nextLabel }: GameProps) {
 
 // ── Hunt: pick the park that wins from a line-up ──────────────────────────
 
-function Hunt({ step, atlas, onScore, onNext, nextLabel }: GameProps) {
+function Hunt({ step, atlas, onScore, onNext, nextLabel, timeUp }: GameProps) {
   const h = step.hunt!;
   const [pick, setPick] = useState<string | null>(null);
   const side = (p: string): Side => ({ parkId: p, variable: h.variable, period: h.period });
@@ -239,6 +248,12 @@ function Hunt({ step, atlas, onScore, onNext, nextLabel }: GameProps) {
   const sorted = [...h.parks].sort((x, y) => (h.pick === "max" ? val(y) - val(x) : val(x) - val(y)));
   const winner = sorted[0];
   const ok = pick === winner;
+  useEffect(() => {
+    if (timeUp && !pick) {
+      setPick("⏰");
+      onScore(0, 2);
+    }
+  }, [timeUp]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <Styles />
@@ -262,7 +277,7 @@ function Hunt({ step, atlas, onScore, onNext, nextLabel }: GameProps) {
         ))}
       </div>
       {pick && (
-        <Reveal ok={ok} head={ok ? `✓ ${parkName(winner)}!` : `✗ It was ${parkName(winner)}.`}>
+        <Reveal ok={ok} head={ok ? `✓ ${parkName(winner)}!` : pick === "⏰" ? `⏰ Time's up! It was ${parkName(winner)}.` : `✗ It was ${parkName(winner)}.`}>
           <span>{factText(step, atlas)}</span>
         </Reveal>
       )}
@@ -273,7 +288,7 @@ function Hunt({ step, atlas, onScore, onNext, nextLabel }: GameProps) {
 
 // ── Guess: slide to your estimate ─────────────────────────────────────────
 
-function Guess({ step, atlas, onScore, onNext, nextLabel }: GameProps) {
+function Guess({ step, atlas, onScore, onNext, nextLabel, timeUp }: GameProps) {
   const g = step.guess!;
   const side: Side = { parkId: g.parkId, variable: g.variable, period: g.period };
   const truth = shown(atlas, g.variable, cellOf(atlas, side)?.sen ?? null) ?? 0;
@@ -282,6 +297,12 @@ function Guess({ step, atlas, onScore, onNext, nextLabel }: GameProps) {
   const range = g.max - g.min;
   const err = Math.abs(val - truth) / range;
   const pts = err <= 0.08 ? 3 : err <= 0.18 ? 2 : err <= 0.3 ? 1 : 0;
+  useEffect(() => {
+    if (timeUp && !locked) {
+      setLocked(true);
+      onScore(pts, 3);
+    }
+  }, [timeUp]); // eslint-disable-line react-hooks/exhaustive-deps
   const label = (v: number) => fmtRate(atlas, g.variable, v);
   const pct = (v: number) => `${Math.max(0, Math.min(100, ((v - g.min) / range) * 100))}%`;
   return (
@@ -365,11 +386,17 @@ const V_OPTS: { v: Verdict; label: string; emoji: string }[] = [
 ];
 const V_RANK: Record<string, number> = { none: 0, possible: 1, real: 2 };
 
-function VerdictGame({ step, atlas, onScore, onNext, nextLabel }: GameProps) {
+function VerdictGame({ step, atlas, onScore, onNext, nextLabel, timeUp }: GameProps) {
   const q = step.verdictQ!;
   const side: Side = { parkId: q.parkId, variable: q.variable, period: q.period };
   const data = useTrends(q.parkId);
-  const [pick, setPick] = useState<Verdict | null>(null);
+  const [pick, setPick] = useState<Verdict | "late" | null>(null);
+  useEffect(() => {
+    if (timeUp && !pick) {
+      setPick("late");
+      onScore(0, 2);
+    }
+  }, [timeUp]); // eslint-disable-line react-hooks/exhaustive-deps
   const truth = cellOf(atlas, side)?.verdict ?? "none";
   const series = data?.series[q.variable]?.[q.period];
   const row = data?.trends.find((t) => t.variable === q.variable && t.period === q.period);
@@ -414,7 +441,7 @@ function VerdictGame({ step, atlas, onScore, onNext, nextLabel }: GameProps) {
       {pick && (
         <Reveal
           ok={ok}
-          head={ok ? "✓ Verdict matches." : diff === 1 ? "~ Half right." : "✗ Missed it."}
+          head={ok ? "✓ Verdict matches." : pick === "late" ? "⏰ Time's up!" : diff === 1 ? "~ Half right." : "✗ Missed it."}
         >
           <span>
             The test says <b>{truth === "real" ? "real" : truth === "possible" ? "possible" : "no trend"}</b>
@@ -429,7 +456,7 @@ function VerdictGame({ step, atlas, onScore, onNext, nextLabel }: GameProps) {
 
 // ── Rank: tap in order, highest first ─────────────────────────────────────
 
-function Rank({ step, atlas, onScore, onNext, nextLabel }: GameProps) {
+function Rank({ step, atlas, onScore, onNext, nextLabel, timeUp }: GameProps) {
   const r = step.rank!;
   const [order, setOrder] = useState<string[]>([]);
   const [locked, setLocked] = useState(false);
@@ -438,6 +465,12 @@ function Rank({ step, atlas, onScore, onNext, nextLabel }: GameProps) {
   const truth = [...r.parks].sort((a, b) => val(b) - val(a));
   const right = order.filter((p, i) => truth[i] === p).length;
   const ok = right === r.parks.length;
+  useEffect(() => {
+    if (timeUp && !locked) {
+      setLocked(true);
+      onScore(right, r.parks.length);
+    }
+  }, [timeUp]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <Styles />
@@ -494,10 +527,16 @@ function Rank({ step, atlas, onScore, onNext, nextLabel }: GameProps) {
 
 // ── Myth: true or false? ──────────────────────────────────────────────────
 
-function Myth({ step, atlas, onScore, onNext, nextLabel }: GameProps) {
+function Myth({ step, atlas, onScore, onNext, nextLabel, timeUp }: GameProps) {
   const m = step.myth!;
-  const [pick, setPick] = useState<boolean | null>(null);
+  const [pick, setPick] = useState<boolean | "late" | null>(null);
   const ok = pick === m.isTrue;
+  useEffect(() => {
+    if (timeUp && pick == null) {
+      setPick("late");
+      onScore(0, 1);
+    }
+  }, [timeUp]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <Styles />
@@ -532,7 +571,7 @@ function Myth({ step, atlas, onScore, onNext, nextLabel }: GameProps) {
         ))}
       </div>
       {pick != null && (
-        <Reveal ok={ok} head={ok ? "✓ Myth-buster!" : "✗ Fooled you."}>
+        <Reveal ok={ok} head={ok ? "✓ Myth-buster!" : pick === "late" ? "⏰ Time's up!" : "✗ Fooled you."}>
           <span>{factText(step, atlas)}</span>
         </Reveal>
       )}
@@ -545,16 +584,123 @@ function Myth({ step, atlas, onScore, onNext, nextLabel }: GameProps) {
 
 export const GAME_KINDS = ["duel", "hunt", "guess", "verdict", "rank", "myth"] as const;
 
+export const QUESTION_SECONDS = 5;
+
+function TimerBar({ ms }: { ms: number }) {
+  const total = QUESTION_SECONDS * 1000;
+  const frac = Math.max(0, ms / total);
+  const hot = ms <= 2000;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }} aria-label={`${Math.ceil(ms / 1000)} seconds left`}>
+      <div style={{ flex: 1, height: 10, borderRadius: 6, background: "rgba(0,0,0,.12)", overflow: "hidden" }}>
+        <div
+          style={{
+            width: `${frac * 100}%`,
+            height: "100%",
+            background: hot ? "#d9473a" : "#2a7d4f",
+            transition: "width .1s linear, background .3s",
+          }}
+        />
+      </div>
+      <div style={{ fontWeight: 800, minWidth: 34, textAlign: "right", color: hot ? "#d9473a" : "inherit" }}>
+        ⏱ {Math.ceil(ms / 1000)}
+      </div>
+    </div>
+  );
+}
+
 export function GameStep(props: GameProps) {
-  switch (props.step.kind) {
-    case "duel": return <Duel {...props} />;
-    case "hunt": return <Hunt {...props} />;
-    case "guess": return <Guess {...props} />;
-    case "verdict": return <VerdictGame {...props} />;
-    case "rank": return <Rank {...props} />;
-    case "myth": return <Myth {...props} />;
-    default: return null;
+  const [answered, setAnswered] = useState(false);
+  const [ms, setMs] = useState(QUESTION_SECONDS * 1000);
+  useEffect(() => {
+    if (answered || ms <= 0) return;
+    const t = setTimeout(() => setMs((m) => m - 100), 100);
+    return () => clearTimeout(t);
+  }, [ms, answered]);
+  const p: GameProps = {
+    ...props,
+    timeUp: ms <= 0 && !answered,
+    onScore: (pts, max) => {
+      setAnswered(true);
+      props.onScore(pts, max);
+    },
+  };
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {!answered && <TimerBar ms={ms} />}
+      {props.step.kind === "duel" && <Duel {...p} />}
+      {props.step.kind === "hunt" && <Hunt {...p} />}
+      {props.step.kind === "guess" && <Guess {...p} />}
+      {props.step.kind === "verdict" && <VerdictGame {...p} />}
+      {props.step.kind === "rank" && <Rank {...p} />}
+      {props.step.kind === "myth" && <Myth {...p} />}
+    </div>
+  );
+}
+
+// ── Data facts shown between questions ────────────────────────────────────
+
+export interface DataFact { emoji: string; title: string; text: string }
+
+function subjectSide(step: Step, atlas: Atlas): Side | null {
+  const best = (sides: Side[], max = true) => {
+    const v = (s: Side) => shown(atlas, s.variable, cellOf(atlas, s)?.sen ?? null) ?? 0;
+    return [...sides].sort((a, b) => (max ? v(b) - v(a) : v(a) - v(b)))[0] ?? null;
+  };
+  if (step.duel) return best([step.duel.a, step.duel.b], step.duel.pick !== "slower");
+  if (step.hunt) {
+    const h = step.hunt;
+    return best(h.parks.map((p) => ({ parkId: p, variable: h.variable, period: h.period })), h.pick === "max");
   }
+  if (step.rank) {
+    const r = step.rank;
+    return best(r.parks.map((p) => ({ parkId: p, variable: r.variable, period: r.period })));
+  }
+  if (step.guess) return { parkId: step.guess.parkId, variable: step.guess.variable, period: step.guess.period };
+  if (step.verdictQ) return step.verdictQ;
+  return null;
+}
+
+const YEARS = 45;
+
+/** Builds a "did you know" card from the atlas. `variant` alternates park facts and nationwide facts. */
+export function makeFact(step: Step, atlas: Atlas, variant: number): DataFact | null {
+  const side = subjectSide(step, atlas);
+  if (!side) return null;
+  const meta = atlas.variables[side.variable];
+  const cells = (atlas.atlas[side.variable]?.[side.period] ?? []).filter((c) => c.sen != null);
+  const cell = cellOf(atlas, side);
+  if (!meta || !cell || cell.sen == null || !cells.length) return null;
+  const per = PERIOD_LABEL[side.period] ?? side.period;
+  const label = meta.label.toLowerCase();
+  const temp = isTempVar(atlas, side.variable);
+  const v = shown(atlas, side.variable, cell.sen)!;
+  const total = v * (YEARS / 10);
+  const unit = temp ? "°F" : meta.unit;
+  const amt = (x: number) => `${x > 0 ? "+" : ""}${Math.abs(x) >= 10 ? x.toFixed(0) : x.toFixed(1)} ${unit}`;
+
+  if (variant % 2 === 0) {
+    const sorted = [...cells].sort((a, b) => (b.sen ?? 0) - (a.sen ?? 0));
+    const rank = sorted.findIndex((c) => c.park_id === side.parkId) + 1;
+    const real = cell.verdict === "real" ? "a statistically real trend" : cell.verdict === "possible" ? "a possible trend" : "no confirmed trend";
+    return {
+      emoji: "💡",
+      title: `${parkName(side.parkId)}, in numbers`,
+      text:
+        `Since 1981, ${per.toLowerCase()} ${label} at ${parkName(side.parkId)} moved about ${amt(total)}. ` +
+        `That ranks #${rank} of ${cells.length} parks, and the test calls it ${real}.`,
+    };
+  }
+  const real = cells.filter((c) => c.verdict === "real").length;
+  const poss = cells.filter((c) => c.verdict === "possible").length;
+  const up = cells.filter((c) => (c.sen ?? 0) > 0).length;
+  return {
+    emoji: "🌎",
+    title: "Across all parks",
+    text:
+      `For ${per.toLowerCase()} ${label}, ${real} of ${cells.length} parks show a real trend and ${poss} more show a possible one. ` +
+      `${up} lean upward, ${cells.length - up} lean downward. Source: NASA satellite and climate records, 1981 to now.`,
+  };
 }
 
 // ── Progress (stars, XP, rank title), kept in localStorage ────────────────
