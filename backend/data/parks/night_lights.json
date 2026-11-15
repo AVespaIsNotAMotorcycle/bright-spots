@@ -1,0 +1,714 @@
+{
+ "_meta": {
+  "source": "NASA GIBS WMS, VIIRS Black Marble city lights 2012 (Suomi NPP VIIRS), no login",
+  "url": "https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi",
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "method": "mean brightness (0-1) of a 64x64 px image over a 0.5 degree box around the park centre",
+  "citation": "NASA Worldview / GIBS, VIIRS Black Marble; Roman et al. 2018, Remote Sensing of Environment 210"
+ },
+ "acadia": {
+  "glow": 0.0507,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -68.46,
+   44.1,
+   -67.96,
+   44.6
+  ]
+ },
+ "american-samoa": {
+  "glow": 0.0346,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -170.93,
+   -14.5,
+   -170.43,
+   -14.0
+  ]
+ },
+ "arches": {
+  "glow": 0.1044,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -109.82,
+   38.43,
+   -109.32,
+   38.93
+  ]
+ },
+ "badlands": {
+  "glow": 0.0819,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -102.75,
+   43.5,
+   -102.25,
+   44.0
+  ]
+ },
+ "big-bend": {
+  "glow": 0.084,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -103.5,
+   29.0,
+   -103.0,
+   29.5
+  ]
+ },
+ "biscayne": {
+  "glow": 0.2668,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -80.33,
+   25.4,
+   -79.83,
+   25.9
+  ]
+ },
+ "black-canyon-of-the-gunnison": {
+  "glow": 0.0942,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -107.97,
+   38.32,
+   -107.47,
+   38.82
+  ]
+ },
+ "bryce-canyon": {
+  "glow": 0.0797,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -112.43,
+   37.32,
+   -111.93,
+   37.82
+  ]
+ },
+ "canyonlands": {
+  "glow": 0.0827,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -110.18,
+   37.95,
+   -109.68,
+   38.45
+  ]
+ },
+ "capitol-reef": {
+  "glow": 0.0869,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -111.42,
+   37.95,
+   -110.92,
+   38.45
+  ]
+ },
+ "carlsbad-caverns": {
+  "glow": 0.1273,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -104.69,
+   31.92,
+   -104.19,
+   32.42
+  ]
+ },
+ "channel-islands": {
+  "glow": 0.058,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -119.67,
+   33.76,
+   -119.17,
+   34.26
+  ]
+ },
+ "chiricahua": {
+  "glow": 0.076,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -109.6,
+   31.77,
+   -109.1,
+   32.27
+  ]
+ },
+ "congaree": {
+  "glow": 0.3378,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -81.03,
+   33.53,
+   -80.53,
+   34.03
+  ]
+ },
+ "crater-lake": {
+  "glow": 0.0314,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -122.35,
+   42.69,
+   -121.85,
+   43.19
+  ]
+ },
+ "cuyahoga-valley": {
+  "glow": 0.8145,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -81.8,
+   40.99,
+   -81.3,
+   41.49
+  ]
+ },
+ "death-valley": {
+  "glow": 0.0812,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -117.07,
+   35.99,
+   -116.57,
+   36.49
+  ]
+ },
+ "denali": {
+  "glow": 0.0768,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -150.75,
+   63.08,
+   -150.25,
+   63.58
+  ]
+ },
+ "dry-tortugas": {
+  "glow": 0.0132,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -83.12,
+   24.38,
+   -82.62,
+   24.88
+  ]
+ },
+ "everglades": {
+  "glow": 0.0316,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -81.18,
+   25.07,
+   -80.68,
+   25.57
+  ]
+ },
+ "gates-of-the-arctic": {
+  "glow": 0.0447,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -153.55,
+   67.53,
+   -153.05,
+   68.03
+  ]
+ },
+ "gateway-arch": {
+  "glow": 0.8163,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -90.44,
+   38.38,
+   -89.94,
+   38.88
+  ]
+ },
+ "glacier": {
+  "glow": 0.0378,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -114.25,
+   48.55,
+   -113.75,
+   49.05
+  ]
+ },
+ "glacier-bay": {
+  "glow": 0.0772,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -137.25,
+   58.25,
+   -136.75,
+   58.75
+  ]
+ },
+ "grand-canyon": {
+  "glow": 0.0689,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -112.39,
+   35.81,
+   -111.89,
+   36.31
+  ]
+ },
+ "grand-teton": {
+  "glow": 0.0548,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -111.05,
+   43.48,
+   -110.55,
+   43.98
+  ]
+ },
+ "great-basin": {
+  "glow": 0.078,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -114.55,
+   38.73,
+   -114.05,
+   39.23
+  ]
+ },
+ "great-sand-dunes": {
+  "glow": 0.0639,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -105.76,
+   37.48,
+   -105.26,
+   37.98
+  ]
+ },
+ "great-smoky-mountains": {
+  "glow": 0.2155,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -83.78,
+   35.43,
+   -83.28,
+   35.93
+  ]
+ },
+ "guadalupe-mountains": {
+  "glow": 0.0892,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -105.12,
+   31.67,
+   -104.62,
+   32.17
+  ]
+ },
+ "haleakala": {
+  "glow": 0.0361,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -156.42,
+   20.47,
+   -155.92,
+   20.97
+  ]
+ },
+ "hawaii-volcanoes": {
+  "glow": 0.0501,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -155.45,
+   19.13,
+   -154.95,
+   19.63
+  ]
+ },
+ "hot-springs": {
+  "glow": 0.2381,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -93.3,
+   34.26,
+   -92.8,
+   34.76
+  ]
+ },
+ "indiana-dunes": {
+  "glow": 0.4283,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -87.302,
+   41.403,
+   -86.802,
+   41.903
+  ]
+ },
+ "isle-royale": {
+  "glow": 0.0126,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -88.8,
+   47.85,
+   -88.3,
+   48.35
+  ]
+ },
+ "joshua-tree": {
+  "glow": 0.1123,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -116.15,
+   33.54,
+   -115.65,
+   34.04
+  ]
+ },
+ "katmai": {
+  "glow": 0.0617,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -155.25,
+   58.25,
+   -154.75,
+   58.75
+  ]
+ },
+ "kenai-fjords": {
+  "glow": 0.0823,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -149.9,
+   59.67,
+   -149.4,
+   60.17
+  ]
+ },
+ "kings-canyon": {
+  "glow": 0.0673,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -118.8,
+   36.55,
+   -118.3,
+   37.05
+  ]
+ },
+ "kobuk-valley": {
+  "glow": 0.0429,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -159.53,
+   67.3,
+   -159.03,
+   67.8
+  ]
+ },
+ "lake-clark": {
+  "glow": 0.09,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -153.67,
+   60.72,
+   -153.17,
+   61.22
+  ]
+ },
+ "lassen-volcanic": {
+  "glow": 0.0357,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -121.76,
+   40.24,
+   -121.26,
+   40.74
+  ]
+ },
+ "mammoth-cave": {
+  "glow": 0.1987,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -86.35,
+   36.93,
+   -85.85,
+   37.43
+  ]
+ },
+ "mesa-verde": {
+  "glow": 0.0968,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -108.74,
+   36.93,
+   -108.24,
+   37.43
+  ]
+ },
+ "mount-rainier": {
+  "glow": 0.032,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -122.0,
+   46.6,
+   -121.5,
+   47.1
+  ]
+ },
+ "new-river-gorge": {
+  "glow": 0.2067,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -81.33,
+   37.82,
+   -80.83,
+   38.32
+  ]
+ },
+ "north-cascades": {
+  "glow": 0.0374,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -121.45,
+   48.45,
+   -120.95,
+   48.95
+  ]
+ },
+ "olympic": {
+  "glow": 0.0659,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -123.75,
+   47.72,
+   -123.25,
+   48.22
+  ]
+ },
+ "petrified-forest": {
+  "glow": 0.0947,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -110.03,
+   34.82,
+   -109.53,
+   35.32
+  ]
+ },
+ "pinnacles": {
+  "glow": 0.0971,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -121.41,
+   36.23,
+   -120.91,
+   36.73
+  ]
+ },
+ "redwood": {
+  "glow": 0.0244,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -124.25,
+   41.05,
+   -123.75,
+   41.55
+  ]
+ },
+ "rocky-mountain": {
+  "glow": 0.057,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -105.83,
+   40.15,
+   -105.33,
+   40.65
+  ]
+ },
+ "saguaro": {
+  "glow": 0.0985,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -110.75,
+   32.0,
+   -110.25,
+   32.5
+  ]
+ },
+ "sequoia": {
+  "glow": 0.0558,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -118.93,
+   36.18,
+   -118.43,
+   36.68
+  ]
+ },
+ "shenandoah": {
+  "glow": 0.0918,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -78.6,
+   38.28,
+   -78.1,
+   38.78
+  ]
+ },
+ "theodore-roosevelt": {
+  "glow": 0.1391,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -103.7,
+   46.72,
+   -103.2,
+   47.22
+  ]
+ },
+ "virgin-islands": {
+  "glow": 0.0659,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -64.98,
+   18.08,
+   -64.48,
+   18.58
+  ]
+ },
+ "voyageurs": {
+  "glow": 0.0271,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -93.13,
+   48.25,
+   -92.63,
+   48.75
+  ]
+ },
+ "white-sands": {
+  "glow": 0.1547,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -106.42,
+   32.53,
+   -105.92,
+   33.03
+  ]
+ },
+ "wind-cave": {
+  "glow": 0.0792,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -103.73,
+   43.32,
+   -103.23,
+   43.82
+  ]
+ },
+ "wrangell-st-elias": {
+  "glow": 0.0838,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -142.25,
+   60.75,
+   -141.75,
+   61.25
+  ]
+ },
+ "yellowstone": {
+  "glow": 0.0339,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -110.75,
+   44.35,
+   -110.25,
+   44.85
+  ]
+ },
+ "yosemite": {
+  "glow": 0.0583,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -119.75,
+   37.58,
+   -119.25,
+   38.08
+  ]
+ },
+ "zion": {
+  "glow": 0.0812,
+  "layer": "VIIRS_CityLights_2012",
+  "date": "2012-01-01",
+  "bbox": [
+   -113.3,
+   37.05,
+   -112.8,
+   37.55
+  ]
+ }
+}
