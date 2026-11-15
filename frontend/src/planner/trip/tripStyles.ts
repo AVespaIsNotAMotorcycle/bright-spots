@@ -290,4 +290,13 @@ export const TRIP_CSS = `
 @media (max-width:900px){
   .tp-list{position:static;max-height:50vh}
 }
+/* Sort by, then by. */
+.tp-sort{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.tp-sort-row{display:flex;gap:6px;align-items:center;width:100%}
+.tp-sort-row label{display:flex;gap:8px;align-items:center;flex:1;min-width:0;font-size:12.5px;color:var(--text-muted)}
+.tp-sort-row label span{flex:none;width:52px}
+.tp-sort-row select{flex:1;min-width:0;font:inherit;font-size:13px;padding:5px 8px;border:1px solid var(--stone);background:var(--paper);color:var(--bark)}
+.tp-sort-x{flex:none;width:26px;height:26px;border:1px solid var(--stone);background:var(--paper);cursor:pointer;color:var(--text-muted);line-height:1}
+.tp-sort-x:hover{border-color:var(--moss);color:var(--bark)}
+.tp-sort-add{font-size:12.5px;padding:2px 0}
 `;

@@ -1,7 +1,8 @@
 // Trip planner, in two steps.
 //   1. Preferences: when, how warm, what you're into and what to avoid.
-//   2. Parks: every park ranked on the left (tick to pick), and a card per picked park on the
-//      right showing this year and next year side by side.
+//   2. Parks: every park on the left, sorted by this year's score unless the user stacks other
+//      sort keys (tick to pick), and a card per picked park on the right showing this year and
+//      next year side by side.
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Case } from "../../detective/cases";
 import { loadProgress } from "../../detective/games";
@@ -15,9 +16,9 @@ import ParkDrawer from "./ParkDrawer";
 import { ScoreRing } from "./TripCards";
 import TripSettings from "./TripSettings";
 import { TRIP_CSS } from "./tripStyles";
+import { DEFAULT_SORT, MAX_SORTS, SORT, SORTS, cleanSort, shownHorizon, sortParks, type SortKey } from "./sortParks";
 import {
   DEFAULT_STATE,
-  HORIZON_LABEL,
   clearCount,
   isBrowse,
   clearFilters,
@@ -39,10 +40,19 @@ import { trendTag } from "../whatChanged";
 import { loadAtlas, type Atlas } from "../../atlas/model";
 
 /** How many of the best matches start ticked. */
-export const DEFAULT_PICKS = 3;
+export const DEFAULT_PICKS = 4;
 /** The card columns: always both, never a toggle. */
 export const CARD_HORIZONS: HorizonKey[] = ["this_year", "next_year"];
 const KEY = "trip.state";
+const SORT_KEY = "trip.sort";
+
+function loadSort(): SortKey[] {
+  try {
+    return cleanSort(JSON.parse(localStorage.getItem(SORT_KEY) ?? "null"));
+  } catch {
+    return DEFAULT_SORT;
+  }
+}
 
 export type Stage = "prefs" | "parks";
 
@@ -56,8 +66,8 @@ function initial(q: string | null | undefined, month: number | null | undefined)
     }
   }
   s = s ?? DEFAULT_STATE;
-  // Cards show this year and next year together, so the list is always ranked for next year.
-  s = { ...s, horizon: "next_year" };
+  // The list is sorted on this year by default; must-haves and best month follow this year too.
+  s = { ...s, horizon: "this_year" };
   return month && month >= 1 && month <= 12 ? { ...s, months: [month] } : s;
 }
 
@@ -95,7 +105,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, stage, scie
     } catch {
       /* storage unavailable */
     }
-    const enc = encodeState({ ...d, horizon: "next_year" });
+    const enc = encodeState({ ...d, horizon: "this_year" });
     return enc === saved ? null : enc;
   });
   const linkEnc = useRef<string | null>(fromLink);
@@ -109,6 +119,18 @@ export default function TripPlanner({ unit, setUnit, month, park, q, stage, scie
   const [find, setFind] = useState("");
   /** The user's own ticks; null until they tick or untick something (then the top matches show). */
   const [picked, setPicked] = useState<string[] | null>(null);
+  const [sortKeys, setSortKeysState] = useState<SortKey[]>(loadSort);
+  // A new sort means new top parks, so the ticks follow it (until the user ticks by hand again).
+  const setSortKeys = (keys: SortKey[]) => {
+    const clean = cleanSort(keys);
+    setSortKeysState(clean);
+    setPicked(null);
+    try {
+      localStorage.setItem(SORT_KEY, JSON.stringify(clean));
+    } catch {
+      /* storage unavailable */
+    }
+  };
 
   useEffect(() => {
     loadAtlas().then(setAtlas).catch(() => undefined);
@@ -164,10 +186,11 @@ export default function TripPlanner({ unit, setUnit, month, park, q, stage, scie
   const matches = useMemo(() => (trip?.parks ?? []).filter((p) => p.ok), [trip]);
   // No filters: nothing to rank by, so list every park A to Z with no rank or score.
   const order = useMemo(
-    () => (browse ? [...(trip?.parks ?? [])].sort((a, b) => a.park.short.localeCompare(b.park.short)) : trip?.parks ?? []),
-    [trip, browse],
+    () => (browse ? sortParks(trip?.parks ?? [], ["name"]) : sortParks(trip?.parks ?? [], sortKeys)),
+    [trip, browse, sortKeys],
   );
-  const rankOf = useMemo(() => new Map((trip?.parks ?? []).map((p, i) => [p.park.id, i + 1])), [trip]);
+  const rankOf = useMemo(() => new Map(order.map((p, i) => [p.park.id, i + 1])), [order]);
+  const ringHorizon = shownHorizon(sortKeys);
   const byId = useMemo(() => new Map((trip?.parks ?? []).map((p) => [p.park.id, p])), [trip]);
   const listed = find.trim() ? searchParks(order, find) : order;
 
@@ -252,11 +275,13 @@ export default function TripPlanner({ unit, setUnit, month, park, q, stage, scie
             <span className="small muted">
               {browse
                 ? "No filters, so no ranking. Tick parks to compare them."
-                : `${monthsText} · ranked for ${HORIZON_LABEL("next_year", trip)}${noWarmth ? ` · comfy ${unit === "F" ? "59–86°F" : "15–30°C"} highs` : ""}`}
+                : `${monthsText}${noWarmth ? ` · comfy ${unit === "F" ? "59–86°F" : "15–30°C"} highs` : ""}`}
             </span>
           </div>
           <button className="tp-act" onClick={() => onStage("prefs")}>Edit preferences</button>
         </div>
+
+        {!browse && <SortControl keys={sortKeys} onChange={setSortKeys} />}
 
         <input type="search" className="tp-search" placeholder="Search a park or state" aria-label="Search a park or state"
           value={find} onChange={(e) => setFind(e.target.value)} />
@@ -296,7 +321,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, stage, scie
                         {!browse && (p.ok ? ` · best in ${MONTHS[p.best_month - 1]}` : ` · misses ${p.failed.map((k) => LABEL(k)).join(", ")}`)}
                       </small>
                     </span>
-                    {!browse && <ScoreRing score={p.score} size={38} light={false} />}
+                    {!browse && <ScoreRing score={p.scores?.[ringHorizon] ?? null} size={38} light={false} />}
                   </label>
                 </li>
               );
@@ -348,6 +373,31 @@ export default function TripPlanner({ unit, setUnit, month, park, q, stage, scie
               {wish.includes(parkKey(drawerPark.park)) ? "♥ Saved" : "♡ Want to go"}
             </button>
           } />
+      )}
+    </div>
+  );
+}
+
+/** "Sort by" plus up to two "then by" keys. Each row can change or drop its key. */
+function SortControl({ keys, onChange }: { keys: SortKey[]; onChange: (keys: SortKey[]) => void }) {
+  const unused = SORTS.filter((s) => !keys.includes(s.key));
+  return (
+    <div className="tp-sort" role="group" aria-label="Sort parks">
+      {keys.map((k, i) => (
+        <div key={k} className="tp-sort-row">
+          <label>
+            <span>{i === 0 ? "Sort by" : "then by"}</span>
+            <select value={k} onChange={(e) => onChange(keys.map((x, j) => (j === i ? (e.target.value as SortKey) : x)))}>
+              {[SORT[k], ...unused].map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+            </select>
+          </label>
+          {keys.length > 1 && (
+            <button type="button" className="tp-sort-x" aria-label={`Remove sort: ${SORT[k].label}`} onClick={() => onChange(keys.filter((_, j) => j !== i))}>×</button>
+          )}
+        </div>
+      ))}
+      {keys.length < MAX_SORTS && unused.length > 0 && (
+        <button type="button" className="tp-clear tp-sort-add" onClick={() => onChange([...keys, unused[0].key])}>+ then by…</button>
       )}
     </div>
   );

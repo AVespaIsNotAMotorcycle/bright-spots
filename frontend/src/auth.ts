@@ -17,7 +17,7 @@ interface Account {
 /** Per-user keys: put away on log out, brought back on log in. */
 export const USER_KEYS = [
   "detective.progress", "detective.days", "detective.bestStreak", "detective.sound",
-  "wishlist", "trip.state", "planner.unit", "born", "station.saved",
+  "wishlist", "trip.state", "trip.sort", "planner.unit", "born", "station.saved",
   "campfire.name", "campfire.id",
 ];
 

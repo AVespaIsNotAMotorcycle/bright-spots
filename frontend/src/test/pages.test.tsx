@@ -285,16 +285,20 @@ describe("App", () => {
     expect(location.search).toContain("trip=");
     await screen.findByText(/parks? fit your trip/, undefined, { timeout: 3000 });
 
-    // Step 2: every park listed, the top 3 ticked, one card each.
+    // Step 2: every park listed, sorted by this year's score, the top 4 ticked, one card each.
     fireEvent.click(screen.getByRole("button", { name: "Show my parks" }));
     expect(location.search).toContain("step=1");
     expect(screen.queryByRole("heading", { name: "Your preferences" })).toBeNull();
     const boxes = (await screen.findAllByRole("checkbox")) as HTMLInputElement[];
     expect(boxes).toHaveLength(10); // the trip fixture's parks
-    expect(boxes.filter((b) => b.checked)).toHaveLength(3);
-    expect(boxes.slice(0, 3).every((b) => b.checked)).toBe(true);
+    expect(boxes.filter((b) => b.checked)).toHaveLength(4);
+    expect(boxes.slice(0, 4).every((b) => b.checked)).toBe(true);
     const cards = screen.getAllByRole("article");
-    expect(cards).toHaveLength(3);
+    expect(cards).toHaveLength(4);
+    const sortBy = screen.getByRole("combobox", { name: "Sort by" }) as HTMLSelectElement;
+    expect(sortBy.value).toBe("this_year");
+    const listed = () => screen.getAllByRole("checkbox").map((b) => b.closest("label")!.querySelector("b")!.textContent!);
+    const byThisYear = listed();
 
     // Each card shows this year and next year together, with no year toggle anywhere.
     const year = new Date().getFullYear();
@@ -305,12 +309,12 @@ describe("App", () => {
     }
     expect(screen.queryByRole("group", { name: "Year" })).toBeNull();
 
-    // Tick a fourth park, untick one from its card.
+    // Tick a fifth park, untick one from its card.
     fireEvent.click(boxes[5]);
-    expect(screen.getAllByRole("article")).toHaveLength(4);
+    expect(screen.getAllByRole("article")).toHaveLength(5);
     const first = within(cards[0]).getByRole("heading", { level: 3 }).textContent!;
     fireEvent.click(screen.getByRole("button", { name: `Untick ${first}` }));
-    expect(screen.getAllByRole("article")).toHaveLength(3);
+    expect(screen.getAllByRole("article")).toHaveLength(4);
     expect(boxes[0].checked).toBe(false);
 
     // Details opens the drawer; save from the card.
@@ -321,6 +325,22 @@ describe("App", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
     fireEvent.click(screen.getAllByRole("button", { name: /Want to go/ })[0]);
     expect(JSON.parse(localStorage.getItem("wishlist")!)).toHaveLength(1);
+
+    // Change the sort: the list reorders, the ticks follow the new top 4, and the choice is kept.
+    fireEvent.change(sortBy, { target: { value: "name" } });
+    const az = listed();
+    expect(az).toEqual([...byThisYear].sort((x, y) => x.localeCompare(y)));
+    const ticked = (screen.getAllByRole("checkbox") as HTMLInputElement[]).map((b) => b.checked);
+    expect(ticked.slice(0, 4)).toEqual([true, true, true, true]);
+    expect(JSON.parse(localStorage.getItem("trip.sort")!)).toEqual(["name"]);
+    // Stack a second key, then drop it.
+    fireEvent.click(screen.getByRole("button", { name: "+ then by…" }));
+    expect(screen.getByRole("combobox", { name: "then by" })).toBeTruthy();
+    fireEvent.change(screen.getByRole("combobox", { name: "Sort by" }), { target: { value: "warm" } });
+    expect(JSON.parse(localStorage.getItem("trip.sort")!)).toEqual(["warm", "this_year"]);
+    fireEvent.click(screen.getByRole("button", { name: "Remove sort: Warmest highs" }));
+    expect(screen.queryByRole("combobox", { name: "then by" })).toBeNull();
+    expect((screen.getByRole("combobox", { name: "Sort by" }) as HTMLSelectElement).value).toBe("this_year");
 
     // Back to preferences.
     fireEvent.click(screen.getByRole("button", { name: "Edit preferences" }));
