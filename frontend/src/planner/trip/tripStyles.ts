@@ -176,4 +176,59 @@ export const TRIP_CSS = `
   .tp-row .hide-sm{display:none}
 }
 @media (prefers-reduced-motion:reduce){.tp *{animation:none!important;transition:none!important}}
+
+/* Canopy look: flat paper cards, thin stone borders, moss for "on", clay only for "avoid". */
+.tp-side{background:var(--paper);border:1px solid var(--stone);border-radius:var(--radius);box-shadow:none}
+.tp-h{color:var(--bark-2);font-weight:500}
+.tp-hero{background:none;color:var(--bark);border-radius:0;padding:0 0 18px;border-bottom:1px solid var(--stone);overflow:visible}
+.tp-hero h2{font-weight:400;font-size:clamp(28px,4vw,38px);color:var(--bark)}
+.tp-hero p{opacity:1;color:var(--bark-2)}
+.tp-mood{border:1px solid var(--stone);background:var(--paper);color:var(--bark);border-radius:99px;font-weight:500;padding:7px 13px;font-size:13.5px}
+.tp-mood:hover{background:var(--paper);border-color:var(--moss)}
+.tp-mood[aria-pressed=true]{background:var(--sage);border-color:var(--moss);color:var(--bark)}
+.tp-season{background:var(--sand);color:var(--bark);border:1px solid var(--stone);border-radius:10px;font-weight:500}
+.tp-month{background:var(--paper);color:var(--bark);border:1px solid var(--stone);font-weight:500}
+.tp-season:hover,.tp-month:hover{border-color:var(--moss)}
+.tp-season[aria-pressed=true],.tp-month[aria-pressed=true]{background:var(--moss);border-color:var(--moss);color:var(--paper);box-shadow:none;font-weight:600}
+.tp-feel{border:1px solid var(--stone);background:var(--paper);font-weight:500;color:var(--bark)}
+.tp-feel[aria-pressed=true]{border-color:var(--moss);background:color-mix(in srgb,var(--sage) 35%,var(--paper));color:var(--bark)}
+.tp-chip{border:1px solid var(--stone);background:var(--paper);color:var(--bark);font-weight:500}
+.tp-chip:hover{border-color:var(--moss)}
+.tp-chip.nice{border-color:var(--moss);background:color-mix(in srgb,var(--sage) 30%,var(--paper));color:var(--bark)}
+.tp-chip.nice .lvl{background:var(--paper);color:var(--moss)}
+.tp-chip.must{border-color:var(--moss);background:var(--moss);color:var(--paper)}
+.tp-chip.must .lvl{background:var(--paper);color:var(--moss)}
+.tp-chips.avoid .tp-chip.nice{border-color:var(--clay);background:color-mix(in srgb,var(--clay) 10%,var(--paper));color:var(--bark)}
+.tp-chips.avoid .tp-chip.must{border-color:var(--clay);background:var(--clay);color:var(--paper)}
+.tp-chips.avoid .tp-chip.must .lvl{color:var(--clay)}
+.tp-more summary{color:var(--moss);font-weight:500}
+.tp-seg{border:1px solid var(--stone)}
+.tp-seg button{font-weight:500;color:var(--bark-2)}
+.tp-seg button[aria-pressed=true]{background:var(--moss);color:var(--paper)}
+.tp-count{font-weight:400;color:var(--bark)}
+.tp-card{border:1px solid var(--stone);background:var(--paper);border-radius:var(--radius);box-shadow:none}
+.tp-card:hover,.tp-card:focus-visible{box-shadow:none;border-color:var(--moss);transform:translateY(-2px)}
+.tp-name{font-weight:400}
+.tp-why{background:var(--paper);border:1px solid var(--stone);border-left:3px solid var(--moss);border-radius:var(--radius);color:var(--bark)}
+.tp-row{border:1px solid var(--stone);background:var(--paper);border-radius:12px}
+.tp-row:hover{border-color:var(--moss)}
+.tp-tile{border:1px solid var(--stone);background:var(--paper);border-radius:var(--radius)}
+.tp-tile:hover,.tp-tile:focus-visible{border-color:var(--moss);box-shadow:none}
+.tp-act{border:1px solid var(--stone);background:var(--paper);font-weight:500;color:var(--bark)}
+.tp-act:hover{border-color:var(--moss);color:var(--moss)}
+.tp-act[aria-pressed=true]{background:var(--moss);border-color:var(--moss);color:var(--paper)}
+.tp-search{border:1px solid var(--stone);background-color:var(--paper);color:var(--bark)}
+.tp-search:focus{border-color:var(--moss)}
+.tp-clear{color:var(--clay);font-weight:500}
+.tp-relax{border:1px dashed var(--clay);border-radius:var(--radius);background:var(--paper)}
+.tp-badge{font-weight:500;background:var(--sand);color:var(--bark);border:1px solid var(--stone)}
+.tp-badge.warn{background:color-mix(in srgb,var(--clay) 10%,var(--paper));color:var(--clay)}
+.tp-badge.case{background:color-mix(in srgb,var(--sage) 35%,var(--paper));color:var(--bark)}
+.tp-strip span.best{outline-color:var(--moss)}
+.tp-dates{font-weight:400;color:var(--bark)}
+.tp-card-dates b,.tp-mlist li.top b{color:var(--bark)}
+.tp-drawer{background:var(--paper)}
+.tp-heart{background:var(--paper);color:var(--clay);box-shadow:none;border:1px solid var(--stone)}
+.tp-heart[aria-pressed=true]{background:var(--clay);border-color:var(--clay);color:var(--paper)}
+.tp-cmp td.win{background:color-mix(in srgb,var(--sage) 35%,var(--paper))}
 `;

@@ -1,5 +1,6 @@
 // Park passport page and its Home preview. Stamps come from solved cases.
 import { useMemo, useState } from "react";
+import PageHead from "../brand/PageHead";
 import { CASES, type Case } from "./cases";
 import { loadProgress } from "./games";
 import { PARK_NAMES } from "./parkNames";
@@ -120,7 +121,7 @@ export function PassportPreview({ onOpen, onCase }: { onOpen: () => void; onCase
           );
         })}
       </div>
-      <p className="micro muted" style={{ margin: "10px 0 0" }}>Solve a case to stamp every park it studies. Photos: Wikimedia Commons.</p>
+      <p className="micro muted" style={{ margin: "10px 0 0" }}>Solve a mystery to stamp every park it studies. Photos: Wikimedia Commons.</p>
     </section>
   );
 }
@@ -139,16 +140,11 @@ export default function Passport({ onCase, onExplore, onSaved }: Go & { onSaved?
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <style>{CSS}</style>
-      <header style={{ borderBottom: "1px solid var(--stone)", paddingBottom: 16 }}>
-        <div className="section-title">Park passport</div>
-        <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 34, color: "var(--bark)", margin: "4px 0 6px" }}>
-          {got.size} of {casePark.length} stamps
-        </h2>
-        <p className="muted" style={{ margin: 0 }}>
-          Each solved case stamps the parks it studies. A ⭐ means another case visited that park.
-          {extra > 0 && ` You have ${extra} extra ⭐.`}
-        </p>
-      </header>
+      <PageHead
+        eyebrow="Park passport"
+        title={`${got.size} of ${casePark.length} stamps`}
+        lead={<>Each solved mystery stamps the parks it studies. A ⭐ means another mystery visited that park.{extra > 0 && ` You have ${extra} extra ⭐.`}</>}
+      />
 
       {picked && (
         <section className="card" aria-live="polite">
@@ -178,7 +174,7 @@ export default function Passport({ onCase, onExplore, onSaved }: Go & { onSaved?
       <div className="pp-grid">
         {casePark.map((p) => (
           <Stamp key={p} park={p} solved={got.get(p) ?? []} onClick={() => setPick(p)}
-            title={got.has(p) ? `${got.get(p)!.length} case(s) solved here` : `Solve "${caseForPark(p, progress)?.title}" to stamp it`} />
+            title={got.has(p) ? `${got.get(p)!.length} ${got.get(p)!.length === 1 ? "mystery" : "mysteries"} solved here` : `Solve "${caseForPark(p, progress)?.title}" to stamp it`} />
         ))}
       </div>
 
@@ -189,8 +185,8 @@ export default function Passport({ onCase, onExplore, onSaved }: Go & { onSaved?
       )}
 
       <section>
-        <div className="section-title" style={{ marginBottom: 6 }}>No case yet</div>
-        <p className="small muted" style={{ margin: "0 0 8px" }}>These parks have NASA data but no case. Tap one to explore it.</p>
+        <div className="section-title" style={{ marginBottom: 6 }}>No mystery yet</div>
+        <p className="small muted" style={{ margin: "0 0 8px" }}>These parks have NASA data but no mystery yet. Tap one to explore it.</p>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {noCase.map((p) => (
             <button key={p} className="chip chip-sm" onClick={() => onExplore(p)}>{PARK_NAMES[p]}</button>

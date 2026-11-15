@@ -32,7 +32,7 @@ describe("App", () => {
     researcher();
     render(<App />);
     const nav = await screen.findByRole("navigation", { name: "Main" });
-    expect([...nav.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["Home", "Plan", "Cases", "Saved", "Passport"]);
+    expect([...nav.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["Home", "Plan", "Mysteries", "Saved", "Passport"]);
     fireEvent.click(screen.getByRole("button", { name: /^Research/ }));
     const items = screen.getAllByRole("menuitem").map((b) => b.textContent);
     expect(items).toEqual(["Trend Atlas", "Topo Map", "Analog Sites", "Park Families", "Odd One Out", "Season Shifts", "Head-to-Head", "Robustness", "Campfire"]);
@@ -107,7 +107,7 @@ describe("App", () => {
   it("an old student profile opens Explorer home with the twin game", async () => {
     localStorage.setItem("profile", JSON.stringify({ name: "", persona: "student" }));
     render(<App />);
-    expect(await screen.findByText("When do you want to go?", undefined, { timeout: 3000 })).toBeTruthy();
+    expect(await screen.findByText("Play today", undefined, { timeout: 3000 })).toBeTruthy();
     expect(screen.queryByText("Trend atlas, maps, comparisons and methods.")).toBeNull();
   });
 
@@ -115,7 +115,7 @@ describe("App", () => {
     localStorage.setItem("profile", JSON.stringify({ name: "Sam", persona: "visitor" }));
     render(<App />);
     const nav = await screen.findByRole("navigation", { name: "Main" }, { timeout: 3000 });
-    for (const t of ["Plan", "Saved", "Cases", "Passport"]) expect(within(nav).getAllByText(t).length).toBeGreaterThan(0);
+    for (const t of ["Plan", "Saved", "Mysteries", "Passport"]) expect(within(nav).getAllByText(t).length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: /^Research/ })).toBeNull();
   });
 
@@ -184,8 +184,8 @@ describe("App", () => {
     history.replaceState(null, "", "#tab=passport");
     render(<App />);
     expect(await screen.findByText(/stamps$/, undefined, { timeout: 3000 })).toBeTruthy();
-    expect(screen.getAllByTitle(/case\(s\) solved here/).length).toBeGreaterThan(0);
-    expect(screen.getByText("No case yet")).toBeTruthy();
+    expect(screen.getAllByTitle(/myster(y|ies) solved here/).length).toBeGreaterThan(0);
+    expect(screen.getByText("No mystery yet")).toBeTruthy();
   });
 });
 

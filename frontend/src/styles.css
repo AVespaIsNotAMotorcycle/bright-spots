@@ -121,6 +121,32 @@ button, input, select { font: inherit; color: inherit; }
   margin: 0;
 }
 
+/* One page header for every tab: eyebrow, Gloock title, short lead. */
+.page-head { display: flex; flex-direction: column; gap: 6px; padding-bottom: 18px; margin-bottom: 4px; border-bottom: 1px solid var(--stone); }
+.page-head .page-title { font-family: var(--font-display); font-weight: 400; font-size: clamp(28px, 4vw, 38px); line-height: 1.1; color: var(--bark); margin: 0; }
+.page-head .page-lead { margin: 0; color: var(--bark-2); font-size: 15px; line-height: 1.5; max-width: 62ch; }
+.page-head .page-extra { margin-top: 10px; }
+
+/* Small flat tag (difficulty, status). */
+.tag { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 500; padding: 2px 10px; border-radius: 99px;
+  background: var(--sand); color: var(--bark-2); border: 1px solid var(--stone); white-space: nowrap; }
+.tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.tag.easy { color: var(--moss); }
+.tag.medium { color: #8A6A2E; }
+.tag.hard { color: var(--clay); }
+.tag.plain::before { display: none; }
+
+/* Flat clickable tile used by lists of things (mysteries, saved parks). */
+.tile-btn { display: flex; flex-direction: column; gap: 10px; text-align: left; padding: 18px; font: inherit; color: var(--bark);
+  background: var(--paper); border: 1px solid var(--stone); border-radius: var(--radius); cursor: pointer; transition: border-color .15s, transform .15s; }
+.tile-btn:hover { border-color: var(--moss); transform: translateY(-2px); }
+.tile-btn:focus-visible { outline: 2px solid var(--moss); outline-offset: 2px; }
+.tile-btn .tile-icon { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; background: var(--sand); border: 1px solid var(--stone); }
+.tile-btn .tile-title { font-family: var(--font-display); font-weight: 400; font-size: 20px; line-height: 1.2; }
+.tile-btn .tile-text { font-size: 13.5px; line-height: 1.5; color: var(--bark-2); }
+.tile-btn .tile-foot { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+@media (prefers-reduced-motion: reduce) { .tile-btn { transition: none; } .tile-btn:hover { transform: none; } }
+
 .small  { font-size: 13px; }
 .micro  { font-size: 11px; }
 .muted  { color: var(--text-muted); }

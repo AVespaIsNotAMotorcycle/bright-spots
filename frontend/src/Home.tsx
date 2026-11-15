@@ -1,11 +1,10 @@
 // Home: the first impression. Hero, month picker, three park picks for this month, entry cards.
 import type { Atlas } from "./detective/model";
 import { Safe } from "./ErrorBoundary";
-import Logo, { TAGLINE } from "./brand/Logo";
+import { TAGLINE } from "./brand/Logo";
 import RightNow from "./home/RightNow";
 import { NextCase, ParkOfTheDay } from "./detective/StudentWidgets";
 import { GuessTheTwin } from "./detective/TwinGame";
-import { MONTHS } from "./planner/trip/tripModel";
 import "./home/home.css";
 
 interface Props {
@@ -17,7 +16,7 @@ interface Props {
 
 const CARDS = [
   { tab: "planner", title: "Plan", text: "Find the best month for any park." },
-  { tab: "student", title: "Cases", text: "Solve short puzzles about how parks are changing." },
+  { tab: "student", title: "Mysteries", text: "Solve short puzzles about how parks are changing." },
   { tab: "passport", title: "Passport", text: "Collect a stamp for every park you solve." },
 ];
 
@@ -30,7 +29,6 @@ export default function Home({ name, research, atlas, onGo }: Props) {
   return (
     <div className="hm">
       <section className="hm-hero" aria-label="Welcome">
-        <Logo size={36} />
         <p className="hm-hello">{name ? `Welcome, ${name}` : "Welcome"}</p>
         <h1 className="hm-head">{TAGLINE}</h1>
         <p className="hm-lead">
@@ -38,23 +36,7 @@ export default function Home({ name, research, atlas, onGo }: Props) {
         </p>
         <div className="hm-actions">
           <button className="hm-cta" onClick={() => onGo("planner")}>Plan a trip</button>
-          <button className="hm-quiet" onClick={() => onGo("student")}>Try a case</button>
-        </div>
-      </section>
-
-      <section className="hm-sec" aria-label="Pick a month">
-        <h2 className="hm-h2">When do you want to go?</h2>
-        <div className="hm-months">
-          {MONTHS.map((m, i) => (
-            <button
-              key={m}
-              className="hm-pill"
-              aria-current={i + 1 === now ? "true" : undefined}
-              onClick={() => onGo("planner", { month: i + 1 })}
-            >
-              {m}
-            </button>
-          ))}
+          <button className="hm-quiet" onClick={() => onGo("student")}>Try a mystery</button>
         </div>
       </section>
 
@@ -64,7 +46,7 @@ export default function Home({ name, research, atlas, onGo }: Props) {
 
       <section className="hm-sec" aria-label="Play today">
         <h2 className="hm-h2">Play today</h2>
-        <Safe what="Next case"><NextCase onPlay={(c) => onGo("student", { caseId: c.id, step: 0 })} /></Safe>
+        <Safe what="Next mystery"><NextCase onPlay={(c) => onGo("student", { caseId: c.id, step: 0 })} /></Safe>
         {atlas && (
           <div className="hm-games">
             <Safe what="Park of the day"><ParkOfTheDay atlas={atlas} onExplore={explore} /></Safe>

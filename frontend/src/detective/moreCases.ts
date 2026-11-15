@@ -28,7 +28,7 @@ export const MORE_CASES: Case[] = [
       {
         kind: "intro",
         heading: "The deepest lake in America",
-        body: "Crater Lake sits inside a volcano that blew up 7,700 years ago. The water is so blue it looks fake. Your first case: is the air around it warming, or is it all in our heads?",
+        body: "Crater Lake sits inside a volcano that blew up 7,700 years ago. The water is so blue it looks fake. Your first mystery: is the air around it warming, or is it all in our heads?",
       },
       {
         kind: "verdict",
@@ -801,7 +801,7 @@ export const MORE_CASES: Case[] = [
   {
     id: "chief-detective",
     title: "Chief Detective Exam",
-    subtitle: "Everything you learned, in one final case.",
+    subtitle: "Everything you learned, in one final mystery.",
     emoji: "🏅",
     difficulty: "hard",
     badge: "🏅 Chief Detective",

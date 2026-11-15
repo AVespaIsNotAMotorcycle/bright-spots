@@ -522,7 +522,7 @@ export default function QuizCard({
               <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55 }}>{explain(step, atlas)}</p>
             )}
             <div style={{ flex: 1 }} />
-            <button onClick={onNext} style={lockBtn}>{isLast ? "Finish case 🏁" : "Next →"}</button>
+            <button onClick={onNext} style={lockBtn}>{isLast ? "Finish mystery 🏁" : "Next →"}</button>
             {didYouKnow && (
               <div style={{ borderTop: "1px solid rgba(0,0,0,.18)", paddingTop: 10, fontSize: 12.5, lineHeight: 1.5 }}>
                 <b>💡 Did you know?</b> {didYouKnow.text}

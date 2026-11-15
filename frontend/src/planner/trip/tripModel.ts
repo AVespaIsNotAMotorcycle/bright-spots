@@ -79,7 +79,7 @@ export const SOURCE_LABEL: Record<Source, string> = {
   maths: "NASA POWER + sun and moon maths",
   fires: "NASA FIRMS fire satellites",
   visitors: "2025 visitor counts (yearly, not by month)",
-  cases: "Park Trend Detective cases",
+  cases: "Canopy mysteries",
 };
 
 export interface Chip {
@@ -102,7 +102,7 @@ export const WANTS: Chip[] = [
   { key: "sunny", emoji: "☀️", label: "Sunny days", hint: "Lots of sunlight reaching the ground.", source: "nasa" },
   { key: "hikes", emoji: "🥾", label: "Long hike days", hint: "Long daylight, mild highs, no heat stress.", source: "maths" },
   { key: "witness", emoji: "📈", label: "See change happen", hint: "Parks where this month warmed or cooled most since 1981.", source: "nasa" },
-  { key: "mystery", emoji: "🔍", label: "Has a mystery", hint: "Parks with a case you have not solved yet.", source: "cases" },
+  { key: "mystery", emoji: "🔍", label: "Has a mystery", hint: "Parks with a mystery you have not solved yet.", source: "cases" },
 ];
 
 export const AVOIDS: Chip[] = [
@@ -250,7 +250,7 @@ export const tempDelta = (c: number, u: Unit, digits = 1) => `${c > 0 ? "+" : ""
 /** What a reason's value means, in a few words. */
 export function reasonText(r: Reason, u: Unit): string {
   const v = r.value;
-  if (r.key === "mystery") return r.score ? "has a case to solve" : "no unsolved case";
+  if (r.key === "mystery") return r.score ? "has a mystery to solve" : "no unsolved mystery";
   if (v == null) return "no data here";
   switch (r.key) {
     case "temperature": return `${temp(v, u)} highs`;

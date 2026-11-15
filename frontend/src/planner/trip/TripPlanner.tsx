@@ -395,13 +395,13 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
         )}
 
         {trip && !browse && goBefore.length > 0 && (
-          <section className="card" style={{ background: "#fbf1e8" }}>
-            <div className="tp-h">⏳ Go before it changes</div>
+          <section className="card">
+            <div className="tp-h">Go before it changes</div>
             <p className="small" style={{ margin: "0 0 8px" }}>These good fits score lower for the same month in the 2050 climate model.</p>
             <div className="tp-chips">
               {goBefore.map((p) => (
                 <button key={p.park.id} className="tp-chip" onClick={() => setOpen(code(p))}>
-                  {p.park.short} · {MONTHS[p.best_month - 1]} <b style={{ color: "var(--rust)" }}>{Math.round(p.change_2050!)}</b>
+                  {p.park.short} · {MONTHS[p.best_month - 1]} <b style={{ color: "var(--clay)" }}>{Math.round(p.change_2050!)}</b>
                 </button>
               ))}
             </div>

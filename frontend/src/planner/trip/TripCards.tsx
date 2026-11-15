@@ -10,10 +10,10 @@ export function ScoreRing({ score, size = 62, light = true }: { score: number | 
   const s = Math.max(0, Math.min(100, score ?? 0));
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={`Score ${Math.round(s)} out of 100`}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill={light ? "rgba(0,0,0,.35)" : "var(--surface-2)"} stroke={light ? "rgba(255,255,255,.3)" : "var(--grid)"} strokeWidth={5} />
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#f3c969" strokeWidth={5} strokeLinecap="round"
+      <circle cx={size / 2} cy={size / 2} r={r} fill={light ? "rgba(0,0,0,.35)" : "var(--paper)"} stroke={light ? "rgba(255,255,255,.3)" : "var(--stone)"} strokeWidth={5} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={light ? "#E9EDD8" : "var(--moss)"} strokeWidth={5} strokeLinecap="round"
         strokeDasharray={`${(c * s) / 100} ${c}`} transform={`rotate(-90 ${size / 2} ${size / 2})`} />
-      <text x="50%" y="50%" dy=".35em" textAnchor="middle" fontWeight={900} fontSize={size * 0.32} fill={light ? "#fff" : "var(--text)"}>
+      <text x="50%" y="50%" dy=".35em" textAnchor="middle" fontWeight={600} fontSize={size * 0.32} fill={light ? "#fff" : "var(--text)"}>
         {score == null ? "–" : Math.round(score)}
       </text>
     </svg>

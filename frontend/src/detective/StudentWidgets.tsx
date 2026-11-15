@@ -86,36 +86,36 @@ export function RankBanner() {
   const pct = rank.next == null ? 100 : Math.min(100, Math.round((totalStars / rank.next) * 100));
   const stat = (emoji: string, n: number | string, label: string) => (
     <div style={{ textAlign: "center", minWidth: 64 }} title={label}>
-      <div style={{ fontSize: 20, fontWeight: 800, color: E.bark }}>{emoji} {n}</div>
-      <div style={{ fontSize: 10.5, letterSpacing: ".06em", textTransform: "uppercase", color: E.moss, fontWeight: 700 }}>{label}</div>
+      <div style={{ fontSize: 18, fontWeight: 600, color: E.bark }}>{emoji} {n}</div>
+      <div style={{ fontSize: 10.5, letterSpacing: ".06em", textTransform: "uppercase", color: "var(--bark-2)", fontWeight: 500 }}>{label}</div>
     </div>
   );
   return (
     <div
       style={{
         display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap",
-        background: `${RIDGE} bottom / 100% 46px no-repeat, linear-gradient(135deg, ${E.cream}, ${E.sand})`,
-        border: `1.5px solid ${E.sage}`, borderRadius: 18, padding: "14px 18px 30px",
+        background: "var(--paper)",
+        border: "1px solid var(--stone)", borderRadius: "var(--radius)", padding: "14px 18px",
       }}
     >
       <div
         style={{
-          fontSize: 32, width: 58, height: 58, borderRadius: "50%", display: "grid", placeItems: "center",
-          background: E.cream, border: `3px double ${E.pine}`,
+          fontSize: 26, width: 52, height: 52, borderRadius: "50%", display: "grid", placeItems: "center",
+          background: "var(--sand)", border: "1px solid var(--stone)",
         }}
       >
         {rank.emoji}
       </div>
       <div style={{ flex: 1, minWidth: 180 }}>
-        <div style={{ fontSize: 10.5, letterSpacing: ".12em", textTransform: "uppercase", color: E.rust, fontWeight: 700 }}>Ranger rank</div>
-        <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 20, color: E.pine }}>{rank.title}</div>
-        <div style={{ fontSize: 12, color: E.bark, opacity: 0.8 }}>
-          {solved} of {CASES.length} cases solved
+        <div className="section-title">Ranger rank</div>
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22, color: E.bark }}>{rank.title}</div>
+        <div style={{ fontSize: 12.5, color: "var(--bark-2)" }}>
+          {solved} of {CASES.length} mysteries solved
           {rank.next != null ? ` · ${rank.next - totalStars} more ⭐ to the next rank` : " · top rank reached"}
         </div>
         {/* Trail progress: hiker walks toward the summit flag. */}
-        <div style={{ position: "relative", height: 8, borderRadius: 4, background: "rgba(74,55,38,.14)", marginTop: 8 }} aria-hidden>
-          <div style={{ width: `${pct}%`, height: "100%", borderRadius: 4, background: `linear-gradient(90deg, ${E.moss}, ${E.pine})` }} />
+        <div style={{ position: "relative", height: 8, borderRadius: 4, background: "var(--stone)", marginTop: 10 }} aria-hidden>
+          <div style={{ width: `${pct}%`, height: "100%", borderRadius: 4, background: E.moss }} />
           <span style={{ position: "absolute", top: -11, left: `calc(${pct}% - 9px)`, fontSize: 16 }}>🥾</span>
           <span style={{ position: "absolute", top: -13, right: -6, fontSize: 16 }}>🚩</span>
         </div>
@@ -152,7 +152,7 @@ export function NextCase({ onPlay }: { onPlay: (c: Case) => void }) {
     return (
       <div className="card" style={{ textAlign: "center" }}>
         <div style={{ fontSize: 34 }}>🏅</div>
-        <strong>Every case has 3 stars. You are a Chief Detective!</strong>
+        <strong>Every mystery has 3 stars. You are a Chief Detective!</strong>
       </div>
     );
   }
@@ -181,7 +181,7 @@ export function NextCase({ onPlay }: { onPlay: (c: Case) => void }) {
       </span>
       <span style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1, minWidth: 200, position: "relative" }}>
         <span style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <span style={chip("var(--sage)", E.bark)}>{n.replay ? "Go for 3 stars" : "Next case"}</span>
+          <span style={chip("var(--sage)", E.bark)}>{n.replay ? "Go for 3 stars" : "Next mystery"}</span>
           <span style={chip("var(--sand)", d.c)}>● {d.t}</span>
         </span>
         <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 26, lineHeight: 1.15, color: E.bark }}>{n.c.title}</span>
@@ -245,7 +245,7 @@ export function ParkOfTheDay({ atlas, onExplore, science = false }: { atlas: Atl
     <section
       style={{
         borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--stone)", background: "var(--paper)",
-        position: "relative",
+        position: "relative", height: "100%", display: "flex", flexDirection: "column",
       }}
     >
       <style>{WIDGET_CSS}</style>
@@ -254,7 +254,7 @@ export function ParkOfTheDay({ atlas, onExplore, science = false }: { atlas: Atl
           background: photo
             ? `linear-gradient(180deg, rgba(31,42,36,.15) 0%, rgba(31,42,36,.7) 100%), url("${photo.file}") center / cover no-repeat`
             : `${RIDGE} bottom / 100% 60px no-repeat, linear-gradient(180deg, #f0c98f 0%, #d9a066 45%, #8a9a5b 100%)`,
-          color: E.cream, padding: photo ? "96px 24px 18px" : "20px 24px 54px", position: "relative",
+          color: E.cream, padding: "20px 22px 16px", minHeight: 170, display: "flex", flexDirection: "column", justifyContent: "flex-end", position: "relative",
         }}
       >
         <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".14em", textTransform: "uppercase", color: photo ? E.cream : E.bark }}>
@@ -262,7 +262,7 @@ export function ParkOfTheDay({ atlas, onExplore, science = false }: { atlas: Atl
         </div>
         <h3
           style={{
-            margin: "4px 0 0", fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 30, color: photo ? "#fff" : E.bark,
+            margin: "4px 0 0", fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 26, lineHeight: 1.15, color: photo ? "#fff" : E.bark,
             textShadow: photo ? "0 2px 8px rgba(0,0,0,.55)" : "0 1px 0 rgba(255,255,255,.4)",
           }}
         >
@@ -272,16 +272,16 @@ export function ParkOfTheDay({ atlas, onExplore, science = false }: { atlas: Atl
       </div>
 
       {!guess ? (
-        <div style={{ padding: "18px 22px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{ fontWeight: 600, fontSize: 18, color: E.bark }}>Quick guess: since 1981, is {name} getting…</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
+        <div style={{ padding: "18px 22px 20px", display: "flex", flexDirection: "column", gap: 14, flex: 1 }}>
+          <div style={{ fontWeight: 600, fontSize: 16, color: E.bark }}>Quick guess: since 1981, is {name} getting…</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
             {GUESSES.map((g) => (
               <button
                 key={g.id}
                 className="sw-pick"
                 onClick={() => pick(g.id)}
                 style={{
-                  background: "var(--sand)", border: "1px solid var(--stone)", borderTop: `3px solid ${g.edge}`, borderRadius: 12, padding: "14px 10px",
+                  background: "var(--sand)", border: "1px solid var(--stone)", borderRadius: 12, padding: "14px 6px",
                   cursor: "pointer", color: E.bark, fontWeight: 600, fontSize: 15, font: "inherit",
                 }}
               >
@@ -290,7 +290,7 @@ export function ParkOfTheDay({ atlas, onExplore, science = false }: { atlas: Atl
               </button>
             ))}
           </div>
-          <div style={{ fontSize: 13, color: "var(--bark-2)" }}>Tap one to see what 45 years of NASA data say.</div>
+          <div style={{ fontSize: 13, color: "var(--bark-2)", marginTop: "auto" }}>Tap one to see what 45 years of NASA data say.</div>
         </div>
       ) : (
         <div className="sw-reveal" style={{ padding: "18px 24px 22px", display: "flex", flexDirection: "column", gap: 14, position: "relative" }}>

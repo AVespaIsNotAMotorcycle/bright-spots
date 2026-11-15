@@ -77,45 +77,45 @@ export function GuessTheTwin({ atlas, onExplore }: { atlas: Atlas; onExplore: (p
 
   return (
     <section style={{ borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--stone)", background: "var(--paper)",
-      position: "relative" }}>
+      position: "relative", height: "100%", display: "flex", flexDirection: "column" }}>
       <style>{WIDGET_CSS}</style>
       <div style={{
         background: photo
           ? `linear-gradient(180deg, rgba(31,42,36,.15) 0%, rgba(31,42,36,.72) 100%), url("${photo.file}") center / cover no-repeat`
           : `${RIDGE} bottom / 100% 60px no-repeat, linear-gradient(180deg, #cfdcb4 0%, #9db07a 55%, #6b7f3a 100%)`,
-        padding: photo ? "96px 24px 18px" : "20px 24px 54px", position: "relative" }}>
+        padding: "20px 22px 16px", minHeight: 170, display: "flex", flexDirection: "column", justifyContent: "flex-end", position: "relative" }}>
         <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".14em", textTransform: "uppercase", color: photo ? E.cream : E.bark }}>
           Guess the twin
         </div>
-        <h3 style={{ margin: "4px 0 0", fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 28, color: photo ? "#fff" : E.bark,
+        <h3 style={{ margin: "4px 0 0", fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 26, lineHeight: 1.15, color: photo ? "#fff" : E.bark,
           textShadow: photo ? "0 2px 8px rgba(0,0,0,.55)" : undefined }}>
-          Who changes most like {name}?
+          Whose climate moves like {name}?
         </h3>
         {photo && <PhotoCredit photo={photo} style={{ position: "absolute", right: 12, top: 10, color: "rgba(255,255,255,.85)", textShadow: "0 1px 3px rgba(0,0,0,.7)" }} />}
       </div>
 
       {!guess ? (
-        <div style={{ padding: "18px 22px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{ fontSize: 14.5, color: E.bark }}>
-            Twin parks change in the same ways: the same seasons warm, the same rain goes up or down. Pick one.
+        <div style={{ padding: "18px 22px 20px", display: "flex", flexDirection: "column", gap: 14, flex: 1 }}>
+          <div style={{ fontWeight: 600, fontSize: 16, color: E.bark }}>
+            Pick the park whose weather has changed the same way.
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
             {round.options.map((id) => {
               const ph = photoOf(id);
               return (
                 <button key={id} className="sw-pick" onClick={() => pickOne(id)}
                   title={ph ? `Photo: ${ph.credit} (${ph.license}), Wikimedia Commons` : undefined}
                   style={{ background: "var(--sand)", border: "1px solid var(--stone)", borderRadius: 12, font: "inherit",
-                    padding: ph ? "0 0 12px" : "16px 10px", overflow: "hidden", cursor: "pointer", color: E.bark, fontWeight: 600, fontSize: 15 }}>
+                    padding: ph ? "0 0 12px" : "16px 10px", overflow: "hidden", cursor: "pointer", color: E.bark, fontWeight: 600, fontSize: 13.5, lineHeight: 1.25 }}>
                   {ph
-                    ? <div aria-hidden style={{ height: 120, marginBottom: 12, background: `url("${ph.file}") center / cover no-repeat` }} />
+                    ? <div aria-hidden style={{ height: 64, marginBottom: 10, background: `url("${ph.file}") center / cover no-repeat` }} />
                     : <div style={{ fontSize: 30 }}>🏞️</div>}
                   {parkName(id)}
                 </button>
               );
             })}
           </div>
-          <div style={{ fontSize: 13, color: "var(--bark-2)" }}>New park every day. Answers come from NASA data since 1981.</div>
+          <div style={{ fontSize: 13, color: "var(--bark-2)", marginTop: "auto" }}>New park every day. Answers come from NASA data since 1981.</div>
         </div>
       ) : (
         <div className="sw-reveal" style={{ padding: "18px 24px 22px", display: "flex", flexDirection: "column", gap: 12, position: "relative" }}>

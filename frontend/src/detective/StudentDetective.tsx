@@ -1,4 +1,5 @@
 // Student detective mode: guided cases with predict → examine → analyze → interpret flow.
+import PageHead from "../brand/PageHead";
 import { useEffect, useState } from "react";
 import type { Atlas, ParkTrends, TrendRow } from "./model";
 import { PERIOD_LABEL } from "./model";
@@ -11,77 +12,43 @@ import { RankBanner } from "./StudentWidgets";
 import { play } from "./sound";
 import QuizCard from "./quiz";
 import type { CaseResult } from "./games";
-import FlashCard, { themeFor } from "./cardTheme";
+import FlashCard from "./cardTheme";
 import { PARK_NAMES } from "./parkNames";
 import { caseParks } from "./stamps";
 
 // ── Case list ──────────────────────────────────────────────────────────────
 
 function DifficultyBadge({ d }: { d: Case["difficulty"] }) {
-  const map = {
-    easy: { label: "Easy", bg: "#d4edda", color: "#155724" },
-    medium: { label: "Medium", bg: "#fff3cd", color: "#856404" },
-    hard: { label: "Hard", bg: "#f8d7da", color: "#721c24" },
-  };
-  const s = map[d];
-  return (
-    <span style={{ fontSize: 11, fontWeight: 600, background: s.bg, color: s.color, borderRadius: 20, padding: "2px 10px" }}>
-      {s.label}
-    </span>
-  );
+  const label = { easy: "Easy", medium: "Medium", hard: "Hard" }[d];
+  return <span className={`tag ${d}`}>{label}</span>;
 }
 
 export function CaseList({ onSelect }: { onSelect: (c: Case) => void }) {
   const progress = loadProgress();
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div>
-        <h2 style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 700, fontFamily: "var(--font-display, 'Playfair Display', Georgia, serif)", color: "var(--pine)" }}>Detective Cases</h2>
-        <p style={{ margin: 0, fontSize: 14, color: "var(--text-muted)" }}>
-          Each case walks you through real NASA data: predict first, then see what the numbers say.
-        </p>
-      </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      <PageHead
+        eyebrow="Mysteries"
+        title="Solve a park mystery"
+        lead="Each mystery walks you through real NASA data: guess first, then see what the numbers say."
+      />
       <RankBanner />
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 14 }}>
         {CASES.map((c) => (
-          <button
-            key={c.id}
-            onClick={() => onSelect(c)}
-            style={{
-              background: `linear-gradient(145deg, ${themeFor(c.steps[0], c.id).from}, ${themeFor(c.steps[0], c.id).to})`,
-              border: `2px solid ${themeFor(c.steps[0], c.id).edge}`,
-              color: "#1f2a24",
-              borderRadius: 18,
-              padding: "20px 18px",
-              cursor: "pointer",
-              textAlign: "left",
-              display: "flex",
-              flexDirection: "column",
-              gap: 12,
-              transition: "transform 0.15s, box-shadow 0.15s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-4px) rotate(-.6deg)";
-              e.currentTarget.style.boxShadow = "0 12px 24px rgba(0,0,0,.18)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "none";
-              e.currentTarget.style.boxShadow = "none";
-            }}
-          >
-            <div style={{ fontSize: 32 }}>{c.emoji}</div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{c.title}</div>
-              <div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.5 }}>{c.subtitle}</div>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <button key={c.id} className="tile-btn" onClick={() => onSelect(c)}>
+            <span className="tile-icon" aria-hidden>{c.emoji}</span>
+            <span>
+              <span className="tile-title" style={{ display: "block", marginBottom: 4 }}>{c.title}</span>
+              <span className="tile-text">{c.subtitle}</span>
+            </span>
+            <span className="tile-foot">
               <DifficultyBadge d={c.difficulty} />
               {progress[c.id] && (
                 <span title="Best result" style={{ fontSize: 13 }}>
                   {"⭐".repeat(progress[c.id].stars)}
                 </span>
               )}
-            </div>
+            </span>
           </button>
         ))}
       </div>
@@ -389,7 +356,7 @@ export default function StudentDetective({
           {step.kind === "intro" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <p style={{ margin: 0, fontSize: 16, lineHeight: 1.7 }}>{step.body}</p>
-              <button onClick={nextStep} style={primaryBtn}>Start the case →</button>
+              <button onClick={nextStep} style={primaryBtn}>Start the mystery →</button>
             </div>
           )}
 
@@ -420,7 +387,7 @@ function CaseClosed({
     play("star");
   }, []);
   const verdict =
-    result.stars === 3 ? "Case closed. Flawless." : result.stars === 2 ? "Case closed. Solid work." : "Case closed. Try again for more stars.";
+    result.stars === 3 ? "Mystery solved. Flawless." : result.stars === 2 ? "Mystery solved. Solid work." : "Mystery solved. Try again for more stars.";
   const btn = { borderRadius: 8, padding: "10px 20px", cursor: "pointer", fontWeight: 600, fontSize: 14 } as const;
   return (
     <div

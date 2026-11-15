@@ -335,7 +335,7 @@ export function ParkCard({
       <Details p={p} plan={plan} unit={unit} />
       {c && onCase && (
         <button className="btn-ghost small" onClick={() => onCase(c.id)} style={{ alignSelf: "flex-start" }}>
-          🔍 Solve a case here: {c.emoji} {c.title} →
+          🔍 Solve a mystery here: {c.emoji} {c.title} →
         </button>
       )}
       {p.park.code && (

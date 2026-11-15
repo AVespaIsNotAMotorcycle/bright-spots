@@ -11,7 +11,6 @@ import {
   SOURCE_LABEL,
   WANTS,
   nextLevel,
-  seasonOf,
   temp,
   type Chip,
   type Level,
@@ -51,19 +50,16 @@ function Months({ state, set }: Pick<Props, "state" | "set">) {
       <div className="tp-seasons">
         {SEASONS.map((s) => (
           <button key={s.id} className="tp-season" aria-pressed={exactly(s.months)} onClick={() => set({ months: exactly(s.months) ? [] : [...s.months].sort((a, b) => a - b) })}
-            title={`Pick all of ${s.label.toLowerCase()}`}
-            style={{ background: exactly(s.months) ? s.color : s.tint, color: exactly(s.months) ? "#fff" : s.ink }}>
+            title={`Pick all of ${s.label.toLowerCase()}`}>
             {s.emoji} {s.label}
           </button>
         ))}
       </div>
       <div className="tp-months" role="group" aria-label="Months">
         {[12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((m) => {
-          const s = seasonOf(m);
           const on = state.months.includes(m);
           return (
-            <button key={m} className="tp-month" aria-pressed={on} onClick={(e) => pick(m, e)}
-              style={{ background: on ? s.color : s.tint, color: on ? "#fff" : s.ink }}>
+            <button key={m} className="tp-month" aria-pressed={on} onClick={(e) => pick(m, e)}>
               {MONTHS[m - 1]}
             </button>
           );

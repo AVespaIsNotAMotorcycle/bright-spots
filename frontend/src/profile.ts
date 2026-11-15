@@ -12,7 +12,7 @@ export interface Profile {
 export const TAB_LABEL: Record<Tab, string> = {
   home: "Home",
   planner: "Plan",
-  student: "Cases",
+  student: "Mysteries",
   saved: "Saved",
   passport: "Passport",
   explore: "Park Explorer",

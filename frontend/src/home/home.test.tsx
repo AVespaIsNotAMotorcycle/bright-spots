@@ -23,15 +23,13 @@ describe("Home", () => {
     const onGo = vi.fn();
     render(<Home name="Sam" research={false} atlas={null} onGo={onGo} />);
     expect(screen.getByRole("heading", { name: "Play today" })).toBeTruthy();
-    fireEvent.click(screen.getByText("Next case").closest("button")!);
+    fireEvent.click(screen.getByText("Next mystery").closest("button")!);
     expect(onGo).toHaveBeenCalledWith("student", expect.objectContaining({ step: 0, caseId: expect.any(String) }));
   });
 
-  it("month pill opens the planner on that month", () => {
-    const onGo = vi.fn();
-    render(<Home name="Sam" research={false} atlas={null} onGo={onGo} />);
-    fireEvent.click(screen.getByRole("button", { name: "Jun" }));
-    expect(onGo).toHaveBeenCalledWith("planner", { month: 6 });
+  it("has no month picker (Plan a trip covers it)", () => {
+    render(<Home name="Sam" research={false} atlas={null} onGo={() => undefined} />);
+    expect(screen.queryByRole("button", { name: "Jun" })).toBeNull();
   });
 
   it("CTA opens the planner", () => {
