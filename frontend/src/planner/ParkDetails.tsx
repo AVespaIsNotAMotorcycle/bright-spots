@@ -63,17 +63,17 @@ export function Meter({ h, label }: { h: Horizon; label?: string }) {
   );
 }
 
-function fmtTemp(c: number | null | undefined, unit: Unit) {
+export function fmtTemp(c: number | null | undefined, unit: Unit) {
   if (c == null) return "–";
   return unit === "F" ? `${Math.round(cToF(c))}°F` : `${c.toFixed(1)}°C`;
 }
 
-function fmtRain(mm: number | null | undefined, unit: Unit) {
+export function fmtRain(mm: number | null | undefined, unit: Unit) {
   if (mm == null) return "–";
   return unit === "F" ? `${mmToIn(mm).toFixed(1)} in` : `${Math.round(mm)} mm`;
 }
 
-const pct = (v: number | null | undefined) => (v == null ? "–" : `${Math.round(v)}%`);
+export const pct = (v: number | null | undefined) => (v == null ? "–" : `${Math.round(v)}%`);
 
 /** Values, factor scores and horizon notes for one park. */
 const DAILY_LABEL: Record<DailyVar, string> = {

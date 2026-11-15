@@ -1,55 +1,81 @@
 /* ═══════════════════════════════════════════════════════════════
    Postcard layer — PROPOSED, sandbox only (not imported by the app)
-   One-sided card: park photo on the left, park info on the right,
-   on white card stock with square paper corners.
+   One-sided card: park photo on the left (40%), the full park card
+   on the right (60%), on white card stock with square paper corners.
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
   --pc-paper:   #ffffff;             /* card stock */
   --pc-ink:     var(--text);
-  --pc-rule:    var(--border);       /* hairlines between data points */
+  --pc-rule:    var(--border);       /* hairlines between sections */
   --pc-radius:  0;                   /* paper has sharp corners */
   --pc-edge:    12px;                /* white border around the card */
   --pc-shadow:  var(--shadow-md);
 }
 
-/* ── Postcard: 3:2 card stock, photo | info ── */
+/* The wrapper is the size container, so the card responds to its slot, not the viewport. */
+.postcard-wrap { container-type: inline-size; width: 100%; }
+
+/* ── Postcard: photo | info. aspect-ratio is a minimum; the card grows if the info needs it. ── */
 .postcard {
   aspect-ratio: 3 / 2;
-  width: 100%;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 2fr 3fr;
   gap: var(--pc-edge);
   padding: var(--pc-edge);
   background: var(--pc-paper);
   color: var(--pc-ink);
   border-radius: var(--pc-radius);
   box-shadow: var(--pc-shadow);
-  overflow: hidden;
 }
 
-.pc-photo { min-height: 0; overflow: hidden; }
-.pc-photo svg, .pc-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pc-photo { position: relative; overflow: hidden; }
+.pc-photo svg, .pc-photo img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
 
-.pc-info { display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 4px 4px 0 0; }
-.pc-info .park-card-title { font-size: 20px; }
-.pc-place { margin: 2px 0 0; }
+.pc-info { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 2px 2px 0 0; }
 
-.pc-score { margin-top: 12px; }
-.pc-score .big-score { font-size: 34px; }
-.pc-score .meter-track { flex: none; width: 100%; } /* same override .park-card uses */
-
-.pc-facts { list-style: none; margin: auto 0 0; padding: 0; }
-.pc-facts li {
-  display: flex; justify-content: space-between; gap: 12px;
-  padding: 5px 0;
-  border-top: 1px solid var(--pc-rule);
-  font-size: 13px;
+/* Header: name, place line, remove × */
+.pc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.pc-head .park-card-title { font-size: 20px; }
+.pc-head p { margin: 2px 0 0; }
+.pc-remove {
+  flex: none; width: 22px; height: 22px; margin: -2px -2px 0 0;
+  display: grid; place-items: center;
+  border: 0; border-radius: 50%; background: none; cursor: pointer;
+  font-size: 16px; line-height: 1; color: var(--text-faint);
 }
-.pc-facts li span:first-child { color: var(--text-muted); }
+.pc-remove:hover, .pc-remove:focus-visible { background: var(--surface-2); color: var(--text); }
 
-@media (max-width: 520px) {
+.pc-trend { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* Table: years are the columns; the score row doubles as the column header. */
+.pc-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; }
+/* Undo the app's global th/td rules (sticky cream header, bottom borders). */
+.pc-table th, .pc-table td {
+  position: static; background: none; border-bottom: 0; color: inherit;
+  padding: 4px 0 4px 8px; text-align: right; vertical-align: top;
+}
+.pc-table th:first-child, .pc-table td:first-child { padding-left: 0; }
+.pc-table col.pc-label-col { width: 30%; }
+.pc-table thead .pc-corner { text-align: left; vertical-align: bottom; font-weight: 400; }
+.pc-table tbody th { text-align: left; font-weight: 400; color: var(--text-muted); }
+.pc-table tbody tr { border-top: 1px solid var(--pc-rule); }
+
+.pc-year { display: block; font-weight: 600; font-size: 12px; }
+.pc-year .tag { margin-top: 2px; }
+.pc-score-row th, .pc-score-row td { padding-top: 6px; padding-bottom: 8px; }
+.pc-score-row .big-score { font-size: 26px; line-height: 1.1; }
+.pc-score-row .meter-track { flex: none; width: 100%; margin-top: 4px; }
+.pc-range { display: block; font-size: 11px; color: var(--text-muted); font-weight: 400; }
+
+/* Factor score: a thin bar under the value, width = score. */
+.pc-bar { display: block; width: 48px; height: 3px; margin: 4px 0 0 auto; border-radius: 2px; background: var(--grid); }
+.pc-bar > span { display: block; height: 100%; margin-left: auto; border-radius: inherit; background: var(--pine-light); }
+
+.pc-foot { margin-top: auto; text-align: right; }
+
+/* Narrow slot: stack photo over info, drop the fixed shape. */
+@container (max-width: 600px) {
   .postcard { aspect-ratio: auto; grid-template-columns: 1fr; }
   .pc-photo { aspect-ratio: 3 / 2; }
-  .pc-facts { margin-top: 12px; }
 }
