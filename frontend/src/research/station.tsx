@@ -33,6 +33,18 @@ export const STATION_CSS = `
 .st-btn:hover { filter: brightness(1.1) }
 .st-ring { transform-box: fill-box; transform-origin: center; animation: st-ring 2.8s ease-out infinite }
 .st-pop { animation: st-pop .25s cubic-bezier(.2,1.2,.4,1) both }
+.st-tip { position: relative; display: inline-block; margin-left: 4px; cursor: help; color: ${E.moss}; font-size: .9em; font-weight: 600;
+  text-transform: none; letter-spacing: 0; outline: none }
+
+.st-grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px }
+@media (max-width: 760px) { .st-grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
+.st-badge { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; font-size: 21px; line-height: 1;
+  background: ${E.sand}; border: 1px solid ${E.sage}; margin-bottom: 8px }
+.st-menu { position: relative }
+.st-menu-list { position: absolute; z-index: 60; top: calc(100% + 6px); left: 0; min-width: 200px; padding: 6px; border-radius: 12px;
+  background: ${E.cream}; border: 1px solid ${E.sage}; box-shadow: 0 10px 24px rgba(38,30,20,.18); display: flex; flex-direction: column; gap: 2px }
+.st-menu-list button { text-align: left; border: 0; background: none; padding: 8px 10px; border-radius: 8px; cursor: pointer; color: ${E.bark}; font-size: 13px }
+.st-menu-list button:hover, .st-menu-list button.on { background: ${E.sand} }
 @media (prefers-reduced-motion: reduce) { .st-card, .st-ring, .st-pop { animation: none } .st-ring { opacity: .35 } }
 `;
 
@@ -51,15 +63,36 @@ const POWER_ACK =
   "These data were obtained from the NASA Langley Research Center (LaRC) POWER Project " +
   "funded through the NASA Earth Science/Applied Science Program.";
 
-/** One honest line under every research widget: where the numbers come from. */
-export function Source({ extra }: { extra?: string }) {
+const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** "1981 to Oct 2026", read from the data. Falls back to a plain label while loading. */
+export function coverageText(atlas: Atlas | null | undefined): string {
+  const c = atlas?.coverage;
+  if (!c) return "since 1981";
+  return `${c.first_year} to ${MON[c.last_month - 1]} ${c.last_year}`;
+}
+
+/** "Up to Oct 2026": the newest month in the data. */
+export function freshText(atlas: Atlas | null | undefined): string | null {
+  const c = atlas?.coverage;
+  return c ? `${MON[c.last_month - 1]} ${c.last_year}` : null;
+}
+
+/** One honest line under a research widget: where the numbers come from. */
+export function Source({ atlas, extra }: { atlas?: Atlas | null; extra?: string }) {
+  const c = atlas?.coverage;
   return (
     <p className="micro" style={{ margin: "8px 0 0", color: E.moss }}>
-      Data: NASA POWER daily, one grid point (about 50 km wide) per park, 1981–2025.
+      Data: NASA POWER daily, one grid point (about 50 km wide) per park, {coverageText(atlas)}
+      {c ? ` (yearly values to ${c.last_full_year}, the last full year)` : ""}.
       {extra ? ` ${extra}` : ""}
     </p>
   );
 }
+
+export { GLOSSARY, Tip, VAR_TIP } from "./glossary";
+import { Tip } from "./glossary";
+export { fmtQ } from "../detective/model";
 
 export interface CiteContext {
   park?: string | null;
@@ -154,17 +187,80 @@ export function CiteThis({ ctx, atlas, label = "❝ Cite this" }: { ctx: CiteCon
   );
 }
 
-/** Thin bar above each research tool: where you are, plus Cite this. */
-export function StationStrip({ title, ctx, atlas }: { title: string; ctx: CiteContext; atlas: Atlas | null }) {
+// ---------- saved views (this browser only) ----------
+
+export interface SavedView {
+  hash: string;
+  title: string;
+  detail: string;
+  saved: number;
+}
+
+const SAVED_KEY = "station.saved";
+
+export function loadSaved(): SavedView[] {
+  try {
+    return JSON.parse(localStorage.getItem(SAVED_KEY) ?? "[]") as SavedView[];
+  } catch {
+    return [];
+  }
+}
+
+export function storeSaved(list: SavedView[]): void {
+  try {
+    localStorage.setItem(SAVED_KEY, JSON.stringify(list.slice(0, 30)));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+function ctxDetail(ctx: CiteContext, atlas: Atlas | null): string {
+  return [
+    ctx.parkName ?? ctx.park,
+    ctx.variable ? atlas?.variables[ctx.variable]?.label ?? ctx.variable : null,
+    ctx.period ? PERIOD_LABEL[ctx.period] ?? ctx.period : null,
+  ].filter(Boolean).join(" · ");
+}
+
+/** Thin bar above each research tool: where you are, data freshness, save, share and cite. */
+export function StationStrip({
+  title, ctx, atlas, onShare,
+}: {
+  title: string;
+  ctx: CiteContext;
+  atlas: Atlas | null;
+  onShare?: () => void;
+}) {
+  const hash = typeof location !== "undefined" ? location.hash : "";
+  const [saved, setSaved] = useState(() => loadSaved().some((s) => s.hash === hash));
+  useEffect(() => setSaved(loadSaved().some((s) => s.hash === hash)), [hash]);
+  const detail = ctxDetail(ctx, atlas);
+  const toggle = () => {
+    const list = loadSaved();
+    if (list.some((s) => s.hash === hash)) storeSaved(list.filter((s) => s.hash !== hash));
+    else storeSaved([{ hash, title, detail, saved: Date.now() }, ...list]);
+    setSaved(!saved);
+  };
+  const fresh = freshText(atlas);
   return (
     <div className="st-card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
-      padding: "10px 14px", marginBottom: 14, flexWrap: "wrap" }}>
+      padding: "10px 14px", marginBottom: 14, flexWrap: "wrap", overflow: "visible" }}>
       <StationStyle />
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
         <Tag>Field station</Tag>
         <b style={{ fontFamily: "var(--font-display)", color: E.pine, fontSize: 17 }}>{title}</b>
+        {detail && <span className="small" style={{ color: E.bark }}>{detail}</span>}
+        {fresh && (
+          <span className="micro" style={{ color: E.moss, border: `1px solid ${E.sage}`, borderRadius: 10, padding: "1px 8px" }}>
+            🛰️ NASA data up to {fresh}<Tip term="grid" />
+          </span>
+        )}
       </div>
-      <CiteThis ctx={{ ...ctx, tool: title }} atlas={atlas} />
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        <button className={`st-btn${saved ? "" : " ghost"}`} onClick={toggle} aria-pressed={saved}>{saved ? "★ Saved" : "☆ Save view"}</button>
+        {onShare && <button className="st-btn ghost" onClick={onShare}>🔥 Share to Campfire</button>}
+        <CiteThis ctx={{ ...ctx, tool: title }} atlas={atlas} />
+      </div>
     </div>
   );
 }

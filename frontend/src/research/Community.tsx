@@ -5,6 +5,7 @@ import type { Atlas } from "../detective/model";
 import { PERIOD_LABEL } from "../detective/model";
 import { useInsights, varLabel } from "./lib";
 import { E, StationStyle, Tag } from "./station";
+import { exampleNotes } from "./ResearcherWidgets";
 
 export type Kind = "insight" | "question" | "hypothesis" | "method";
 
@@ -306,7 +307,22 @@ export default function Community({
         </div>
         {err && <p className="error">{err}</p>}
         {posts === null && !err && <p className="muted">Lighting the fire…</p>}
-        {posts?.length === 0 && <p style={{ color: E.bark }}>No notes here yet. Start the conversation above.</p>}
+        {posts?.length === 0 && (
+          <>
+            <p style={{ color: E.bark }}>No notes here yet. Start the conversation above. Here are some ideas to start from:</p>
+            {atlas && !filterPark && !kind && exampleNotes(atlas).map((x, i) => (
+              <div key={i} style={{ padding: "10px 0", borderTop: `1px dashed ${E.sage}`, color: E.bark }}>
+                <div className="micro">
+                  <span style={{ background: KIND[x.kind].color, color: E.cream, borderRadius: 10, padding: "1px 8px", fontWeight: 600 }}>
+                    {KIND[x.kind].icon} {KIND[x.kind].label}
+                  </span>{" "}
+                  <i style={{ color: E.moss }}>Example, written by the app from the data. Not a real post.</i>
+                </div>
+                <p style={{ margin: "4px 0 0" }}>{x.text}</p>
+              </div>
+            ))}
+          </>
+        )}
         <div style={{ marginTop: 8 }}>
           {posts?.map((p) => (
             <Note key={p.id} p={p} atlas={atlas} parkName={parkName} onChanged={load} onOpenPark={onOpenPark} replyProps={composer} />

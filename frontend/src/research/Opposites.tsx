@@ -4,7 +4,7 @@ import type { Atlas } from "../detective/model";
 import { PERIOD_LABEL, VERDICT_LABEL } from "../detective/model";
 import { oddNeighbours } from "./insights";
 import { VERDICT_COLOR, slopeText, useInsights, varLabel, type OppGroup, type TrendRef } from "./lib";
-import { E, Source, StationStyle, Tag } from "./station";
+import { E, Source, StationStyle, Tag, Tip } from "./station";
 
 function Ref({ r, v, atlas }: { r: TrendRef | null | undefined; v: string; atlas: Atlas | null }) {
   if (!r || r.sen == null) return <span className="muted">no data</span>;
@@ -46,8 +46,8 @@ export default function Opposites({
         <h2 className="section-title">Opposite-trend finder</h2>
         <p className="panel-intro">
           The same process can push a variable up in one park and down in another. These are the variable and period
-          pairs where parks go both ways. <b>Strong</b> means each side has a trend that passes the false-discovery-rate
-          test. <b>Weak</b> means at least one side is only "possible".
+          pairs where parks go both ways. <b>Strong</b><Tip term="confirmed" /> means each side has a trend that passes the false-discovery-rate
+          test. <b>Weak</b><Tip term="possible" /> means at least one side is only "possible".
         </p>
         <label className="check">
           <input type="checkbox" checked={strongOnly} onChange={(e) => { setStrongOnly(e.target.checked); setSel(0); }} /> Strong only
@@ -82,7 +82,7 @@ export default function Opposites({
               </button>
             ))}
           </div>
-          <Source extra="Both trends pass the false-discovery-rate test (q < 0.05). Why they differ is a question, not an answer." />
+          <Source atlas={atlas} extra="Both trends pass the false-discovery-rate test (q < 0.05). Why they differ is a question, not an answer." />
         </section>
       )}
 

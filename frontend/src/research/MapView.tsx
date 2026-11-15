@@ -4,7 +4,7 @@ import type { Atlas } from "../detective/model";
 import { PERIOD_LABEL, VERDICT_LABEL } from "../detective/model";
 import { slopeText, useInsights } from "./lib";
 import ParkMap from "./ParkMap";
-import { Source, StationStyle } from "./station";
+import { Source, StationStyle, Tip, VAR_TIP } from "./station";
 
 type RGB = [number, number, number];
 function lerp(a: RGB, b: RGB, t: number): RGB {
@@ -96,7 +96,7 @@ export default function MapView({
         </p>
         <div className="row gap-12" style={{ flexWrap: "wrap", margin: "10px 0" }}>
           <label className="field">
-            <span className="small muted">Variable</span>
+            <span className="small muted">Variable<Tip term={VAR_TIP[v]} /></span>
             <select className="text-input" value={v} onChange={(e) => setV(e.target.value)}>
               {Object.entries(atlas.variables).map(([k, m]) => (
                 <option key={k} value={k}>{m.label}</option>
@@ -104,7 +104,7 @@ export default function MapView({
             </select>
           </label>
           <label className="field">
-            <span className="small muted">Period</span>
+            <span className="small muted">Period<Tip term="seasons" /></span>
             <select className="text-input" value={per} onChange={(e) => setPer(e.target.value)}>
               {atlas.periods.map((p) => (
                 <option key={p} value={p}>{PERIOD_LABEL[p] ?? p}</option>
@@ -142,9 +142,9 @@ export default function MapView({
         </div>
         <p className="small" style={{ marginTop: 8 }}>
           <b style={{ color: "#d63c1e" }}>{counts.up}</b> rising · <b style={{ color: "#1e5abe" }}>{counts.down}</b> falling ·{" "}
-          <b>{counts.none}</b> no clear change (real = passes the false-discovery-rate test, q &lt; 0.05).
+          <b>{counts.none}</b> no clear change (real = passes the false-discovery-rate test, q &lt; 0.05)<Tip term="q" />.
         </p>
-        <Source />
+        <Source atlas={atlas} />
       </div>
     </div>
   );

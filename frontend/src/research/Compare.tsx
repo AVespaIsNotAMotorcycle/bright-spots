@@ -3,9 +3,24 @@ import { useMemo, useState } from "react";
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { Atlas } from "../detective/model";
 import { PERIOD_LABEL, VERDICT_LABEL } from "../detective/model";
+import { fmtQ } from "../detective/model";
 import { headToHead } from "./insights";
 import { VERDICT_COLOR, findRow, slopeText, useInsights, usePark } from "./lib";
-import { E, Source, StationStyle, Tag } from "./station";
+import { E, Source, StationStyle, Tag, Tip, VAR_TIP } from "./station";
+
+const ROW_TIP: Record<string, string> = {
+  "Trend (Sen's slope)": "sen",
+  Verdict: "confirmed",
+  "p (primary test)": "p",
+  "q (FDR-adjusted)": "q",
+  "Signal-to-noise": "sn",
+  "Lag-1 autocorrelation": "lag1",
+};
+const ROUND_TIP: Record<string, string> = {
+  "Faster change": "sen",
+  "More certain (lower q)": "q",
+  "Clearer signal (S/N)": "sn",
+};
 
 export function Pickers({
   atlas, v, per, setV, setPer,
@@ -91,8 +106,8 @@ export default function Compare({
   const rows: [string, (r: typeof ra) => string][] = [
     ["Trend (Sen's slope)", (r) => slopeText(r?.sen_per_decade, v, atlas)],
     ["Verdict", (r) => (r ? VERDICT_LABEL[r.verdict] : "–")],
-    ["p (primary test)", (r) => (r?.p != null ? r.p.toFixed(4) : "–")],
-    ["q (FDR-adjusted)", (r) => (r?.q != null ? r.q.toFixed(4) : "–")],
+    ["p (primary test)", (r) => fmtQ(r?.p)],
+    ["q (FDR-adjusted)", (r) => fmtQ(r?.q)],
     ["Signal-to-noise", (r) => (r?.signal_to_noise != null ? r.signal_to_noise.toFixed(2) : "–")],
     ["Lag-1 autocorrelation", (r) => (r?.lag1_autocorr != null ? r.lag1_autocorr.toFixed(2) : "–")],
     ["Test used", (r) => r?.p_method ?? "–"],
@@ -128,7 +143,9 @@ export default function Compare({
             <Line type="monotone" dataKey="b" name={nameB} stroke="var(--rust)" strokeWidth={2} dot={{ r: 2 }} connectNulls />
           </LineChart>
         </ResponsiveContainer>
-        <p className="micro muted">Values in {unit}{anomaly ? ", minus each park's own long-run average" : ""}.</p>
+        <p className="micro muted">
+          {atlas?.variables[v]?.label ?? v}<Tip term={VAR_TIP[v]} /> in {unit}{anomaly ? ", minus each park's own long-run average" : ""}.
+        </p>
       </div>
 
       {ra && rb && (() => {
@@ -152,7 +169,9 @@ export default function Compare({
               {h.rounds.map((r) => (
                 <div key={r.name} style={{ display: "grid", gridTemplateColumns: "1fr 150px 1fr", gap: 8, alignItems: "center" }}>
                   <span className="small" style={{ ...side(r.winner, "a"), textAlign: "right", padding: "4px 10px", borderRadius: 8 }}>{r.a}</span>
-                  <span className="micro" style={{ textAlign: "center", color: E.moss }}>{r.name}{r.winner === "tie" ? " · tie" : ""}</span>
+                  <span className="micro" style={{ textAlign: "center", color: E.moss }}>
+                    {r.name}<Tip term={ROUND_TIP[r.name]} />{r.winner === "tie" ? " · tie" : ""}
+                  </span>
                   <span className="small" style={{ ...side(r.winner, "b"), padding: "4px 10px", borderRadius: 8 }}>{r.b}</span>
                 </div>
               ))}
@@ -163,7 +182,7 @@ export default function Compare({
                 : <>Even match: neither park's trend evidence is clearly stronger.</>}
               {" "}A stronger trend is not a better or worse park.
             </p>
-            <Source />
+            <Source atlas={atlas} />
           </section>
         );
       })()}
@@ -175,7 +194,7 @@ export default function Compare({
             <tbody>
               {rows.map(([label, fn]) => (
                 <tr key={label}>
-                  <td>{label}</td>
+                  <td>{label}<Tip term={ROW_TIP[label]} /></td>
                   <td style={label === "Verdict" && ra ? { color: VERDICT_COLOR[ra.verdict], fontWeight: 700 } : undefined}>{fn(ra)}</td>
                   <td style={label === "Verdict" && rb ? { color: VERDICT_COLOR[rb.verdict], fontWeight: 700 } : undefined}>{fn(rb)}</td>
                 </tr>

@@ -208,7 +208,8 @@ export function slopeText(sen: number | null | undefined, variable: string, atla
   const temp = isTemp(atlas, variable);
   const v = temp ? sen * 1.8 : sen;
   const unit = temp ? "°F" : atlas?.variables[variable]?.unit ?? "";
-  return `${v > 0 ? "+" : ""}${v.toFixed(2)} ${unit}/decade`;
+  // Degrees sit right next to the number (0.56°F); other units get a space (12 mm).
+  return `${v > 0 ? "+" : ""}${v.toFixed(2)}${unit.startsWith("°") ? "" : " "}${unit}/decade`;
 }
 
 export function varLabel(atlas: Atlas | null, v: string): string {

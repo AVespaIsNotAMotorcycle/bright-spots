@@ -34,11 +34,33 @@ def _park(park_id: str) -> dict:
     return json.loads(p.read_text())
 
 
+@lru_cache(maxsize=1)
+def _coverage() -> dict:
+    """Years the bundled series really cover, read from the per-park files (not typed in by hand)."""
+    first, last_full, last_year, last_month = 9999, 0, 0, 0
+    for p in (DATA / "parks").glob("*.json"):
+        for by_period in json.loads(p.read_text()).get("series", {}).values():
+            for period, s in by_period.items():
+                years = s.get("years") or []
+                if not years:
+                    continue
+                first = min(first, int(years[0]))
+                if period == "annual":
+                    last_full = max(last_full, int(years[-1]))
+                elif period.isdigit():
+                    y, m = int(years[-1]), int(period)
+                    if (y, m) > (last_year, last_month):
+                        last_year, last_month = y, m
+    if first == 9999:
+        return {}
+    return {"first_year": first, "last_full_year": last_full, "last_year": last_year, "last_month": last_month}
+
+
 @router.get("/atlas")
 def get_atlas() -> dict:
     """Full trend atlas: variables metadata + per-park verdicts for every variable × period."""
     try:
-        return _atlas()
+        return {**_atlas(), "coverage": _coverage()}
     except FileNotFoundError as e:
         raise HTTPException(503, detail=str(e)) from e
 

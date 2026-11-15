@@ -5,7 +5,7 @@ import { PERIOD_LABEL } from "../detective/model";
 import { ParkSelect } from "./Compare";
 import { findTwins, type Twin } from "./insights";
 import { useInsights, varLabel } from "./lib";
-import { E, Source, StationStyle, Tag } from "./station";
+import { E, Source, StationStyle, Tag, Tip } from "./station";
 
 function Meter({ score }: { score: number }) {
   const pct = Math.round(((score + 1) / 2) * 100);
@@ -39,7 +39,7 @@ export default function Twins({
   const card = (t: Twin, i: number, opposite = false) => (
     <div key={t.park} className="st-tile" style={{ cursor: "default", ["--tile" as string]: opposite ? E.clay : E.moss }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 6 }}>
-        <b style={{ fontFamily: "var(--font-display)", fontSize: 17, color: E.pine }}>{opposite ? "🪞 " : `#${i + 1} `}{name(t.park)}</b>
+        <b style={{ fontFamily: "var(--font-display)", fontSize: 17, color: E.pine }}>{opposite ? "↔️ " : `#${i + 1} `}{name(t.park)}</b>
       </div>
       <div style={{ margin: "8px 0" }}><Meter score={t.score} /></div>
       <div className="small" style={{ color: E.bark, minHeight: 34 }}>
@@ -58,10 +58,10 @@ export default function Twins({
     <div className="panel-stack">
       <StationStyle />
       <section className="st-card" style={{ padding: 18 }}>
-        <Tag>👯 Twin finder</Tag>
+        <Tag>🪞 Twin finder</Tag>
         <p className="small" style={{ color: E.bark, margin: "8px 0 12px" }}>
           Each park gets a fingerprint: its trend in every measure, for the whole year and each season.
-          Twins have the most similar fingerprints. The score is cosine similarity: +1 identical, 0 unrelated, −1 opposite.
+          Twins have the most similar fingerprints. The score is cosine similarity: +1 identical, 0 unrelated, −1 opposite.<Tip term="twin" />
         </p>
         <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap" }}>
           <ParkSelect label="Park" value={me} parks={ins.parks} onChange={onPark} />
@@ -79,7 +79,7 @@ export default function Twins({
           </div>
         </>
       )}
-      <Source extra="Fingerprints use Sen's slopes from the atlas, scaled across parks. Similar trends do not mean the same cause." />
+      <Source atlas={atlas} extra="Fingerprints use Sen's slopes from the atlas, scaled across parks. Similar trends do not mean the same cause." />
     </div>
   );
 }

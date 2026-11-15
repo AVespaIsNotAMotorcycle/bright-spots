@@ -95,16 +95,6 @@ button, input, select { font: inherit; color: inherit; }
   position: relative;
 }
 
-.topbar::after {
-  content: "";
-  position: absolute;
-  bottom: -5px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--rust);
-  opacity: 0.4;
-}
 
 .title {
   font: 800 26px/1.1 var(--font-display);

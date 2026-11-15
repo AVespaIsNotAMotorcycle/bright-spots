@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { Atlas, ParkTrends, TrendRow } from "../detective/model";
 import { PERIOD_LABEL, VERDICT_LABEL } from "../detective/model";
+import { fmtQ } from "../detective/model";
 import { ParkSelect, Pickers } from "./Compare";
 import { findRow, pettitt, robustness, slopeText, startYearScan, useInsights, usePark } from "./lib";
 import Validation from "./Validation";
@@ -197,7 +198,7 @@ export default function Robust({
             <div className="stat"><div className="stat-value">{row.p_method ?? "–"}</div>
               <div className="small muted">Test used. Tests agree with OLS: {row.tests_agree == null ? "–" : row.tests_agree ? "yes" : "no"}.</div></div>
             <div className="stat"><div className="stat-value">{VERDICT_LABEL[row.verdict]}</div>
-              <div className="small muted">q = {row.q?.toFixed(3) ?? "–"} after FDR across parks.</div></div>
+              <div className="small muted">q = {fmtQ(row.q)} after FDR across parks.</div></div>
           </div>
         </div>
       )}

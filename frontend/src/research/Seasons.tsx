@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import type { Atlas } from "../detective/model";
 import { PERIOD_LABEL } from "../detective/model";
 import { isTemp, slopeText, useInsights, varLabel } from "./lib";
-import { E, Source, StationStyle, Tag } from "./station";
+import { E, Source, StationStyle, Tag, Tip, VAR_TIP } from "./station";
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => String(i + 1));
 
@@ -101,7 +101,7 @@ export default function Seasons({ atlas, onOpenPark }: { atlas: Atlas | null; on
         <h2 className="section-title">Season shifts</h2>
         <p className="panel-intro">
           Averages hide uneven change. Each row is a park and each column a month. Colour shows the trend per decade
-          (rust up, blue down). A bold outline means the trend is real after the false-discovery-rate test. Rows are
+          (rust up, blue down). A bold outline means the trend is real after the false-discovery-rate test<Tip term="fdr" />. Rows are
           ordered by the gap between the fastest and slowest month.
         </p>
         <label className="field" style={{ maxWidth: 260 }}>
@@ -124,6 +124,7 @@ export default function Seasons({ atlas, onOpenPark }: { atlas: Atlas | null; on
             <StationStyle />
             <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
               <Tag>🌗 Season wheel</Tag>
+              <span className="small" style={{ color: E.bark }}>{varLabel(atlas, v)}<Tip term={VAR_TIP[v]} /></span>
               <select className="text-input" value={w.id} onChange={(e) => setWheelPark(e.target.value)} style={{ maxWidth: 260 }}>
                 {[...rows].sort((a, b) => a.name.localeCompare(b.name)).map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
               </select>
@@ -141,13 +142,13 @@ export default function Seasons({ atlas, onOpenPark }: { atlas: Atlas | null; on
                   {slow?.verdict === "real" ? " (confirmed)" : " (not confirmed)"}.
                 </p>
                 <p className="micro" style={{ margin: 0 }}>
-                  Longer wedge = faster change. Rust = rising, blue = falling. Solid with a dark edge = confirmed (q &lt; 0.05).
+                  Longer wedge = faster change. Rust = rising, blue = falling. Solid with a dark edge = confirmed (q &lt; 0.05)<Tip term="confirmed" />.
                   All wheels share one scale, so parks can be compared. Click a table row to show it here.
                 </p>
                 <button className="btn-ghost" style={{ marginTop: 8 }} onClick={() => onOpenPark(w.id)}>Open in atlas →</button>
               </div>
             </div>
-            <Source />
+            <Source atlas={atlas} />
           </section>
         );
       })()}

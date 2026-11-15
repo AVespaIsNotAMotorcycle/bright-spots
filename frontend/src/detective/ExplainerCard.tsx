@@ -1,5 +1,7 @@
 // Explainer card: templated from numbers, never free-written.
 import type { TrendRow, VariableMeta } from "./model";
+import { fmtQ } from "./model";
+import { Tip } from "../research/glossary";
 
 interface Props {
   parkName: string;
@@ -74,7 +76,7 @@ export default function ExplainerCard({
         ? `${trend.first_year}–${trend.last_year}`
         : "";
     if (trend.verdict === "real") {
-      return `${meta.label} at ${parkName} has been ${direction} by ${perDecade} over ${years} (q = ${trend.q?.toFixed(3)}).`;
+      return `${meta.label} at ${parkName} has been ${direction} by ${perDecade} over ${years} (q = ${fmtQ(trend.q, 3)}).`;
     }
     if (trend.verdict === "possible") {
       return `${meta.label} at ${parkName} may be ${direction} by about ${perDecade} over ${years}, but this doesn't yet clear the bar after correcting for multiple tests (p = ${trend.p?.toFixed(3)}, q = ${trend.q?.toFixed(3)}).`;
@@ -138,7 +140,7 @@ export default function ExplainerCard({
             }}
           >
             <Stat
-              label="Sen's slope/decade"
+              label={<>Sen's slope/decade<Tip term="sen" /></>}
               value={`${slope > 0 ? "+" : ""}${slope.toFixed(3)} ${unit}`}
             />
             {ciLo != null && ciHi != null && (
@@ -149,24 +151,24 @@ export default function ExplainerCard({
             )}
             {trend.signal_to_noise != null && (
               <Stat
-                label="Signal / noise"
+                label={<>Signal / noise<Tip term="sn" /></>}
                 value={trend.signal_to_noise.toFixed(2)}
               />
             )}
-            {trend.p != null && <Stat label="p-value" value={trend.p.toFixed(4)} />}
-            {trend.q != null && <Stat label="q-value (FDR)" value={trend.q.toFixed(4)} />}
+            {trend.p != null && <Stat label={<>p-value<Tip term="p" /></>} value={fmtQ(trend.p)} />}
+            {trend.q != null && <Stat label={<>q-value (FDR)<Tip term="q" /></>} value={fmtQ(trend.q)} />}
           </div>
         )}
 
       {!simple && <div style={{ fontSize: 11, color: "var(--text-muted)", borderTop: "1px solid var(--border)", paddingTop: 8, marginTop: 2 }}>
-        Source: NASA POWER / MERRA-2, 1981–2026 · Mann-Kendall significance test ·
-        Benjamini-Hochberg FDR correction across 62 parks
+        Source: NASA POWER / MERRA-2, daily since 1981 · Mann-Kendall significance test ·
+        Benjamini-Hochberg FDR correction across all parks<Tip term="fdr" />
       </div>}
     </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value }: { label: React.ReactNode; value: string }) {
   return (
     <div>
       <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em" }}>

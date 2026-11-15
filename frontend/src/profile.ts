@@ -25,13 +25,13 @@ export const TAB_LABEL: Record<Tab, string> = {
   explore: "🧭 Park Explorer",
   planner: "🗓 Trip Planner",
   atlas: "📊 Trend Atlas",
-  map: "🗺 Map",
+  map: "🗺️ Topo Map",
   families: "🧬 Park Families",
-  opposites: "↔ Opposite Trends",
-  compare: "⚖ Compare Parks",
+  opposites: "🧭 Odd One Out",
+  compare: "🥊 Head-to-Head",
   robust: "🧪 Robustness",
   seasons: "🌗 Season Shifts",
-  twins: "👯 Twin Finder",
+  twins: "🪞 Twin Finder",
   community: "🔥 Campfire",
 };
 

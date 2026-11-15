@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Home from "./Home";
 import Landing from "./Landing";
 import Detective from "./detective/Detective";
@@ -15,10 +15,52 @@ import Robust from "./research/Robust";
 import Seasons from "./research/Seasons";
 import Community from "./research/Community";
 import Twins from "./research/Twins";
-import { StationStrip } from "./research/station";
+import { StationStrip, StationStyle } from "./research/station";
 import { PARK_NAMES } from "./detective/Detective";
 import { PERSONAS, TAB_LABEL, loadProfile, saveProfile, type Profile, type Tab } from "./profile";
 import { useNav, type NavState } from "./useNav";
+
+// Researcher nav: a few top buttons, with the many tools folded into two menus.
+const NAV_GROUPS: (Tab | { label: string; tabs: Tab[] })[] = [
+  "home",
+  { label: "🧭 Explore", tabs: ["atlas", "map", "twins", "families", "seasons"] },
+  { label: "🥊 Compare", tabs: ["opposites", "compare", "robust"] },
+  "community",
+];
+
+function NavMenu({ label, tabs, current, onGo }: { label: string; tabs: Tab[]; current: Tab; onGo: (t: Tab) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false);
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", esc);
+    };
+  }, [open]);
+  const active = tabs.includes(current);
+  return (
+    <div className="st-menu" ref={ref}>
+      <StationStyle />
+      <button className={`nav-tab${active ? " active" : ""}`} onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-haspopup="menu">
+        {label}{active ? `: ${TAB_LABEL[current].replace(/^\S+\s/, "")}` : ""} ▾
+      </button>
+      {open && (
+        <div className="st-menu-list" role="menu">
+          {tabs.map((t) => (
+            <button key={t} role="menuitem" className={t === current ? "on" : undefined} onClick={() => { setOpen(false); onGo(t); }}>
+              {TAB_LABEL[t]}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function loadUnit(): Unit {
   try {
@@ -50,6 +92,22 @@ export default function App() {
   useEffect(() => {
     if (!nav.tab) replace({ tab: "home" });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Researchers: ← and → move between tools, unless typing or using a control.
+  useEffect(() => {
+    if (profile?.persona !== "researcher" || editing) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      const el = e.target as HTMLElement | null;
+      if (el?.closest("input, textarea, select, [contenteditable=true], [role=menu], [role=dialog]")) return;
+      const i = allowedTabs.indexOf(tab);
+      const next = allowedTabs[(i + (e.key === "ArrowRight" ? 1 : -1) + allowedTabs.length) % allowedTabs.length];
+      navigate({ tab: next });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [profile, editing, tab, allowedTabs, navigate]);
 
   // Back/forward while the profile form is open closes the form and shows that page.
   useEffect(() => {
@@ -98,15 +156,25 @@ export default function App() {
           </p>
         </div>
         <nav style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-          {allowedTabs.map((t) => (
-            <button
-              key={t}
-              onClick={() => go(t)}
-              className={`nav-tab${tab === t ? " active" : ""}`}
-            >
-              {TAB_LABEL[t]}
-            </button>
-          ))}
+          {profile.persona === "researcher"
+            ? NAV_GROUPS.map((g) =>
+                typeof g === "string" ? (
+                  <button key={g} onClick={() => go(g)} className={`nav-tab${tab === g ? " active" : ""}`}>
+                    {TAB_LABEL[g]}
+                  </button>
+                ) : (
+                  <NavMenu key={g.label} label={g.label} tabs={g.tabs} current={tab} onGo={go} />
+                ),
+              )
+            : allowedTabs.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => go(t)}
+                  className={`nav-tab${tab === t ? " active" : ""}`}
+                >
+                  {TAB_LABEL[t]}
+                </button>
+              ))}
           <button
             onClick={() => setEditing(true)}
             style={{
@@ -121,7 +189,7 @@ export default function App() {
             }}
             title="Edit profile"
           >
-            ⚙ Profile
+            ⚙️ Profile
           </button>
         </nav>
       </header>
@@ -131,6 +199,8 @@ export default function App() {
             title={TAB_LABEL[tab].replace(/^\S+\s/, "")}
             atlas={atlas}
             ctx={{ park: nav.park, parkName: nav.park ? PARK_NAMES[nav.park] : null, variable: nav.v, period: nav.per }}
+            onShare={tab === "community" ? undefined : () =>
+              go("community", { park: nav.park ?? undefined, v: nav.v ?? undefined, per: nav.per ?? undefined })}
           />
         )}
         {tab === "home" && (

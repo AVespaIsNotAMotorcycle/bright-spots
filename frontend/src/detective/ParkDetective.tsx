@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import ExplainerCard from "./ExplainerCard";
 import type { Atlas, ParkTrends, TrendRow } from "./model";
-import { PERIOD_LABEL } from "./model";
+import { PERIOD_LABEL, fmtQ } from "./model";
 import TrendChart from "./TrendChart";
 
 interface Props {
@@ -314,7 +314,7 @@ export default function ParkDetective({
                         }}
                         title={
                           t
-                            ? `${t.verdict} · slope: ${slope?.toFixed(3) ?? "—"} ${isTemp && useFahrenheit ? "°F" : atlas.variables[v]?.unit}/dec · p=${t.p?.toFixed(3) ?? "—"} q=${t.q?.toFixed(3) ?? "—"}`
+                            ? `${t.verdict} · slope: ${slope?.toFixed(3) ?? "—"} ${isTemp && useFahrenheit ? "°F" : atlas.variables[v]?.unit}/dec · p=${fmtQ(t.p, 3)} q=${fmtQ(t.q, 3)}`
                             : "No data"
                         }
                         style={{

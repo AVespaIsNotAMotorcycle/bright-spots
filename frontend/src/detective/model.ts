@@ -18,6 +18,8 @@ export interface Atlas {
   variables: Record<string, VariableMeta>;
   periods: string[];
   atlas: Record<string, Record<string, AtlasCell[]>>;  // variable -> period -> cells[]
+  /** Years the data really covers, worked out by the backend from the series. */
+  coverage?: { first_year: number; last_full_year: number; last_year: number; last_month: number };
 }
 
 export interface TrendRow {
@@ -77,3 +79,10 @@ export const VERDICT_LABEL: Record<Verdict, string> = {
   short: "Too little data",
   flat: "No variation",
 };
+
+/** A p or q value with a floor, so 0.00004 does not show as 0.0000. */
+export function fmtQ(q: number | null | undefined, digits = 4): string {
+  if (q == null) return "–";
+  const floor = 10 ** -digits;
+  return q < floor ? `< ${floor.toFixed(digits)}` : q.toFixed(digits);
+}

@@ -1,9 +1,10 @@
 // Trend Detective tab: national atlas table + per-park drill-down.
 import { useEffect, useMemo, useState } from "react";
 import type { Atlas, AtlasCell } from "./model";
-import { PERIOD_LABEL, VERDICT_LABEL } from "./model";
+import { PERIOD_LABEL, VERDICT_LABEL, fmtQ } from "./model";
 import ParkDetective from "./ParkDetective";
 import { useInsights } from "../research/lib";
+import { Tip } from "../research/glossary";
 
 // Park name lookup (we get it from atlas cells' park metadata via per-park fetch,
 // but the atlas itself only has park_id). We'll keep a minimal static map for labels.
@@ -490,7 +491,7 @@ export default function Detective({
                     </span>
                   )}
                   {!simple && cell.q != null && (
-                    <span>q={cell.q.toFixed(3)}</span>
+                    <span>q={fmtQ(cell.q, 3)}<Tip term="q" /></span>
                   )}
                 </div>
               </div>
