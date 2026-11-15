@@ -84,6 +84,9 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
   const [find, setFind] = useState("");
   const [showAll, setShowAll] = useState(false);
   const opened = useRef<string | null>(null);
+  // Saving state rewrites the URL and drops ?park before parks load, so hold on to it.
+  const wanted = useRef<string | null>(null);
+  if (park) wanted.current = park;
 
   useEffect(() => {
     loadAtlas().then(setAtlas).catch(() => undefined);
@@ -158,9 +161,10 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
 
   // Open the park a case sent us to, once.
   useEffect(() => {
-    const hit = park && trip ? trip.parks.find((p) => p.park.code === park) : undefined;
-    if (park && hit && opened.current !== park) {
-      opened.current = park;
+    const want = wanted.current;
+    const hit = want && trip ? trip.parks.find((p) => p.park.code === want) : undefined;
+    if (want && hit && opened.current !== want) {
+      opened.current = want;
       setOpen(hit.park.id);
     }
   }, [park, trip]);
