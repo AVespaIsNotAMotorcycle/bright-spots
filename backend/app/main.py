@@ -10,6 +10,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from app.config import settings
 from app.datasets.router import router as datasets_router
 from app.parks.router import router as parks_router
+from app.trends.router import router as trends_router
 
 
 @asynccontextmanager
@@ -34,6 +35,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 app.include_router(datasets_router)
 app.include_router(parks_router)
+app.include_router(trends_router)
 
 
 @app.get("/hello")

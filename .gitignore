@@ -17,3 +17,6 @@ backend/data/raw/
 backend/data/grace_1deg.npz
 backend/data/gpcc_annual_*.npz
 backend/data/landcover/
+
+# Pipeline working directory (step2 + step3 outputs; bundled copies live in data/trends/)
+backend/out/
