@@ -292,7 +292,7 @@ export default function Community({
   return (
     <div className="panel-stack">
       <StationStyle />
-      <section className="st-card" style={{ padding: 18, background: `linear-gradient(160deg, #3b2d20, ${E.bark})`, color: E.cream, borderColor: E.bark }}>
+      <section className="st-card" style={{ padding: 18, background: E.bark, color: E.cream, borderColor: E.bark }}>
         <b style={{ fontFamily: "var(--font-display)", fontSize: 24 }}>🔥 The Campfire</b>
         <p className="small" style={{ margin: "4px 0 0", color: E.sand }}>
           Share what you found in the data. Tag a park and a chart so others can check it.

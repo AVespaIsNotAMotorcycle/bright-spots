@@ -71,7 +71,7 @@ function StudentTrendCard({
         </span>
       </div>
       <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-        <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 30, color, lineHeight: 1 }}>{shown}</span>
+        <span style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 30, color, lineHeight: 1 }}>{shown}</span>
         <span className="small muted">every 10 years</span>
       </div>
     </div>
@@ -148,7 +148,7 @@ export default function ParkDetective({
         </div>
         {photo && (
           <div style={{ height: 220, borderRadius: 22, position: "relative", overflow: "hidden",
-            background: `linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(20,28,22,.7)), url("${photo.file}") center / cover no-repeat` }}>
+            background: `linear-gradient(rgba(20,28,22,.42), rgba(20,28,22,.42)), url("${photo.file}") center / cover no-repeat` }}>
             <h2 style={{ position: "absolute", left: 22, bottom: 16, margin: 0, fontFamily: "var(--font-display)", fontSize: 34,
               color: "#fff", textShadow: "0 2px 8px rgba(0,0,0,.6)" }}>
               {parkName}

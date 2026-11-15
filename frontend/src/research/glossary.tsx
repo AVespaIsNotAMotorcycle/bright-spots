@@ -51,7 +51,7 @@ export function Tip({ term, text }: { term?: keyof typeof GLOSSARY | string; tex
           transform: at.below ? "translateX(-50%)" : "translate(-50%, -100%)",
           width: 260, padding: "9px 11px", borderRadius: 8, background: "#4a3726", color: "#f7f1e3",
           font: "400 12px/1.45 var(--font-body)", textAlign: "left", whiteSpace: "normal", textTransform: "none", letterSpacing: 0,
-          boxShadow: "0 6px 18px rgba(38,30,20,.3)", pointerEvents: "none",
+          boxShadow: "var(--shadow-float)", pointerEvents: "none",
         }}>
           {body}
         </span>,

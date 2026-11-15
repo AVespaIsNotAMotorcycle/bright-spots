@@ -63,11 +63,11 @@ export default function CompareTray({ parks, unit, onRemove, onClear }: {
         </section>
       )}
       <div className="tp-tray" role="region" aria-label="Compare tray">
-        <b>🗂 Compare</b>
+        <b>Compare</b>
         {parks.map((p) => (
-          <span key={p.park.id} className="tp-badge" style={{ background: "rgba(255,255,255,.12)", color: "#fff" }}>
+          <span key={p.park.id} className="tp-badge">
             {p.park.short} <button aria-label={`Remove ${p.park.short}`} onClick={() => onRemove(p.park.id)}
-              style={{ border: 0, background: "none", color: "#fff", cursor: "pointer" }}>✕</button>
+              style={{ border: 0, background: "none", color: "var(--bark-2)", cursor: "pointer" }}>✕</button>
           </span>
         ))}
         <span className="micro" style={{ opacity: 0.7 }}>{parks.length}/{MAX_COMPARE}</span>

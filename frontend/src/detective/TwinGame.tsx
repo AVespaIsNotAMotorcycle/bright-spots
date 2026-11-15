@@ -81,8 +81,8 @@ export function GuessTheTwin({ atlas, onExplore }: { atlas: Atlas; onExplore: (p
       <style>{WIDGET_CSS}</style>
       <div style={{
         background: photo
-          ? `linear-gradient(180deg, rgba(31,42,36,.15) 0%, rgba(31,42,36,.72) 100%), url("${photo.file}") center / cover no-repeat`
-          : `${RIDGE} bottom / 100% 60px no-repeat, linear-gradient(180deg, #cfdcb4 0%, #9db07a 55%, #6b7f3a 100%)`,
+          ? `linear-gradient(rgba(31,42,36,.42), rgba(31,42,36,.42)), url("${photo.file}") center / cover no-repeat`
+          : `${RIDGE} bottom / 100% 60px no-repeat, var(--sand)`,
         padding: "20px 22px 16px", minHeight: 170, display: "flex", flexDirection: "column", justifyContent: "flex-end", position: "relative" }}>
         <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".14em", textTransform: "uppercase", color: photo ? E.cream : E.bark }}>
           Guess the twin

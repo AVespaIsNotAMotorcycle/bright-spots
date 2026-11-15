@@ -299,7 +299,7 @@ export function ParkCard({
           className="park-card-photo"
           style={{
             margin: "-20px -20px 12px", height: 150, borderRadius: "inherit", borderBottomLeftRadius: 0, borderBottomRightRadius: 0,
-            background: `linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,.45)), url("${photo.file}") center / cover no-repeat`,
+            background: `linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.35)), url("${photo.file}") center / cover no-repeat`,
             position: "relative",
           }}
         >

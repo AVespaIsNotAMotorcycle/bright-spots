@@ -6,6 +6,7 @@ import ParkDetective from "./ParkDetective";
 import { useInsights } from "../research/lib";
 import { Tip } from "../research/glossary";
 import ExplorerHome from "./ExplorerHome";
+import PageHead from "../brand/PageHead";
 
 // Park name lookup (we get it from atlas cells' park metadata via per-park fetch,
 // but the atlas itself only has park_id). We'll keep a minimal static map for labels.
@@ -183,16 +184,13 @@ export default function Detective({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Atlas header */}
-      <div style={{ borderBottom: "2px solid var(--pine)", paddingBottom: 12 }}>
-        <h2 style={{ margin: "0 0 4px", fontFamily: "var(--font-display, 'Playfair Display', Georgia, serif)", fontSize: 22, fontWeight: 700, color: "var(--pine)" }}>
-          {simple ? "Park Explorer" : "National Trend Atlas"}
-        </h2>
-        <p style={{ margin: 0, fontSize: 13, color: "var(--text-muted)" }}>
-          {simple
-            ? "Pick something to look at, then tap a park to see how it has changed since 1981 and whether the change is real."
-            : "6,324 Mann-Kendall significance tests · 63 parks · NASA POWER 1981–2026 · click any park to drill down"}
-        </p>
-      </div>
+      <PageHead
+        eyebrow={simple ? "Explore" : "Research"}
+        title={simple ? "Park Explorer" : "National Trend Atlas"}
+        lead={simple
+          ? "Pick something to look at, then tap a park to see how it has changed since 1981 and whether the change is real."
+          : "6,324 Mann-Kendall significance tests · 63 parks · NASA POWER 1981–2026 · click any park to drill down"}
+      />
       {/* Controls row */}
       <div
         style={{

@@ -218,7 +218,7 @@ export function Leaderboard({ atlas, onOpen }: { atlas: Atlas; onOpen: (park: st
             <b className="small" style={{ color: E.pine }}>{pname(c.park_id)}</b>
             <span style={{ height: 14, borderRadius: 7, background: E.sand, overflow: "hidden" }}>
               <span style={{ display: "block", height: "100%", width: `${(c.sen / max) * 100}%`, borderRadius: 7,
-                background: `linear-gradient(90deg, ${E.clay}, ${E.rust})` }} />
+                background: E.clay }} />
             </span>
             <span className="small" style={{ whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>
               {slopeText(c.sen, "tmax_c", atlas)} · q {fmtQ(c.q).startsWith("<") ? fmtQ(c.q) : `= ${fmtQ(c.q)}`}
@@ -327,7 +327,7 @@ export function CampfirePreview({ atlas, onOpen }: { atlas: Atlas | null; onOpen
   }, []);
   const examples = posts?.length === 0 && atlas ? exampleNotes(atlas) : [];
   return (
-    <section className="st-card" style={{ padding: 18, background: `linear-gradient(160deg, #3b2d20, ${E.bark})`, color: E.cream, borderColor: E.bark }}>
+    <section className="st-card" style={{ padding: 18, background: E.bark, color: E.cream, borderColor: E.bark }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
         <b style={{ fontFamily: "var(--font-display)", fontSize: 20 }}>🔥 The Campfire</b>
         <button className="st-btn" style={{ background: E.clay, borderColor: E.clay }} onClick={onOpen}>Join the talk →</button>

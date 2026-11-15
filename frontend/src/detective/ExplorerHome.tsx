@@ -47,7 +47,7 @@ function Thumb({ id, size }: { id: string; size: number }) {
   return (
     <img src={p.file} alt="" loading="lazy" title={`Photo: ${p.credit} (${p.license}), Wikimedia Commons`}
       style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", verticalAlign: "middle", flexShrink: 0,
-        border: `2px solid ${E.cream}`, boxShadow: "0 1px 3px rgba(38,30,20,.25)" }} />
+        border: `1px solid ${E.sage}` }} />
   );
 }
 
@@ -130,11 +130,11 @@ export default function ExplorerHome({ atlas, onOpen }: { atlas: Atlas; onOpen: 
       <style>{WIDGET_CSS}</style>
 
       {/* Hero: search + surprise */}
-      <section style={{ borderRadius: 22, overflow: "hidden", border: `2px solid ${E.sage}`,
-        background: `${RIDGE} bottom / 100% 70px no-repeat, linear-gradient(180deg, #f0c98f 0%, #d9a066 45%, #8a9a5b 100%)`,
+      <section style={{ borderRadius: "var(--radius)", overflow: "hidden", border: "1px solid var(--stone)",
+        background: `${RIDGE} bottom / 100% 70px no-repeat, var(--paper)`,
         padding: "24px 24px 64px", position: "relative" }}>
         <span aria-hidden className="sw-sway" style={{ position: "absolute", right: 24, top: 18, fontSize: 40 }}>🧭</span>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", color: E.bark }}>Park Explorer</div>
+        <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".14em", textTransform: "uppercase", color: E.bark }}>Park Explorer</div>
         <h2 style={{ margin: "6px 0 4px", fontFamily: "var(--font-display)", fontSize: 32, color: E.bark }}>
           {(atlas.atlas["tmax_c"]?.["annual"] ?? []).length} parks. {span + 1} years of NASA data. What will you find?
         </h2>
@@ -146,7 +146,7 @@ export default function ExplorerHome({ atlas, onOpen }: { atlas: Atlas; onOpen: 
                 fontSize: 15, color: E.bark, boxSizing: "border-box" }} />
             {matches.length > 0 && (
               <div style={{ position: "absolute", zIndex: 20, top: "calc(100% + 4px)", left: 0, right: 0, background: E.cream,
-                border: `1px solid ${E.sage}`, borderRadius: 12, boxShadow: "0 10px 24px rgba(38,30,20,.2)", overflow: "hidden" }}>
+                border: "1px solid var(--stone)", borderRadius: 12, boxShadow: "var(--shadow-float)", overflow: "hidden" }}>
                 {matches.map(([id, n]) => (
                   <button key={id} onClick={() => onOpen(id)}
                     style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 14px", border: 0, background: "none",
@@ -159,7 +159,7 @@ export default function ExplorerHome({ atlas, onOpen }: { atlas: Atlas; onOpen: 
           </div>
           <button className="sw-pick" onClick={surprise}
             style={{ padding: "11px 16px", borderRadius: 14, border: `2px solid ${E.pine}`, background: E.pine, color: E.cream,
-              fontWeight: 800, cursor: "pointer", fontSize: 15 }}>
+              fontWeight: 600, cursor: "pointer", fontSize: 15 }}>
             🎲 Surprise me
           </button>
         </div>
@@ -167,7 +167,7 @@ export default function ExplorerHome({ atlas, onOpen }: { atlas: Atlas; onOpen: 
 
       {/* Questions */}
       <section>
-        <div style={{ fontWeight: 800, fontSize: 18, color: E.bark, marginBottom: 10 }}>Pick a question</div>
+        <div style={{ fontWeight: 600, fontSize: 18, color: E.bark, marginBottom: 10 }}>Pick a question</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 10 }}>
           {QUESTIONS.map((x) => {
             const on = x.id === qid;
@@ -177,7 +177,7 @@ export default function ExplorerHome({ atlas, onOpen }: { atlas: Atlas; onOpen: 
                 style={{ textAlign: "left", padding: "14px 14px", borderRadius: 16, cursor: "pointer",
                   border: `2px solid ${on ? E.pine : E.sage}`, background: on ? "#e6edd6" : E.cream, color: E.bark }}>
                 <div style={{ fontSize: 28 }}>{x.emoji}</div>
-                <div style={{ fontWeight: 800, fontSize: 14.5, marginTop: 4 }}>{x.ask}</div>
+                <div style={{ fontWeight: 600, fontSize: 14.5, marginTop: 4 }}>{x.ask}</div>
               </button>
             );
           })}
@@ -198,9 +198,9 @@ export default function ExplorerHome({ atlas, onOpen }: { atlas: Atlas; onOpen: 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, marginTop: 16 }}>
           {top3.map((c, i) => (
             <button key={c.park_id} className="sw-pick" onClick={() => onOpen(c.park_id)}
-              style={{ textAlign: "left", cursor: "pointer", borderRadius: 18, padding: 16, color: E.bark, overflow: "hidden",
-                border: `2px solid ${i === 0 ? E.clay : E.sage}`,
-                background: i === 0 ? "linear-gradient(150deg,#f6e3c4,#e9c79a)" : "linear-gradient(150deg,#f3ecd9,#e6dcc4)" }}>
+              style={{ textAlign: "left", cursor: "pointer", borderRadius: "var(--radius)", padding: 16, color: E.bark, overflow: "hidden",
+                border: `1px solid ${i === 0 ? E.clay : "var(--stone)"}`,
+                background: "var(--paper)" }}>
               {photoOf(c.park_id) && (
                 <div aria-hidden style={{ margin: "-16px -16px 10px", height: 110, position: "relative",
                   background: `url("${photoOf(c.park_id)!.file}") center / cover no-repeat` }}
@@ -209,8 +209,8 @@ export default function ExplorerHome({ atlas, onOpen }: { atlas: Atlas; onOpen: 
                 </div>
               )}
               {!photoOf(c.park_id) && <div style={{ fontSize: 30 }}>{medals[i]}</div>}
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 19 }}>{name(c.park_id)}</div>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: 900, fontSize: 28, color: c.sen > 0 ? E.rust : E.dusk, lineHeight: 1.1, marginTop: 4 }}>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 19 }}>{name(c.park_id)}</div>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 28, color: c.sen > 0 ? E.rust : E.dusk, lineHeight: 1.1, marginTop: 4 }}>
                 {fmt(per10(c.sen))}
               </div>
               <div style={{ fontSize: 12, color: E.moss, fontWeight: 700 }}>every 10 years</div>
@@ -258,7 +258,7 @@ export default function ExplorerHome({ atlas, onOpen }: { atlas: Atlas; onOpen: 
 
         {/* Ranked list */}
         <div style={{ marginTop: 18 }}>
-          <div style={{ fontWeight: 800, color: E.bark, marginBottom: 8 }}>Every park, ranked</div>
+          <div style={{ fontWeight: 600, color: E.bark, marginBottom: 8 }}>Every park, ranked</div>
           <div style={{ display: "grid", gap: 6 }}>
             {list.map((c, i) => (
               <button key={c.park_id} onClick={() => onOpen(c.park_id)}
@@ -272,7 +272,7 @@ export default function ExplorerHome({ atlas, onOpen }: { atlas: Atlas; onOpen: 
                 </b>
                 <span style={{ height: 12, borderRadius: 6, background: E.sand, overflow: "hidden" }}>
                   <span style={{ display: "block", height: "100%", width: `${(Math.abs(c.sen ?? 0) / maxAbs) * 100}%`, borderRadius: 6,
-                    background: c.verdict !== "real" || c.sen == null ? E.sage : c.sen > 0 ? `linear-gradient(90deg, ${E.clay}, ${E.rust})` : `linear-gradient(90deg, #8fb0c4, ${E.dusk})` }} />
+                    background: c.verdict !== "real" || c.sen == null ? E.sage : c.sen > 0 ? E.clay : E.dusk }} />
                 </span>
                 <span style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, whiteSpace: "nowrap" }}>
                   <span style={{ fontVariantNumeric: "tabular-nums" }}>{c.sen == null ? "–" : fmt(per10(c.sen))}</span>

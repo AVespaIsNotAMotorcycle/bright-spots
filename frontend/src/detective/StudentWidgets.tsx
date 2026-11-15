@@ -21,7 +21,7 @@ export const WIDGET_CSS = `
 .sw-hero { position: relative; overflow: hidden; transition: transform .18s, border-color .18s }
 .sw-hero:hover { transform: translateY(-2px); border-color: var(--moss) !important }
 .sw-hero:active { transform: scale(.995) }
-.sw-hero .sw-sun { position: absolute; top: 0; bottom: 0; width: 35%; background: linear-gradient(90deg, transparent, rgba(255,240,200,.45), transparent); animation: sw-sun 4.5s ease-in-out infinite; pointer-events: none }
+.sw-hero .sw-sun { display: none }
 .sw-hero:hover .sw-go { background: ${E.pine}; color: ${E.cream} }
 .sw-sway { animation: sw-sway 3.6s ease-in-out infinite; transform-origin: 50% 90% }
 .sw-pick { transition: transform .15s, border-color .15s }
@@ -208,10 +208,10 @@ function dayIndex(now = new Date()) {
 }
 
 type Guess = "warming" | "cooling" | "flat";
-const GUESSES: { id: Guess; emoji: string; text: string; bg: string; edge: string }[] = [
-  { id: "warming", emoji: "☀️", text: "Warming", bg: "linear-gradient(150deg,#f3d9b8,#d99a62)", edge: E.rust },
-  { id: "flat", emoji: "🪨", text: "No change", bg: "linear-gradient(150deg,#ece4d2,#c9bca0)", edge: E.bark },
-  { id: "cooling", emoji: "🏔️", text: "Cooling", bg: "linear-gradient(150deg,#dbe5e6,#9fb6bf)", edge: E.dusk },
+const GUESSES: { id: Guess; emoji: string; text: string; edge: string }[] = [
+  { id: "warming", emoji: "☀️", text: "Warming", edge: E.rust },
+  { id: "flat", emoji: "🪨", text: "No change", edge: E.bark },
+  { id: "cooling", emoji: "🏔️", text: "Cooling", edge: E.dusk },
 ];
 
 /** Park of the day, drawn as a field-guide card with a quick guess. */
@@ -252,8 +252,8 @@ export function ParkOfTheDay({ atlas, onExplore, science = false }: { atlas: Atl
       <div
         style={{
           background: photo
-            ? `linear-gradient(180deg, rgba(31,42,36,.15) 0%, rgba(31,42,36,.7) 100%), url("${photo.file}") center / cover no-repeat`
-            : `${RIDGE} bottom / 100% 60px no-repeat, linear-gradient(180deg, #f0c98f 0%, #d9a066 45%, #8a9a5b 100%)`,
+            ? `linear-gradient(rgba(31,42,36,.42), rgba(31,42,36,.42)), url("${photo.file}") center / cover no-repeat`
+            : `${RIDGE} bottom / 100% 60px no-repeat, var(--sand)`,
           color: E.cream, padding: "20px 22px 16px", minHeight: 170, display: "flex", flexDirection: "column", justifyContent: "flex-end", position: "relative",
         }}
       >

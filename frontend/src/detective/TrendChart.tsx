@@ -196,7 +196,7 @@ export default function TrendChart({ series: raw, trend: rawTrend, unit, label, 
           card={
             <>
               {header ?? (
-                <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 22, color: "var(--pine)" }}>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: 22, color: "var(--pine)" }}>
                   {label}{parkName ? ` · ${parkName}` : ""}
                 </div>
               )}

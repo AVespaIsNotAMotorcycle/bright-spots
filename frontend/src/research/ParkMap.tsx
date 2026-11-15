@@ -171,7 +171,7 @@ export default function ParkMap({ parks, colorOf, tip, onPick, selected = [], ra
   return (
     <div ref={wrap} style={{ position: "relative" }} onMouseMove={track}>
       <div>
-        <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto", display: "block", borderRadius: 12, boxShadow: "0 2px 10px rgba(30,50,70,.18)" }} role="img" aria-label="Map of US national parks">
+        <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto", display: "block", borderRadius: "var(--radius)", border: "1px solid var(--stone)" }} role="img" aria-label="Map of US national parks">
           <defs>
             <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0" stopColor="#bcdcec" />
@@ -241,7 +241,7 @@ export default function ParkMap({ parks, colorOf, tip, onPick, selected = [], ra
           className="card"
           style={{
             position: "absolute", left: cardLeft, top: cardTop, width: cardW, padding: 12, zIndex: 5,
-            boxShadow: "0 8px 24px rgba(20,30,20,.35)", pointerEvents: hover ? "none" : "auto",
+            boxShadow: "var(--shadow-float)", pointerEvents: hover ? "none" : "auto",
           }}
         >
           <h3 style={{ margin: "0 0 2px" }}>{focusPark.name}</h3>

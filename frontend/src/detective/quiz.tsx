@@ -37,20 +37,20 @@ const explain = (step: Step, atlas: Atlas) =>
   typeof step.fact === "function" ? step.fact(atlas) : (step.fact ?? "");
 
 const optBtn = (state: "idle" | "picked" | "good" | "bad"): React.CSSProperties => ({
-  background: state === "good" ? "#d4edda" : state === "bad" ? "#f8d7da" : state === "picked" ? "#fff" : "rgba(255,255,255,.78)",
-  color: state === "good" ? "#155724" : state === "bad" ? "#721c24" : "#1f2a24",
-  border: `2px solid ${state === "good" ? "#2a7d4f" : state === "bad" ? "#c0392b" : state === "picked" ? "#1f2a24" : "rgba(0,0,0,.14)"}`,
-  borderRadius: 14,
+  background: state === "good" ? "var(--pine-tint)" : state === "bad" ? "var(--rust-tint)" : "var(--paper)",
+  color: state === "bad" ? "var(--error)" : "var(--bark)",
+  border: `${state === "idle" ? 1 : 2}px solid ${state === "good" ? "var(--moss)" : state === "bad" ? "var(--error)" : state === "picked" ? "var(--bark)" : "var(--stone)"}`,
+  borderRadius: "var(--radius)",
   padding: "14px 16px",
   cursor: "pointer",
   textAlign: "center",
   fontSize: 14,
-  fontWeight: state === "idle" ? 500 : 700,
+  fontWeight: state === "idle" ? 500 : 600,
 });
 
 const lockBtn: React.CSSProperties = {
-  background: "#1f2a24", color: "#fff", border: "none", borderRadius: 10,
-  padding: "11px 22px", cursor: "pointer", fontWeight: 700, fontSize: 14, alignSelf: "flex-start",
+  background: "var(--moss)", color: "var(--paper)", border: "none", borderRadius: 10,
+  padding: "11px 22px", cursor: "pointer", fontWeight: 600, fontSize: 14, alignSelf: "flex-start",
 };
 
 // ── Games (front of the card) ─────────────────────────────────────────────
@@ -191,7 +191,7 @@ function DotChart({ years, values }: { years: number[]; values: number[] }) {
   return (
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto", background: "rgba(255,255,255,.6)", borderRadius: 12 }} role="img" aria-label="Yearly values, no trend line">
       <line x1={P} y1={H - P} x2={W - P} y2={H - P} stroke="rgba(0,0,0,.2)" />
-      {values.map((v, i) => <circle key={i} cx={x(years[i])} cy={y(v)} r={4} fill="#1f2a24" opacity={0.8} />)}
+      {values.map((v, i) => <circle key={i} cx={x(years[i])} cy={y(v)} r={4} fill="var(--bark)" opacity={0.8} />)}
       <text x={P} y={H - 6} fontSize="11" fill="#555">{years[0]}</text>
       <text x={W - P} y={H - 6} fontSize="11" textAnchor="end" fill="#555">{years[years.length - 1]}</text>
     </svg>
@@ -286,7 +286,7 @@ function Rank({ step, atlas, timeUp, done, finish }: GameProps) {
           <button style={{ ...lockBtn, opacity: order.length === r.parks.length ? 1 : 0.35 }} disabled={order.length !== r.parks.length} onClick={() => end(false)}>
             Lock in
           </button>
-          <button onClick={() => setOrder([])} style={{ ...lockBtn, background: "transparent", color: "#1f2a24", border: "1px solid rgba(0,0,0,.25)" }}>
+          <button onClick={() => setOrder([])} style={{ ...lockBtn, background: "transparent", color: "var(--bark)", border: "1px solid var(--stone)" }}>
             Reset
           </button>
         </div>
@@ -439,14 +439,14 @@ export default function QuizCard({
   const didYouKnow = answer?.ok ? makeFact(step, atlas, index) : null;
   const partial = !!answer && !answer.ok && !answer.timeout && answer.pts > 0;
   const back = !answer
-    ? { bg: "#fff", edge: "#999", emoji: "", head: "" }
+    ? { bg: "var(--paper)", edge: "var(--stone)", emoji: "", head: "" }
     : answer.ok
-      ? { bg: "linear-gradient(145deg,#e6f7ea,#b9e6c4)", edge: "#2a7d4f", emoji: "✅", head: "Correct!" }
+      ? { bg: "color-mix(in srgb, var(--moss) 12%, var(--paper))", edge: "var(--moss)", emoji: "✅", head: "Correct!" }
       : answer.timeout
-        ? { bg: "linear-gradient(145deg,#fff3d6,#ffd98f)", edge: "#c98a12", emoji: "⏰", head: "Time's up! No point this round." }
+        ? { bg: "var(--surface-2)", edge: "var(--bark-2)", emoji: "⏰", head: "Time's up! No point this round." }
         : partial
-          ? { bg: "linear-gradient(145deg,#fff3d6,#ffe3a8)", edge: "#c98a12", emoji: "🟡", head: `So close! ${answer.pts} of ${answer.max} points.` }
-          : { bg: "linear-gradient(145deg,#fde4e4,#f5b5b5)", edge: "#c0392b", emoji: "❌", head: "Not quite." };
+          ? { bg: "color-mix(in srgb, var(--clay) 8%, var(--paper))", edge: "var(--clay)", emoji: "🟡", head: `So close! ${answer.pts} of ${answer.max} points.` }
+          : { bg: "color-mix(in srgb, var(--clay) 14%, var(--paper))", edge: "var(--error)", emoji: "❌", head: "Not quite." };
 
   return createPortal(
     <div
@@ -467,8 +467,8 @@ export default function QuizCard({
           <div
             className="qz-face"
             style={{
-              background: `linear-gradient(145deg, ${t.from}, ${t.to})`, border: `2px solid ${t.edge}`,
-              boxShadow: `0 10px 0 -4px ${t.edge}55, 0 24px 48px rgba(0,0,0,.28)`, color: "#1f2a24",
+              background: "var(--paper)", border: "1px solid var(--stone)", borderTop: `4px solid ${t.edge}`,
+              borderRadius: "var(--radius)", color: "var(--bark)",
               padding: "26px 24px", minHeight: 380, display: "flex", flexDirection: "column", gap: 16, position: "relative",
               pointerEvents: flipped ? "none" : "auto",
             }}
@@ -497,8 +497,8 @@ export default function QuizCard({
           <div
             className="qz-face qz-back"
             style={{
-              background: back.bg, border: `2px solid ${back.edge}`, color: "#1f2a24",
-              boxShadow: "0 24px 48px rgba(0,0,0,.28)", padding: "26px 24px", minHeight: 380,
+              background: back.bg, border: "1px solid var(--stone)", borderTop: `4px solid ${back.edge}`, color: "var(--bark)",
+              borderRadius: "var(--radius)", padding: "26px 24px", minHeight: 380,
               display: "flex", flexDirection: "column", gap: 12, position: "relative",
               pointerEvents: flipped ? "auto" : "none",
             }}

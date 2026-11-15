@@ -312,7 +312,7 @@ export default function StudentDetective({
   const isLast = safeIndex === activeCase.steps.length - 1;
   const isGame = (GAME_KINDS as readonly string[]).includes(step.kind);
   const primaryBtn = {
-    background: "#1f2a24", color: "#fff", border: "none", borderRadius: 10,
+    background: "var(--moss)", color: "var(--paper)", border: "none", borderRadius: 10,
     padding: "11px 22px", cursor: "pointer", fontWeight: 700, fontSize: 14, alignSelf: "flex-start",
   } as const;
 

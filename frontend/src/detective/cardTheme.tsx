@@ -6,16 +6,16 @@ import type { Step } from "./cases";
 interface Theme { from: string; to: string; edge: string; emoji: string[] }
 
 const T: Record<string, Theme> = {
-  hot:    { from: "#ffe9cc", to: "#ffb9a3", edge: "#e8845f", emoji: ["🔥", "☀️", "🌵"] },
-  night:  { from: "#e3defa", to: "#b7c2f2", edge: "#7d8fd6", emoji: ["🌙", "✨", "⭐"] },
-  rain:   { from: "#dcf0ff", to: "#a8d2f4", edge: "#5aa6dd", emoji: ["🌧️", "💧", "☔"] },
-  winter: { from: "#eaf6ff", to: "#cde0f5", edge: "#8db8e0", emoji: ["❄️", "⛄", "🧣"] },
-  spring: { from: "#e6f7d6", to: "#c3e8a8", edge: "#7fbf5a", emoji: ["🌱", "🌷", "🦋"] },
-  island: { from: "#d3f6f0", to: "#9fe0dc", edge: "#47b9b3", emoji: ["🌴", "🌊", "🐚"] },
-  arctic: { from: "#e6f3fc", to: "#cfe3f5", edge: "#7fb0d8", emoji: ["🐻‍❄️", "🧊", "❄️"] },
-  volcano:{ from: "#fbe2c8", to: "#f2b99a", edge: "#d9774a", emoji: ["🌋", "🪨", "🔥"] },
-  forest: { from: "#e0efd9", to: "#bddcb2", edge: "#6aa461", emoji: ["🌲", "🦌", "🍃"] },
-  mystery:{ from: "#efe6d6", to: "#dccdb0", edge: "#a98d5a", emoji: ["🔍", "🕵️", "❓"] },
+  hot:    { from: "#ffe9cc", to: "#ffb9a3", edge: "#B5643C", emoji: ["🔥", "☀️", "🌵"] },
+  night:  { from: "#e3defa", to: "#b7c2f2", edge: "#4F6A7A", emoji: ["🌙", "✨", "⭐"] },
+  rain:   { from: "#dcf0ff", to: "#a8d2f4", edge: "#4F6A7A", emoji: ["🌧️", "💧", "☔"] },
+  winter: { from: "#eaf6ff", to: "#cde0f5", edge: "#4F6A7A", emoji: ["❄️", "⛄", "🧣"] },
+  spring: { from: "#e6f7d6", to: "#c3e8a8", edge: "#5B6B3A", emoji: ["🌱", "🌷", "🦋"] },
+  island: { from: "#d3f6f0", to: "#9fe0dc", edge: "#5B6B3A", emoji: ["🌴", "🌊", "🐚"] },
+  arctic: { from: "#e6f3fc", to: "#cfe3f5", edge: "#4F6A7A", emoji: ["🐻‍❄️", "🧊", "❄️"] },
+  volcano:{ from: "#fbe2c8", to: "#f2b99a", edge: "#B5643C", emoji: ["🌋", "🪨", "🔥"] },
+  forest: { from: "#e0efd9", to: "#bddcb2", edge: "#5B6B3A", emoji: ["🌲", "🦌", "🍃"] },
+  mystery:{ from: "#efe6d6", to: "#dccdb0", edge: "#6B5D4F", emoji: ["🔍", "🕵️", "❓"] },
 };
 
 const CASE_THEME: Record<string, string> = {
@@ -99,13 +99,13 @@ export default function FlashCard({
       style={{
         position: "relative",
         overflow: "hidden",
-        background: `linear-gradient(145deg, ${t.from}, ${t.to})`,
-        border: `2px solid ${t.edge}`,
-        borderRadius: 22,
-        boxShadow: `0 10px 0 -4px ${t.edge}55, 0 18px 36px rgba(0,0,0,.12)`,
+        background: "var(--paper)",
+        border: "1px solid var(--stone)",
+        borderTop: `4px solid ${t.edge}`,
+        borderRadius: "var(--radius)",
         padding: "30px 26px",
         minHeight: 340,
-        color: "#1f2a24",
+        color: "var(--bark)",
         display: "flex",
         flexDirection: "column",
         gap: 16,

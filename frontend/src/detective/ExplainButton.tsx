@@ -144,7 +144,7 @@ export default function ExplainButton(p: Props) {
                 width: p.card ? "min(760px, 100%)" : "min(460px, 100%)", maxHeight: "calc(100vh - 32px)", overflowY: "auto",
                 background: "var(--surface)", color: "var(--text)",
                 border: "1px solid var(--border)", borderTop: `5px solid ${p.accent ?? "var(--pine)"}`, borderRadius: 20,
-                boxShadow: "0 24px 48px rgba(38,30,20,.28)", padding: "22px 24px 18px", position: "relative",
+                boxShadow: "var(--shadow-float)", padding: "22px 24px 18px", position: "relative",
                 display: "flex", flexDirection: "column", gap: 14,
               }}
             >

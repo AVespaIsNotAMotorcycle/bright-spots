@@ -14,16 +14,15 @@ export const STATION_CSS = `
 @keyframes st-in { from { transform: translateY(6px); opacity: 0 } to { transform: none; opacity: 1 } }
 @keyframes st-pop { from { transform: scale(.94); opacity: 0 } to { transform: scale(1); opacity: 1 } }
 .st-card { position: relative; overflow: hidden; border-radius: 14px; border: 1px solid ${E.sage};
-  background: ${TOPO}, linear-gradient(180deg, ${E.cream}, #f3ead6); background-size: 220px, auto; color: ${E.bark};
-  box-shadow: 0 2px 10px rgba(74,55,38,.10); animation: st-in .35s ease both }
-.st-hero { padding: 22px 22px 54px; background: ${RIDGE} bottom/100% 70px no-repeat, ${TOPO}, linear-gradient(160deg, #eef0dc, ${E.sand});
+  background: ${E.cream}; color: ${E.bark}; animation: st-in .35s ease both }
+.st-hero { padding: 22px 22px 54px; background: ${RIDGE} bottom/100% 70px no-repeat, ${E.sand};
   background-size: 100% 70px, 220px, auto }
 .st-tag { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 8px; border-radius: 4px 12px 12px 4px;
   background: ${E.sand}; border: 1px dashed ${E.clay}; font: 600 11px/1.4 var(--font-body); letter-spacing: .06em; text-transform: uppercase; color: ${E.bark} }
 .st-tag::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: ${E.cream}; border: 1.5px solid ${E.clay} }
 .st-tile { text-align: left; cursor: pointer; padding: 14px; border-radius: 12px; border: 1px solid ${E.sage};
-  background: ${E.cream}; color: ${E.bark}; transition: transform .15s, box-shadow .15s, border-color .15s; position: relative; overflow: hidden }
-.st-tile:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(74,55,38,.18); border-color: ${E.moss} }
+  background: ${E.cream}; color: ${E.bark}; transition: border-color .15s; position: relative; overflow: hidden }
+.st-tile:hover { border-color: ${E.moss} }
 .st-tile .st-ico { font-size: 26px; display: block; margin-bottom: 6px }
 .st-tile::after { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 4px; background: var(--tile, ${E.moss}) }
 .st-num { font: 700 26px/1.1 var(--font-display); color: ${E.pine} }
@@ -37,7 +36,7 @@ export const STATION_CSS = `
   text-transform: none; letter-spacing: 0; outline: none }
 
 .st-page .card { border-radius: 14px; border: 1px solid ${E.sage}; color: ${E.bark};
-  background: ${TOPO}, linear-gradient(180deg, ${E.cream}, #f3ead6); background-size: 220px, auto; box-shadow: 0 2px 10px rgba(74,55,38,.10) }
+  background: ${E.cream} }
 .st-page .card h2, .st-page .card h3 { font-family: var(--font-display); color: ${E.pine} }
 .st-page .card h2.section-title { font-size: 22px; letter-spacing: 0; text-transform: none }
 .st-page .card h4 { color: ${E.bark} }
@@ -47,7 +46,7 @@ export const STATION_CSS = `
   background: ${E.sand}; border: 1px solid ${E.sage}; margin-bottom: 8px }
 .st-menu { position: relative }
 .st-menu-list { position: absolute; z-index: 60; top: calc(100% + 6px); left: 0; min-width: 200px; padding: 6px; border-radius: 12px;
-  background: ${E.cream}; border: 1px solid ${E.sage}; box-shadow: 0 10px 24px rgba(38,30,20,.18); display: flex; flex-direction: column; gap: 2px }
+  background: ${E.cream}; border: 1px solid var(--stone); box-shadow: var(--shadow-float); display: flex; flex-direction: column; gap: 2px }
 .st-menu-list button { text-align: left; border: 0; background: none; padding: 8px 10px; border-radius: 8px; cursor: pointer; color: ${E.bark}; font-size: 13px }
 .st-menu-list button:hover, .st-menu-list button.on { background: ${E.sand} }
 @media (prefers-reduced-motion: reduce) { .st-card, .st-ring, .st-pop { animation: none } .st-ring { opacity: .35 } }
