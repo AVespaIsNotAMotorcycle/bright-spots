@@ -9,7 +9,7 @@ import { play } from "../../detective/sound";
 import ParkMap from "../../research/ParkMap";
 import CompareTray, { MAX_COMPARE } from "./CompareTray";
 import ParkDrawer from "./ParkDrawer";
-import { Row, TopCard } from "./TripCards";
+import { Heart, Row, Tile, TopCard } from "./TripCards";
 import TripSettings from "./TripSettings";
 import { shareTripCard } from "./tripCard";
 import { TRIP_CSS } from "./tripStyles";
@@ -187,6 +187,11 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
     );
   };
 
+  const heart = (p: TripPark) => {
+    const w = p.park.code ?? p.park.id;
+    return <Heart on={wish.includes(w)} name={p.park.short} onToggle={() => toggleWish(w)} />;
+  };
+
   const surprise = () => {
     const pool = matches.filter((p) => (p.score ?? 0) >= 70);
     const pick = (pool.length ? pool : matches)[Math.floor(Math.random() * Math.max(1, (pool.length ? pool : matches).length))];
@@ -249,11 +254,11 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
             <span className="small muted">{browse ? "No filters, so no ranking. Pick a mood or a filter to rank them." : `${monthsText} · ranked for ${HORIZON_LABEL(state.horizon, trip)}`}</span>
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <div className="tp-seg" role="group" aria-label="Year">
+            {!browse && <div className="tp-seg" role="group" aria-label="Year">
               {(["this_year", "next_year", "y2050"] as HorizonKey[]).map((h) => (
                 <button key={h} aria-pressed={state.horizon === h} onClick={() => set({ horizon: h })}>{HORIZON_LABEL(h, trip)}</button>
               ))}
-            </div>
+            </div>}
             <div className="tp-seg" role="group" aria-label="View">
               <button aria-pressed={view === "list"} onClick={() => setView("list")}>☰ List</button>
               <button aria-pressed={view === "map"} onClick={() => setView("map")}>🗺 Map</button>
@@ -282,7 +287,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
             </div>
             <div className="tp-rows">
               {found.map((p) => (
-                <Row key={p.park.id} p={p} rank={rankOf.get(p.park.id) ?? 0} plain={browse} unit={unit} onOpen={() => setOpen(code(p))} actions={actions(p)} />
+                <Row key={p.park.id} p={p} rank={rankOf.get(p.park.id) ?? 0} plain={browse} unit={unit} onOpen={() => setOpen(code(p))} actions={heart(p)} />
               ))}
             </div>
           </section>
@@ -319,7 +324,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
                 <div className="tp-h">{shown.length - TOP} more good fits</div>
                 <div className="tp-rows">
                   {shown.slice(TOP).map((p, i) => (
-                    <Row key={p.park.id} p={p} rank={i + TOP + 1} unit={unit} onOpen={() => setOpen(code(p))} actions={actions(p)} />
+                    <Row key={p.park.id} p={p} rank={i + TOP + 1} unit={unit} onOpen={() => setOpen(code(p))} actions={heart(p)} />
                   ))}
                 </div>
               </section>
@@ -336,7 +341,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
               </div>
               <div className="tp-rows">
                 {rest.map((p) => (
-                  <Row key={p.park.id} p={p} rank={rankOf.get(p.park.id) ?? 0} plain={browse} unit={unit} onOpen={() => setOpen(code(p))} actions={actions(p)} />
+                  <Row key={p.park.id} p={p} rank={rankOf.get(p.park.id) ?? 0} plain={browse} unit={unit} onOpen={() => setOpen(code(p))} actions={heart(p)} />
                 ))}
               </div>
             </section>
@@ -350,7 +355,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
         {trip && browse && view === "list" && !find.trim() && (
           <div className="tp-browse">
             {az.map((p) => (
-              <Row key={p.park.id} p={p} rank={0} plain unit={unit} onOpen={() => setOpen(code(p))} actions={actions(p)} />
+              <Tile key={p.park.id} p={p} onOpen={() => setOpen(code(p))} heart={heart(p)} />
             ))}
           </div>
         )}

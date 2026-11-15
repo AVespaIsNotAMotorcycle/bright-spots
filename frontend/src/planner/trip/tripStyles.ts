@@ -11,7 +11,7 @@ export const TRIP_CSS = `
   background:linear-gradient(120deg,rgba(31,42,36,.92),rgba(45,90,39,.78)),var(--tp-hero,none) center/cover}
 .tp-hero h2{margin:0;font-family:var(--font-display);font-size:34px;line-height:1.1}
 .tp-hero p{margin:6px 0 14px;opacity:.85}
-.tp-moods{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.tp-moods{display:flex;gap:8px;flex-wrap:wrap}
 .tp-mood{flex:0 0 auto;border:1.5px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:14px;
   padding:9px 14px;font:inherit;font-weight:700;font-size:14px;cursor:pointer;transition:background .15s,transform .15s}
 .tp-mood:hover{background:rgba(255,255,255,.24);transform:translateY(-1px)}
@@ -88,7 +88,16 @@ export const TRIP_CSS = `
 .tp-row:hover{border-color:var(--pine)}
 .tp-row.off{opacity:.62}
 .tp-row.plain{grid-template-columns:54px 1fr auto}
-.tp-browse{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:8px}
+.tp-browse{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.tp-tile{position:relative;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--surface);cursor:pointer;color:var(--text)}
+.tp-tile:hover,.tp-tile:focus-visible{border-color:var(--pine);box-shadow:var(--shadow-sm);outline:none}
+.tp-tile img,.tp-tile .ph{display:block;width:100%;height:120px;object-fit:cover;background:var(--surface-2)}
+.tp-tile .t{display:block;padding:9px 12px 11px}
+.tp-tile b{display:block;font-size:15px;line-height:1.25}
+.tp-tile small{display:block;font-size:12px;color:var(--text-muted);margin-top:2px}
+.tp-heart{border:0;background:var(--surface);width:32px;height:32px;border-radius:50%;display:grid;place-items:center;cursor:pointer;font-size:16px;line-height:1;color:var(--rust);box-shadow:var(--shadow-sm);flex:none}
+.tp-heart[aria-pressed=true]{background:var(--rust);color:#fff}
+.tp-tile .tp-heart{position:absolute;top:8px;right:8px}
 .tp-row.off img{filter:grayscale(.7)}
 .tp-find{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .tp-search{flex:1;min-width:200px;font:inherit;font-size:15px;padding:9px 14px 9px 36px;border-radius:999px;border:1.5px solid var(--border);

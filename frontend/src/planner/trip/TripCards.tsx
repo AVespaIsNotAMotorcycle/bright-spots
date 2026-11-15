@@ -99,6 +99,30 @@ export function TopCard({ p, i, unit, picked, caseFor, onOpen, actions, science 
   );
 }
 
+/** Round ♡ toggle for the want-to-go list. Stops the click from opening the park. */
+export function Heart({ on, name, onToggle }: { on: boolean; name: string; onToggle: () => void }) {
+  return (
+    <button className="tp-heart" aria-pressed={on} aria-label={on ? `Remove ${name} from Saved` : `Save ${name}`}
+      title={on ? "Saved" : "Save"} onClick={(e) => { e.stopPropagation(); onToggle(); }}
+      onKeyDown={(e) => e.stopPropagation()}>
+      {on ? "♥" : "♡"}
+    </button>
+  );
+}
+
+/** No filters: one photo tile per park, name and state, no rank or score. */
+export function Tile({ p, onOpen, heart }: { p: TripPark; onOpen: () => void; heart: React.ReactNode }) {
+  const photo = photoOf(p.park.code);
+  return (
+    <div className="tp-tile" role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => e.key === "Enter" && onOpen()}
+      aria-label={`${p.park.short}. Open details`}>
+      {photo ? <img src={photo.file} alt="" loading="lazy" /> : <div className="ph" />}
+      {heart}
+      <span className="t"><b>{p.park.short}</b><small>{p.park.states.join(", ")}</small></span>
+    </div>
+  );
+}
+
 export function Row({ p, rank, unit, onOpen, actions, plain = false }: {
   p: TripPark; rank: number; unit: Unit; onOpen: () => void; actions: React.ReactNode;
   /** No filters: just the park, no rank, score or best month. */
