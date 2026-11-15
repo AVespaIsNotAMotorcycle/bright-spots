@@ -677,3 +677,14 @@ path.yc-series.tag-projected { stroke: var(--sky); stroke-dasharray: 2 2; }
   border-radius: 8px;
   line-height: 1.55;
 }
+
+/* Leaflet hover cards */
+.park-tip.leaflet-tooltip {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(20, 30, 20, 0.35);
+  padding: 8px 10px;
+}
+.leaflet-container { font-family: inherit; }
