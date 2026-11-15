@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import LocationPicker from "./LocationPicker";
+import { useParkTrendBadge } from "../detective/useParkTrendBadge";
 import { HORIZONS, Meter, ParkCard, fmtDistance, horizonTitle } from "./ParkDetails";
 import PrefsPanel, { type Unit } from "./PrefsPanel";
 import {
   MONTHS,
   distanceKm,
+  explainTemp,
   fToC,
   fetchPlan,
   nearestParks,
+  prefsSummary,
   popularParks,
   rankParks,
   type HorizonKey,
@@ -56,46 +59,96 @@ function ScenarioChips({ value, onChange }: { value: Prefs["scenario"]; onChange
   );
 }
 
+function TrendPill({ code, unit }: { code: string | null; unit: Unit }) {
+  const b = useParkTrendBadge(code);
+  if (!b || (b.verdict !== "real" && b.verdict !== "possible")) return null;
+  const slope = unit === "F" ? b.slope_f : b.slope_f / 1.8;
+  const real = b.verdict === "real";
+  return (
+    <span
+      className={`trend-pill ${real ? "real" : "possible"}`}
+      title={`Daytime high trend since 1981: ${real ? "confirmed, very unlikely to be luck" : "possible, not yet confirmed"}`}
+    >
+      {slope >= 0 ? "▲" : "▼"} {slope > 0 ? "+" : ""}
+      {slope.toFixed(1)}°{unit}/decade{real ? "" : "?"}
+    </span>
+  );
+}
+
+function SuggestHead({ plan }: { plan: Plan }) {
+  return (
+    <div className="suggest-head micro muted" aria-hidden="true">
+      {HORIZONS.map((hz) => (
+        <span key={hz.key} className="score-col">
+          <strong>{horizonTitle(hz.key, plan)}</strong>
+          <span>{hz.key === "this_year" ? "measured or typical" : hz.tag.toLowerCase()}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function Suggestion({
   p,
   plan,
   sub,
   selected,
   onToggle,
+  prefs,
+  unit,
 }: {
   p: ParkPlan;
   plan: Plan;
   sub: string;
   selected: boolean;
   onToggle: () => void;
+  prefs: Prefs;
+  unit: Unit;
 }) {
+  const why = explainTemp(p.this_year.values.tmax, prefs.tLo, prefs.tHi, unit);
+  const states = p.park.states.join(", ");
   return (
     <li>
       <label className={`suggestion ${selected ? "selected" : ""}`}>
         <input type="checkbox" checked={selected} onChange={onToggle} />
-        <span className="suggestion-name">
-          {p.park.short}
-          <span className="micro muted">
-            {" "}
-            {p.park.states.join(", ")} · {sub}
+        <span className="suggestion-main">
+          <span className="suggestion-name">
+            {p.park.short} <TrendPill code={p.park.code} unit={unit} />
           </span>
+          <span className="suggestion-sub" title={`${states} · ${sub}`}>
+            {states} · {sub}
+          </span>
+          {why && <span className={`suggestion-why ${why.tone}`}>{why.text}</span>}
         </span>
         <span className="suggestion-scores num">
-          {HORIZONS.map((hz) => (
-            <span key={hz.key} title={`${horizonTitle(hz.key, plan)} ${hz.tag.toLowerCase()} score`}>
-              <span className="micro muted">{horizonTitle(hz.key, plan)}</span> {p[hz.key].score == null ? "–" : Math.round(p[hz.key].score!)}
-            </span>
-          ))}
+          {HORIZONS.map((hz) => {
+            const h = p[hz.key];
+            const range = h.score != null && h.low != null && h.high != null && Math.round(h.low) !== Math.round(h.high);
+            return (
+              <span
+                key={hz.key}
+                className="score-col"
+                title={`${horizonTitle(hz.key, plan)} ${hz.tag.toLowerCase()} score${range ? `, range ${Math.round(h.low!)}–${Math.round(h.high!)}` : ""}`}
+              >
+                <span className="score-num">{h.score == null ? "–" : Math.round(h.score)}</span>
+                {range && hz.key !== "this_year" && (
+                  <span className="score-range">
+                    {Math.round(h.low!)}–{Math.round(h.high!)}
+                  </span>
+                )}
+              </span>
+            );
+          })}
         </span>
       </label>
     </li>
   );
 }
 
-export default function Planner() {
+export default function Planner({ onViewTrend, initialMonth }: { onViewTrend?: (parkCode: string) => void; initialMonth?: number }) {
   const [unit, setUnit] = useState<Unit>(() => load("planner.unit", "F" as Unit));
   const [prefs, setPrefs] = useState<Prefs>({
-    month: DEFAULT_MONTH,
+    month: initialMonth ?? DEFAULT_MONTH,
     tLo: fToC(65),
     tHi: fToC(82),
     rhMax: null,
@@ -159,16 +212,22 @@ export default function Planner() {
           <h2 id="pick-title" className="section-title">
             Pick parks to compare
           </h2>
-          <span className="small muted">
-            Scores for {MONTHS[prefs.month - 1]}, 0–100{loading ? " · updating…" : ""}
-          </span>
+          <span className="small muted">{loading ? "Updating…" : ""}</span>
         </header>
+        <p className="score-explainer small">
+          <strong>What the number means.</strong> Each park gets a <strong>match score from 0 to 100</strong> for a trip in{" "}
+          <strong>{MONTHS[prefs.month - 1]}</strong>, based on what you picked above: {prefsSummary(prefs, unit).join(", ")}.
+          100 means the park fits all of it, 0 means it fits none. Use it to compare parks and choose which to look at
+          closely. It is not a quality rating. Tick parks to compare them below.
+        </p>
         <LocationPicker place={place} onPlace={setPlace} />
         {plan && (
           <div className="suggest-grid">
             <div>
               <h3 className="pref-title">Near you</h3>
               {place ? (
+                <>
+                <SuggestHead plan={plan} />
                 <ul className="suggest-list">
                   {near.map((p) => (
                     <Suggestion
@@ -178,15 +237,19 @@ export default function Planner() {
                       sub={fmtDistance(distanceKm(place, p.park), unit)}
                       selected={selected.includes(p.park.id)}
                       onToggle={() => toggle(p.park.id)}
+                      prefs={prefs}
+                      unit={unit}
                     />
                   ))}
                 </ul>
+                </>
               ) : (
                 <p className="small muted">Share a location or search for a place to see the five closest parks.</p>
               )}
             </div>
             <div>
               <h3 className="pref-title">Most visited nationwide</h3>
+              <SuggestHead plan={plan} />
               <ul className="suggest-list">
                 {popular.map((p) => (
                   <Suggestion
@@ -196,6 +259,8 @@ export default function Planner() {
                     sub={`${((p.park.visitors_2025 ?? 0) / 1e6).toFixed(1)}M visitors in 2025`}
                     selected={selected.includes(p.park.id)}
                     onToggle={() => toggle(p.park.id)}
+                    prefs={prefs}
+                    unit={unit}
                   />
                 ))}
               </ul>
@@ -222,7 +287,7 @@ export default function Planner() {
           ) : (
             <div className="card-grid">
               {chosen.map((p) => (
-                <ParkCard key={p.park.id} p={p} plan={plan} unit={unit} place={place} onRemove={() => toggle(p.park.id)} />
+                <ParkCard key={p.park.id} p={p} plan={plan} unit={unit} place={place} onRemove={() => toggle(p.park.id)} onViewTrend={onViewTrend} />
               ))}
             </div>
           )}
@@ -276,7 +341,8 @@ export default function Planner() {
         POWER monthly values where already measured, otherwise the 1991–2020 normal (marked). {plan?.next_year ?? "Next year"}: that
         month's 1991-onward trend extended one year, range = year-to-year scatter; not a weather forecast. 2050: WorldClim 2.1
         CMIP6 downscaled 2041–2060, six models, range across models; temperature and rain only. Bugs are a weather-based
-        estimate. Park list and 2025 visitors: Wikipedia (CC BY-SA 4.0). Place search: OpenStreetMap Nominatim.
+        estimate. NASA POWER cells are about 50 km wide, so mountain and canyon parks (for example Great Smoky Mountains and
+        Grand Canyon) can read warmer than their visitor areas. Park list and 2025 visitors: Wikipedia (CC BY-SA 4.0). Place search: OpenStreetMap Nominatim.
       </footer>
     </div>
   );

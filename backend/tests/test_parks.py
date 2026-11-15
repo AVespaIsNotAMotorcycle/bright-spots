@@ -13,8 +13,11 @@ from app.parks import scoring as sc
 
 def test_temp_score_band_and_falloff():
     assert sc.temp_score(25, 20, 28) == 1
-    assert sc.temp_score(20 - sc.TEMP_FALLOFF_C / 2, 20, 28) == pytest.approx(0.5)
-    assert sc.temp_score(40, 20, 28) == 0
+    assert sc.temp_score(20 - sc.TEMP_HALF_C, 20, 28) == pytest.approx(0.5)
+    assert sc.temp_score(28 + sc.TEMP_HALF_C, 20, 28) == pytest.approx(0.5)
+    # Far outside the range: close to 0 but still ordered (colder scores lower).
+    assert 0 < sc.temp_score(8, 20, 28) < sc.temp_score(12, 20, 28) < 0.5
+    assert sc.temp_score(40, 20, 28) < 0.05
 
 
 def test_humidity_and_rain_scores():
@@ -81,8 +84,8 @@ def test_score_park_horizons():
     assert nxt.low is not None and nxt.score is not None and nxt.high is not None
     assert nxt.low <= nxt.score <= nxt.high
     assert s["y2050"].values["tmax"] == 27.0 and s["y2050"].values["rh"] == 50.0
-    # 27 C is 1 C above the range: temperature factor 1 - 1/8.
-    assert s["y2050"].factors["temperature"] == pytest.approx(1 - 1 / sc.TEMP_FALLOFF_C)
+    # 27 C is 1 C above the range: smooth falloff, factor just under 1.
+    assert s["y2050"].factors["temperature"] == pytest.approx(0.9726, abs=1e-3)  # exp(-ln2 * (1/5)^2)
     y50, now = s["y2050"].score, s["this_year"].score
     assert y50 is not None and now is not None and y50 < now
 

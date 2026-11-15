@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import YearChart from "./YearChart";
+import { useParkTrendBadge } from "../detective/useParkTrendBadge";
 import {
   FACTOR_LABEL,
   MONTHS,
@@ -268,13 +269,21 @@ export function ParkCard({
   unit,
   place,
   onRemove,
+  onViewTrend,
 }: {
   p: ParkPlan;
   plan: Plan;
   unit: Unit;
   place: Place | null;
   onRemove: () => void;
+  onViewTrend?: (parkCode: string) => void;
 }) {
+  const badge = useParkTrendBadge(p.park.code);
+  const badgeColor = badge?.verdict === "real"
+    ? { bg: "#d4edda", text: "#155724" }
+    : badge?.verdict === "possible"
+      ? { bg: "#fff3cd", text: "#856404" }
+      : null;
   return (
     <article className="card park-card" aria-labelledby={`card-${p.park.id}`}>
       <header className="park-card-head">
@@ -292,6 +301,45 @@ export function ParkCard({
           Remove
         </button>
       </header>
+      {badge && badgeColor && (
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            background: badgeColor.bg,
+            color: badgeColor.text,
+            borderRadius: 8,
+            padding: "5px 12px",
+            fontSize: 12,
+            fontWeight: 600,
+            marginBottom: 12,
+          }}
+        >
+          <span>
+            📈 Warming {badge.slope_f > 0 ? "+" : ""}{badge.slope_f.toFixed(2)}°F/decade
+            · {badge.verdict === "real" ? "Real, not luck" : "Possible trend"}
+          </span>
+          {onViewTrend && p.park.code && (
+            <button
+              onClick={() => onViewTrend(p.park.code!)}
+              style={{
+                background: "none",
+                border: `1px solid ${badgeColor.text}`,
+                borderRadius: 6,
+                padding: "2px 8px",
+                cursor: "pointer",
+                fontSize: 11,
+                color: badgeColor.text,
+                fontWeight: 600,
+              }}
+            >
+              See trend →
+            </button>
+          )}
+        </div>
+      )}
+      <p className="micro muted" style={{ margin: "10px 0 0" }}>Match score 0–100 for {MONTHS[plan.month - 1]}: how well this park fits your preferences. Higher is a better fit.</p>
       <div className="park-card-scores">
         {HORIZONS.map((hz) => (
           <BigScore key={hz.key} h={p[hz.key]} title={horizonTitle(hz.key, plan)} tag={hz.tag} tagClass={hz.tagClass} />

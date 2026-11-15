@@ -7,11 +7,15 @@ PROVISIONAL design choices, not values from a source; see the MVP open decisions
 
 from __future__ import annotations
 
+import math
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
-# Provisional falloffs: how far outside the user's limit a factor reaches 0.
-TEMP_FALLOFF_C = 8.0  # daytime high this far outside the ideal range scores 0
+# Provisional falloffs.
+# Temperature: smooth (Gaussian) decay, so far-off parks still differ instead of
+# all hitting 0. A daytime high this far outside the ideal range scores 0.5.
+TEMP_HALF_C = 5.0
+# Humidity: linear; this far above the user's maximum scores 0.
 RH_FALLOFF_PCT = 20.0  # humidity this far above the user's maximum scores 0
 # Rain: double the user's maximum scores 0.
 
@@ -58,7 +62,7 @@ def temp_score(tmax: float, lo: float, hi: float) -> float:
     if lo <= tmax <= hi:
         return 1.0
     dist = lo - tmax if tmax < lo else tmax - hi
-    return clamp01(1 - dist / TEMP_FALLOFF_C)
+    return math.exp(-math.log(2) * (dist / TEMP_HALF_C) ** 2)
 
 
 def humidity_score(rh: float, rh_max: float) -> float:
@@ -125,7 +129,9 @@ def score(
 
 
 def _pick(entry: dict, var: str, key: str, part: str = "value") -> float | None:
-    h = entry[var][key]
+    if var not in entry:
+        return None
+    h = entry[var].get(key)
     if h is None:
         return None
     return h if isinstance(h, (int, float)) else h.get(part)
@@ -135,20 +141,21 @@ def score_park(climate: dict, prefs: Prefs, scenario: str) -> dict[str, Scored]:
     """Scores for this_year, next_year and y2050 for one park's bundled climate."""
     months = climate["months"]
     m = months[prefs.month - 1]
-    normal = {var: m[var]["normal"] for var in VARS}
-    normal_melt = melt_shares([months[i]["snow"]["normal"] for i in range(12)])
+    normal = {var: m[var]["normal"] if var in m else None for var in VARS}
+    normal_melt = melt_shares([months[i]["snow"]["normal"] if "snow" in months[i] else None for i in range(12)])
     out: dict[str, Scored] = {}
 
     # This year: measured where available, otherwise the normal (and say so).
-    measured = {var: m[var]["this_year"] for var in VARS}
+    measured = {var: m[var]["this_year"] if var in m else None for var in VARS}
     this_vals = {
         var: measured[var] if measured[var] is not None else normal[var] for var in VARS
     }
     this_melt = melt_shares(
         [
-            months[i]["snow"]["this_year"]
+            (months[i]["snow"]["this_year"]
             if months[i]["snow"]["this_year"] is not None
-            else months[i]["snow"]["normal"]
+            else months[i]["snow"]["normal"])
+            if "snow" in months[i] else None
             for i in range(12)
         ]
     )
@@ -163,7 +170,7 @@ def score_park(climate: dict, prefs: Prefs, scenario: str) -> dict[str, Scored]:
     def at(part: str) -> dict[str, float | None]:
         return {
             var: _pick(m, var, "next_year", part)
-            if m[var]["next_year"] is not None
+            if var in m and m[var].get("next_year") is not None
             else normal[var]
             for var in VARS
         }
@@ -186,7 +193,7 @@ def score_park(climate: dict, prefs: Prefs, scenario: str) -> dict[str, Scored]:
                 vals[var] = p[scenario][part]
         return vals
 
-    has_proj = bool(m["tmax"]["y2050"]) and scenario in (m["tmax"]["y2050"] or {})
+    has_proj = bool(m.get("tmax", {}).get("y2050")) and scenario in (m.get("tmax", {}).get("y2050") or {})
     if has_proj:
         mid, lo, hi = (
             score(proj(p), prefs, normal_melt) for p in ("value", "low", "high")

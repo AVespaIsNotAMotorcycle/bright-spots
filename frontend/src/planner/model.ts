@@ -180,3 +180,39 @@ export function fetchDaily(parkId: string, scenario: string): Promise<DailyCurve
 
 /** First day-of-year index (0-based, non-leap) of each month, plus 365. */
 export const MONTH_STARTS = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365];
+
+/** One plain sentence on how a park's daytime high compares with the user's ideal range. */
+export function explainTemp(
+  tmaxC: number | null | undefined,
+  tLoC: number,
+  tHiC: number,
+  unit: "F" | "C",
+): { text: string; tone: "good" | "bad" | "ok" } | null {
+  if (tmaxC == null) return null;
+  const show = (c: number) => (unit === "F" ? `${Math.round(cToF(c))}°F` : `${Math.round(c)}°C`);
+  // Differences convert by the scale factor only (no +32).
+  const gap = (c: number) => (unit === "F" ? `${Math.round(c * 1.8)}°F` : `${Math.round(c)}°C`);
+  const range = `${show(tLoC)}–${show(tHiC)}`;
+  if (tmaxC < tLoC) {
+    const d = tLoC - tmaxC;
+    return { text: `Too cold: highs of ${show(tmaxC)}, ${gap(d)} under your ${range}`, tone: d > 4 ? "bad" : "ok" };
+  }
+  if (tmaxC > tHiC) {
+    const d = tmaxC - tHiC;
+    return { text: `Too hot: highs of ${show(tmaxC)}, ${gap(d)} over your ${range}`, tone: d > 4 ? "bad" : "ok" };
+  }
+  return { text: `Highs of ${show(tmaxC)} fit your ${range}`, tone: "good" };
+}
+
+/** The preferences that currently make up the score, as short phrases. */
+export function prefsSummary(p: Prefs, unit: "F" | "C"): string[] {
+  const t = (c: number) => (unit === "F" ? `${Math.round(cToF(c))}°F` : `${Math.round(c)}°C`);
+  const out = [`daytime highs of ${t(p.tLo)}–${t(p.tHi)}`];
+  if (p.rhMax != null) out.push(`humidity under ${Math.round(p.rhMax)}%`);
+  if (p.rainMax != null)
+    out.push(`rain under ${unit === "F" ? `${mmToIn(p.rainMax).toFixed(1)} in` : `${Math.round(p.rainMax)} mm`} a month`);
+  if (p.avoidBugs) out.push("few bugs");
+  if (p.stars) out.push("clear night skies");
+  if (p.snowmelt) out.push("snowmelt season (waterfalls)");
+  return out;
+}

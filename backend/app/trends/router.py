@@ -47,3 +47,20 @@ def get_park_trends(park_id: str) -> dict:
         return _park(park_id)
     except FileNotFoundError:
         raise HTTPException(404, detail=f"No trend data for park '{park_id}'") from None
+
+
+@lru_cache(maxsize=1)
+def _insights() -> dict:
+    p = DATA / "insights.json"
+    if not p.exists():
+        raise FileNotFoundError("insights.json not found — run scripts/step4_insights.py first")
+    return json.loads(p.read_text())
+
+
+@router.get("/insights")
+def get_insights() -> dict:
+    """Park list (with coordinates), park families and opposite-trend groups."""
+    try:
+        return _insights()
+    except FileNotFoundError as e:
+        raise HTTPException(503, detail=str(e)) from e

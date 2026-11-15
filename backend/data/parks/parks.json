@@ -144,6 +144,18 @@
   "visitors_2025": 227186
  },
  {
+  "id": "chiricahua",
+  "code": "chir",
+  "name": "Chiricahua National Park",
+  "short": "Chiricahua",
+  "states": [
+   "Arizona"
+  ],
+  "lat": 32.0,
+  "lon": -109.34,
+  "visitors_2025": 70407
+ },
+ {
   "id": "congaree",
   "code": "cong",
   "name": "Congaree National Park",
