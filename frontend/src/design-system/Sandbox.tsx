@@ -3,7 +3,7 @@
 // overrides :root custom properties inline; nothing is written back to the source files.
 import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import { FAMILY_COLORS, VERDICT_COLOR } from "../research/lib";
-import { OFF_TOKEN, TOKEN_GROUPS } from "./tokens";
+import { SPACE_STEPS, TOKEN_GROUPS } from "./tokens";
 import { HORIZONS, fmtDistance, fmtRain, fmtTemp, horizonTitle, pct } from "../planner/ParkDetails";
 import { FACTOR_LABEL, MONTHS, distanceKm, type FactorKey, type Horizon, type HorizonKey, type ParkPlan, type Place, type Plan } from "../planner/model";
 import type { Unit } from "../planner/PrefsPanel";
@@ -86,15 +86,15 @@ function TokenEditor() {
         <p className="section-title">Token editor</p>
         <span className="micro muted">{changed.length} changed</span>
       </div>
-      <p className="micro muted" style={{ margin: "6px 0 0" }}>
+      <p className="micro muted" style={{ margin: "var(--space-0-5) 0 0" }}>
         Edits apply live to this page and are saved in this browser only. styles.css is never touched;
         copy the changed block out when you like it.
       </p>
-      <div className="row gap-8 wrap" style={{ marginTop: 10 }}>
-        <button className="btn" style={{ padding: "6px 12px", fontSize: 13 }} onClick={() => setShowExport((s) => !s)} disabled={!changed.length}>
+      <div className="row gap-8 wrap" style={{ marginTop: "var(--space-0-5)" }}>
+        <button className="btn" style={{ padding: "var(--space-0-25) var(--space-0-5)", fontSize: 13 }} onClick={() => setShowExport((s) => !s)} disabled={!changed.length}>
           {showExport ? "Hide CSS" : "Show changed CSS"}
         </button>
-        <button className="btn-ghost" style={{ padding: "5px 12px", fontSize: 13 }} onClick={() => setOverrides({})} disabled={!changed.length}>
+        <button className="btn-ghost" style={{ padding: "var(--space-0-25) var(--space-0-5)", fontSize: 13 }} onClick={() => setOverrides({})} disabled={!changed.length}>
           Reset all
         </button>
       </div>
@@ -112,7 +112,7 @@ function TokenEditor() {
           {g.tokens.map((t) => {
             const value = overrides[t.name] ?? authored[t.name] ?? "";
             const hex = HEX6.test(value) ? value : resolvedHex(t.name);
-            const isColorish = !t.name.includes("shadow") && !t.name.includes("font") && !t.name.includes("radius") && !t.name.includes("edge");
+            const isColorish = !g.nonColour && !t.name.includes("radius") && !t.name.includes("edge");
             return (
               <div key={t.name} className={`ds-token${overrides[t.name] ? " changed" : ""}`}>
                 {isColorish && hex && !value.startsWith("rgba") ? (
@@ -178,17 +178,9 @@ function Swatch({ name, value, note }: { name: string; value?: string; note?: st
   );
 }
 
-/** Inline badge exactly as ExplainerCard draws verdicts today. */
-function VerdictBadge({ bg, color, children }: { bg: string; color: string; children: ReactNode }) {
-  return (
-    <span style={{ display: "inline-block", padding: "2px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: bg, color }}>
-      {children}
-    </span>
-  );
-}
-
+/** A point in a legend: round on purpose. */
 function Dot({ color }: { color: string }) {
-  return <span style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: color, marginRight: 6 }} />;
+  return <span style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: color, marginRight: "var(--space-0-5)" }} />;
 }
 
 // ─────────────────────────────── Postcard parts ───────────────────────────────
@@ -196,9 +188,9 @@ function Dot({ color }: { color: string }) {
 type Mood = "dawn" | "forest" | "night";
 
 const MOODS: Record<Mood, { skyTop: string; skyBottom: string; far: string; mid: string; near: string; sun: string }> = {
-  dawn:   { skyTop: "var(--rust)", skyBottom: "var(--surface-3)", far: "var(--text-faint)", mid: "var(--rust)", near: "var(--pine)", sun: "var(--surface)" },
-  forest: { skyTop: "var(--sky)", skyBottom: "var(--surface-2)", far: "var(--pine-light)", mid: "var(--pine)", near: "var(--text)", sun: "var(--surface)" },
-  night:  { skyTop: "var(--text)", skyBottom: "var(--sky)", far: "var(--sky)", mid: "var(--pine)", near: "var(--text)", sun: "var(--surface-3)" },
+  dawn:   { skyTop: "var(--sunset)", skyBottom: "var(--surface-3)", far: "var(--text-faint)", mid: "var(--sunset-ink)", near: "var(--pine-press)", sun: "var(--surface)" },
+  forest: { skyTop: "var(--glacier)", skyBottom: "var(--surface-2)", far: "var(--glacier-ink)", mid: "var(--pine)", near: "var(--text)", sun: "var(--surface)" },
+  night:  { skyTop: "var(--text)", skyBottom: "var(--glacier-ink)", far: "var(--glacier-ink)", mid: "var(--pine-press)", near: "var(--text)", sun: "var(--surface-3)" },
 };
 
 /** An illustrated park scene drawn only from palette tokens, so it re-themes with them. */
@@ -394,21 +386,21 @@ const TOC: [string, string][] = [
 ];
 
 const TYPE_SCALE: { label: string; spec: string; el: ReactNode }[] = [
-  { label: "Landing h1 (inline)", spec: "display 30 / 1.1 · pine", el: <span style={{ fontFamily: "var(--font-display)", fontSize: 30, color: "var(--pine)", lineHeight: 1.1, fontWeight: 800 }}>Park Trend Detective</span> },
+  { label: ".title (Landing, 32)", spec: "display 32 / 1.1 · pine-ink · sunset offset", el: <span className="title" style={{ fontSize: 32 }}>Park Trend Detective</span> },
   { label: ".big-score", spec: "body 700 30 / 1.1", el: <span className="big-score num">82 <span className="small muted">76–88</span></span> },
-  { label: ".title", spec: "display 800 26 / 1.1 · pine", el: <h1 className="title">Park Trend Detective</h1> },
-  { label: ".stat-value", spec: "body 700 24 · pine", el: <span className="stat-value num">+0.48°F</span> },
-  { label: ".headline", spec: "display 700 20 / 1.2", el: <h2 className="headline">Is Yosemite getting warmer?</h2> },
-  { label: ".park-card-title", spec: "display 700 20 / 1.1 · pine", el: <h3 className="park-card-title">Great Smoky Mountains</h3> },
+  { label: ".title", spec: "display 28 / 1.1 · pine-ink · sunset offset", el: <h1 className="title">Park Trend Detective</h1> },
+  { label: ".stat-value", spec: "body 700 24 · pine-ink", el: <span className="stat-value num">+0.48°F</span> },
+  { label: ".headline", spec: "display 20 / 1.2", el: <h2 className="headline">Is Yosemite getting warmer?</h2> },
+  { label: ".park-card-title", spec: "display 20 / 1.15 · pine-ink", el: <h3 className="park-card-title">Great Smoky Mountains</h3> },
   { label: ".score-num", spec: "body 700 18", el: <span className="score-num num">74</span> },
   { label: "body", spec: "body 400 15 / 1.6", el: <span>Fifty years of NASA POWER data say the valley warms in autumn.</span> },
   { label: ".pref-title", spec: "body 600 14", el: <p className="pref-title">Daytime high</p> },
   { label: ".small", spec: "13", el: <span className="small">California · 312 km from Los Angeles</span> },
   { label: ".small.muted", spec: "13 · text-muted", el: <span className="small muted">Stored only in this browser.</span> },
   { label: ".micro", spec: "11", el: <span className="micro">Match score 0–100 for November</span> },
-  { label: ".section-title", spec: "600 11 caps · 0.12em · rust", el: <span className="section-title">Your parks</span> },
-  { label: ".tag", spec: "600 10 caps · 0.06em", el: <span className="tag tag-measured">Measured</span> },
-  { label: ".num", spec: "tabular-nums", el: <span className="num">1,234 · 98.6 · 0.07</span> },
+  { label: ".section-title", spec: "700 11 caps · 0.12em · text-muted", el: <span className="section-title">Your parks</span> },
+  { label: ".tag", spec: "700 10 caps · 0.12em · ink stamp", el: <span className="tag tag-measured">Measured</span> },
+  { label: ".num", spec: "tabular-nums (Shantell Sans has tnum)", el: <span className="num">1,234 · 98.6 · 0.07</span> },
 ];
 
 export default function Sandbox() {
@@ -433,7 +425,7 @@ export default function Sandbox() {
           <h1 className="title">Park Trend Detective</h1>
           <p className="small muted">Design system sandbox · reads styles.css live</p>
         </div>
-        <nav style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+        <nav style={{ display: "flex", gap: "var(--space-0-5)", flexWrap: "wrap", alignItems: "center" }}>
           {["Home", "Planner", "Explore", "Map"].map((t) => (
             <button key={t} className={`nav-tab${navTab === t ? " active" : ""}`} onClick={() => setNavTab(t)}>{t}</button>
           ))}
@@ -449,28 +441,23 @@ export default function Sandbox() {
         <main className="ds-main">
           {/* ── Colour ── */}
           <Section id="colour" kicker="Foundations" title="Colour" intro="Tokens on :root in styles.css. Swatches use var(), so they follow the editor.">
-            {TOKEN_GROUPS.filter((g) => !["Elevation", "Typography", "Postcard (proposed)"].includes(g.title)).map((g) => (
-              <Specimen key={g.title} label={g.title}>
+            {TOKEN_GROUPS.filter((g) => !g.nonColour && g.title !== "Postcard (proposed)").map((g) => (
+              <Specimen key={g.title} label={g.note ? `${g.title} · ${g.note}` : g.title}>
                 <div className="ds-swatches" style={{ width: "100%" }}>
                   {g.tokens.map((t) => <Swatch key={t.name} name={t.name} note={t.note} />)}
                 </div>
               </Specimen>
             ))}
-            <Specimen label="Off-token: hard-coded in components today (not editable here)">
-              <div className="ds-swatches" style={{ width: "100%" }}>
-                {OFF_TOKEN.map((c) => <Swatch key={c.hex} name={c.hex} value={c.hex} note={`${c.role} · ${c.where}`} />)}
-              </div>
-            </Specimen>
-            <Specimen label="FAMILY_COLORS (research/lib.ts) · categorical series">
+            <Specimen label="FAMILY_COLORS (research/lib.ts) · categorical series: pine, sunset, glacier, caution, plum, slate">
               {FAMILY_COLORS.map((c) => <span key={c} className="swatch" style={{ background: c }} title={c} />)}
             </Specimen>
             <Specimen label="Page background: --bg + topographic SVG texture on body">
-              <div style={{ width: "100%", height: 80, borderRadius: 12, border: "1px solid var(--border)", background: "inherit", backgroundImage: "inherit" }} />
+              <div style={{ width: "100%", height: 80, borderRadius: "var(--radius)", border: "1px solid var(--border)", background: "inherit", backgroundImage: "inherit" }} />
             </Specimen>
           </Section>
 
           {/* ── Type ── */}
-          <Section id="type" kicker="Foundations" title="Typography" intro="Playfair Display (700, 800) for display; Inter (400–600) for everything else. Base body is 15/1.6.">
+          <Section id="type" kicker="Foundations" title="Typography" intro="Alfa Slab One for postcard headlines (one weight, never faux-bolded). Shantell Sans 400–700 for everything else: a plain sans drawn from handwriting, with tabular figures. Base body is 15/1.6.">
             <div className="card">
               {TYPE_SCALE.map((t) => (
                 <div key={t.label} className="ds-type-row">
@@ -485,21 +472,21 @@ export default function Sandbox() {
           </Section>
 
           {/* ── Shape & space ── */}
-          <Section id="shape" kicker="Foundations" title="Shape, space and elevation" intro="Radii and spacing aren't tokens yet; these are the values used across styles.css and inline styles.">
-            <Specimen label="Radius: 2 · 3 · 6 · 8 · 10 · 12 · 14 · 16 · 24 · 999">
-              {[2, 3, 6, 8, 10, 12, 14, 16, 24, 999].map((r) => (
-                <div key={r} className="ds-specimen" style={{ alignItems: "center" }}>
-                  <div className="ds-box" style={{ borderRadius: r }} />
-                  <span className="ds-label">{r}</span>
+          <Section id="shape" kicker="Foundations" title="Shape, space and elevation" intro="One radius and one spacing scale. Spacing is in rem (1rem = 16px). Radius is 2px unless round carries meaning.">
+            <Specimen label="Radius: --radius (2px) everywhere · 50% for points and handles · 0 for postcard paper">
+              {[["--radius", "var(--radius)"], ["50%: dot, thumb", "50%"], ["0: postcard", "0"]].map(([l, r]) => (
+                <div key={l} className="ds-specimen" style={{ alignItems: "center" }}>
+                  <div className="ds-box" style={{ borderRadius: r, ...(r === "50%" ? { width: 56 } : {}) }} />
+                  <span className="ds-label">{l}</span>
                 </div>
               ))}
             </Specimen>
-            <Specimen label="Spacing: gap helpers .gap-8 · .gap-12 · .gap-16, plus 4 · 6 · 18 · 20 · 24 · 28 in layouts">
-              <div style={{ display: "flex", flexDirection: "column", gap: 6, width: "100%" }}>
-                {[4, 6, 8, 12, 16, 18, 20, 24, 28].map((s) => (
-                  <div key={s} className="row gap-12">
-                    <span className="ds-label" style={{ width: 24 }}>{s}</span>
-                    <div className="ds-space" style={{ width: s * 4 }} />
+            <Specimen label="Spacing: --space-* (rem) · helpers .gap-4 · .gap-8 · .gap-16 · .gap-32">
+              <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-0-5)", width: "100%" }}>
+                {SPACE_STEPS.map((s) => (
+                  <div key={s} className="row gap-16">
+                    <span className="ds-label" style={{ width: 170, flex: "none" }}>--space-{s} · {s.replace("-", ".")}rem</span>
+                    <div className="ds-space" style={{ width: `var(--space-${s})` }} />
                   </div>
                 ))}
               </div>
@@ -512,9 +499,12 @@ export default function Sandbox() {
                 </div>
               ))}
             </Specimen>
-            <Specimen label="Borders: 1px card · 1.5px controls · 2px nav/topbar · 4px accent edge">
-              {[1, 1.5, 2].map((w) => <div key={w} className="ds-box" style={{ borderWidth: w, borderColor: "var(--border)", borderRadius: 10 }} />)}
-              <div className="ds-box" style={{ border: "1px solid var(--border)", borderLeft: "4px solid var(--pine)", borderRadius: 10 }} />
+            <Specimen label="Borders: none on cards · 1px hairline · 1.5px controls (--border-strong) · 2px topbar · 3px callout edge">
+              <div className="ds-box" style={{ border: 0, boxShadow: "var(--shadow-sm)" }} />
+              <div className="ds-box" style={{ border: "1px solid var(--border)" }} />
+              <div className="ds-box" style={{ border: "1.5px solid var(--border-strong)" }} />
+              <div className="ds-box" style={{ border: "2px solid var(--pine)" }} />
+              <div className="ds-box" style={{ border: 0, borderLeft: "3px solid var(--glacier)", background: "var(--info-tint)" }} />
             </Specimen>
           </Section>
 
@@ -524,13 +514,14 @@ export default function Sandbox() {
               <button className="btn">Create profile →</button>
               <button className="btn-ghost">Cancel</button>
               <button className="link-btn">Remove</button>
-              <button className="btn" disabled title="styles.css has no :disabled style">.btn:disabled (no style yet)</button>
+              <button className="btn" disabled>.btn:disabled</button>
+              <button className="btn-ghost" disabled>.btn-ghost:disabled</button>
             </Specimen>
             <Specimen label=".nav-tab (topbar) · profile button (inline)">
               {["Home", "Planner", "Explore"].map((t) => (
                 <button key={t} className={`nav-tab${navTab === t ? " active" : ""}`} onClick={() => setNavTab(t)}>{t}</button>
               ))}
-              <button style={{ padding: "7px 12px", borderRadius: 20, border: "1px solid var(--border)", background: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: 12 }}>⚙ Profile</button>
+              <button style={{ marginLeft: 8, padding: "7px 12px", borderRadius: "var(--radius)", border: "1px solid var(--border)", background: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: 12 }}>⚙ Profile</button>
             </Specimen>
             <Specimen label=".chip · .chip.active (month grid)">
               <div className="month-grid" style={{ width: "min(100%, 420px)" }}>
@@ -539,17 +530,11 @@ export default function Sandbox() {
                 ))}
               </div>
             </Specimen>
-            <Specimen label="Segmented control: Landing persona picker (inline)">
-              <div role="radiogroup" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, background: "var(--surface-2)", padding: 5, borderRadius: 14, width: "min(100%, 420px)" }}>
-                {[["🥾", "Visitor"], ["🧑‍🎓", "Student"], ["🔬", "Researcher"]].map(([e, p]) => {
-                  const on = persona === p;
-                  return (
-                    <button key={p} type="button" role="radio" aria-checked={on} onClick={() => setPersona(p)}
-                      style={{ border: 0, borderRadius: 10, padding: "10px 6px", cursor: "pointer", background: on ? "var(--pine)" : "transparent", color: on ? "var(--on-pine)" : "var(--text)", fontWeight: on ? 700 : 500, fontSize: 14, boxShadow: on ? "var(--shadow-sm)" : "none" }}>
-                      <div style={{ fontSize: 20 }}>{e}</div>{p}
-                    </button>
-                  );
-                })}
+            <Specimen label=".segmented (Landing persona picker) · selected = glacier-ink">
+              <div role="radiogroup" aria-label="Persona" className="segmented" style={{ width: "min(100%, 420px)" }}>
+                {["Visitor", "Student", "Researcher"].map((p) => (
+                  <button key={p} type="button" role="radio" aria-checked={persona === p} onClick={() => setPersona(p)}>{p}</button>
+                ))}
               </div>
             </Specimen>
             <Specimen label=".tabs / .tab (dataset tabs)">
@@ -603,29 +588,39 @@ export default function Sandbox() {
           </Section>
 
           {/* ── Badges ── */}
-          <Section id="badges" kicker="Components" title="Tags, pills and badges" intro="The horizon tags and trend pills use tokens. The verdict and difficulty badges are inline styles with hard-coded colours.">
-            <Specimen label=".tag · measured / forecast / projected / illustration">
+          <Section id="badges" kicker="Components" title="Tags, pills and badges" intro="Tags are rubber ink stamps: outline capitals in a double-ruled frame, tilted, with worn ink. Badges are postage labels: a flat tinted fill, upright, sentence case, with a dashed perforation just inside the edge.">
+            <Specimen label=".tag (ink stamp) · measured / forecast / projected / illustration">
               <span className="tag tag-measured">Measured</span>
               <span className="tag tag-forecast">Forecast</span>
               <span className="tag tag-projected">Projected</span>
               <span className="tag tag-illustration">Illustration</span>
             </Specimen>
-            <Specimen label=".trend-pill.real · .trend-pill.possible">
+            <Specimen label=".badge (postage label) · success / caution / danger / info / rising / neutral">
+              <span className="badge badge-success">Real, not luck</span>
+              <span className="badge badge-caution">Possible, not proven</span>
+              <span className="badge badge-danger">Hard</span>
+              <span className="badge badge-info">New data</span>
+              <span className="badge badge-rising">Warming</span>
+              <span className="badge badge-neutral">No clear change</span>
+            </Specimen>
+            <Specimen label="Verdict badge (ExplainerCard) · difficulty badge (StudentDetective)">
+              <span className="badge badge-success">Real, not luck</span>
+              <span className="badge badge-caution">Possible, not proven</span>
+              <span className="badge badge-neutral">Too little data</span>
+              <span className="muted">|</span>
+              <span className="badge badge-success">Easy</span>
+              <span className="badge badge-caution">Medium</span>
+              <span className="badge badge-danger">Hard</span>
+            </Specimen>
+            <Specimen label=".badge + .badge-action (park card trend)">
+              <span className="badge badge-success">Warming +0.48°F/decade · Real, not luck <button className="badge-action">See trend →</button></span>
+            </Specimen>
+            <Specimen label=".trend-pill.real · .trend-pill.possible (compact badge)">
               <span className="trend-pill real">Warming +0.48°F/decade</span>
               <span className="trend-pill possible">Possible trend</span>
             </Specimen>
-            <Specimen label="Verdict badge (ExplainerCard, inline)">
-              <VerdictBadge bg="#d4edda" color="#155724">Real, not luck</VerdictBadge>
-              <VerdictBadge bg="#fff3cd" color="#856404">Possible, not proven</VerdictBadge>
-              <VerdictBadge bg="var(--surface-2)" color="var(--text-muted)">No clear change</VerdictBadge>
-            </Specimen>
-            <Specimen label="Difficulty badge (StudentDetective, inline)">
-              <VerdictBadge bg="#d4edda" color="#155724">Easy</VerdictBadge>
-              <VerdictBadge bg="#fff3cd" color="#856404">Medium</VerdictBadge>
-              <VerdictBadge bg="#f8d7da" color="#721c24">Hard</VerdictBadge>
-            </Specimen>
-            <Specimen label="Verdict dots: Detective (hex) vs research VERDICT_COLOR (tokens + #b7791f)">
-              {[["real", "#2a7d4f"], ["possible", "#b8860b"], ["none", "#aaa"], ["short", "#ccc"]].map(([k, c]) => (
+            <Specimen label="Verdict dots: Detective · research VERDICT_COLOR">
+              {[["real", "var(--success)"], ["possible", "var(--caution)"], ["none", "var(--text-faint)"], ["short", "var(--border-strong)"]].map(([k, c]) => (
                 <span key={k} className="small row"><Dot color={c} />{k}</span>
               ))}
               <span className="muted">|</span>
@@ -649,7 +644,7 @@ export default function Sandbox() {
               </div>
             </Specimen>
             <Specimen label=".meter (score + range band)">
-              <div style={{ width: "min(100%, 360px)", display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ width: "min(100%, 360px)", display: "flex", flexDirection: "column", gap: "var(--space-0-5)" }}>
                 {[[82, 76, 88], [74, 61, 85], [69, 50, 83]].map(([v, lo, hi]) => (
                   <div key={v} className="meter">
                     <div className="meter-track">
@@ -720,15 +715,15 @@ export default function Sandbox() {
                 <strong>How the score works.</strong> Each park gets 0–100 for how well its November weather matches your preferences.
               </p>
             </Specimen>
-            <Specimen label="Persona info panel (Landing, inline)">
-              <div style={{ background: "var(--pine-tint)", borderRadius: 12, padding: "14px 16px", width: "100%" }}>
-                <div style={{ fontWeight: 700, color: "var(--pine)" }}>Plan a trip that fits the weather you like</div>
-                <p className="small muted" style={{ margin: "4px 0 0" }}>Scores every park for your month and shows how sure each number is.</p>
+            <Specimen label=".callout (Landing persona info)">
+              <div className="callout" style={{ width: "100%" }}>
+                <div className="callout-title">Plan a trip that fits the weather you like</div>
+                <p className="small muted" style={{ margin: "var(--space-0-25) 0 0" }}>Scores every park for your month and shows how sure each number is.</p>
               </div>
             </Specimen>
-            <Specimen label="Answer feedback (StudentDetective, inline)">
-              <div style={{ background: "#d4edda", border: "1px solid #2a7d4f", borderRadius: 10, padding: "10px 14px" }} className="small">✓ Correct: the trend is real.</div>
-              <div style={{ background: "#fff3cd", border: "1px solid #b8860b", borderRadius: 10, padding: "10px 14px" }} className="small">Not quite: look at the p-value.</div>
+            <Specimen label="Answer feedback (StudentDetective, inline, status tokens)">
+              <div style={{ background: "var(--success-tint)", border: "1px solid var(--success)", borderRadius: "var(--radius)", padding: "var(--space-0-5) var(--space-1)" }} className="small">✓ Correct: the trend is real.</div>
+              <div style={{ background: "var(--caution-tint)", border: "1px solid var(--caution)", borderRadius: "var(--radius)", padding: "var(--space-0-5) var(--space-1)" }} className="small">Not quite: look at the p-value.</div>
             </Specimen>
             <Specimen label=".error · .muted · .empty">
               <span className="error small">Couldn't reach NASA POWER. Try again.</span>
@@ -737,7 +732,7 @@ export default function Sandbox() {
           </Section>
 
           {/* ── Cards ── */}
-          <Section id="cards" kicker="Components" title="Cards" intro=".card is the base surface: 16px radius, 1px border, --shadow-sm.">
+          <Section id="cards" kicker="Components" title="Cards" intro=".card is pure white stock on the sand page: 2px radius, no outline, --shadow-sm.">
             <div className="ds-grid">
               <div className="card">
                 <div className="card-head"><h3 className="headline">.card + .card-head</h3><button className="link-btn">Action</button></div>
@@ -745,7 +740,7 @@ export default function Sandbox() {
               </div>
               <div className="card" style={{ boxShadow: "var(--shadow-md)" }}>
                 <h3 className="headline">.card + --shadow-md</h3>
-                <p className="small muted" style={{ margin: "4px 0 0" }}>The raised variant the Landing form uses.</p>
+                <p className="small muted" style={{ margin: "var(--space-0-25) 0 0" }}>The raised variant the Landing form uses.</p>
               </div>
             </div>
             <Specimen label=".card.park-card (planner)">
@@ -757,10 +752,10 @@ export default function Sandbox() {
                   </div>
                   <button className="link-btn small">Remove</button>
                 </header>
-                <div style={{ display: "inline-flex", gap: 8, background: "#d4edda", color: "#155724", borderRadius: 8, padding: "5px 12px", fontSize: 12, fontWeight: 600, margin: "10px 0 0" }}>
-                  📈 Warming +0.48°F/decade · Real, not luck
+                <div className="badge badge-success" style={{ marginTop: "var(--space-0-5)" }}>
+                  Warming +0.48°F/decade · Real, not luck
                 </div>
-                <p className="micro muted" style={{ margin: "10px 0 0" }}>Match score 0–100 for November.</p>
+                <p className="micro muted" style={{ margin: "var(--space-0-5) 0 0" }}>Match score 0–100 for November.</p>
                 <div className="park-card-scores">
                   {[["Nov 2026", "Measured", "tag-measured", 82], ["Nov 2027", "Forecast", "tag-forecast", 74], ["Nov 2050", "Projected", "tag-projected", 69]].map(([t, tag, cls, v]) => (
                     <div key={t} className="park-card-score">

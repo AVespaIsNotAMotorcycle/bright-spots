@@ -27,14 +27,14 @@ export default function Landing({
           onSubmit({ name: name.trim(), persona });
         }}
         className="card"
-        style={{ width: "100%", maxWidth: 560, display: "flex", flexDirection: "column", gap: 22, padding: "32px 28px", boxShadow: "var(--shadow-md)" }}
+        style={{ width: "100%", maxWidth: 560, display: "flex", flexDirection: "column", gap: "var(--space-2)", padding: "var(--space-2)", boxShadow: "var(--shadow-md)" }}
       >
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 40 }}>⛰</div>
-          <h1 style={{ fontFamily: "var(--font-display)", fontSize: 30, color: "var(--pine)", margin: "4px 0 0", lineHeight: 1.1 }}>
+          <h1 className="title" style={{ fontSize: 32, margin: "var(--space-0-25) 0 0" }}>
             Park Trend Detective
           </h1>
-          <p className="small muted" style={{ margin: "8px 0 0" }}>
+          <p className="small muted" style={{ margin: "var(--space-0-5) 0 0" }}>
             {initial ? "Edit your profile" : "Create your profile"} · 64 US national parks · 45 years of NASA data
           </p>
         </div>
@@ -51,47 +51,31 @@ export default function Landing({
         </label>
 
         <div>
-          <div className="section-title" style={{ marginBottom: 8 }}>I am a…</div>
-          <div role="radiogroup" aria-label="Persona" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, background: "var(--surface-2)", padding: 5, borderRadius: 14 }}>
-            {ORDER.map((p) => {
-              const on = persona === p;
-              return (
-                <button
-                  key={p}
-                  type="button"
-                  role="radio"
-                  aria-checked={on}
-                  onClick={() => setPersona(p)}
-                  style={{
-                    border: 0,
-                    borderRadius: 10,
-                    padding: "10px 6px",
-                    cursor: "pointer",
-                    background: on ? "var(--pine)" : "transparent",
-                    color: on ? "var(--on-pine)" : "var(--text)",
-                    fontWeight: on ? 700 : 500,
-                    fontSize: 14,
-                    boxShadow: on ? "var(--shadow-sm)" : "none",
-                    transition: "background 0.15s",
-                  }}
-                >
-                  <div style={{ fontSize: 20 }}>{PERSONAS[p].emoji}</div>
-                  {PERSONAS[p].label}
-                </button>
-              );
-            })}
+          <div className="section-title" style={{ marginBottom: "var(--space-0-5)" }}>I am a…</div>
+          <div role="radiogroup" aria-label="Persona" className="segmented">
+            {ORDER.map((p) => (
+              <button
+                key={p}
+                type="button"
+                role="radio"
+                aria-checked={persona === p}
+                onClick={() => setPersona(p)}
+              >
+                {PERSONAS[p].label}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div style={{ background: "var(--pine-tint)", borderRadius: 12, padding: "14px 16px" }} aria-live="polite">
-          <div style={{ fontWeight: 700, color: "var(--pine)" }}>{info.tagline}</div>
-          <p className="small muted" style={{ margin: "4px 0 8px" }}>{info.blurb}</p>
-          <ul className="small" style={{ margin: 0, paddingLeft: 18, lineHeight: 1.7 }}>
+        <div className="callout" aria-live="polite">
+          <div className="callout-title">{info.tagline}</div>
+          <p className="small muted" style={{ margin: "var(--space-0-25) 0 var(--space-0-5)" }}>{info.blurb}</p>
+          <ul className="small" style={{ margin: 0, paddingLeft: "var(--space-1)", lineHeight: 1.7 }}>
             {info.bullets.map((b) => <li key={b}>{b}</li>)}
           </ul>
         </div>
 
-        <div style={{ display: "flex", gap: 10 }}>
+        <div style={{ display: "flex", gap: "var(--space-0-5)" }}>
           <button type="submit" className="btn" style={{ flex: 1 }}>
             {initial ? "Save and go home" : "Create profile"} →
           </button>

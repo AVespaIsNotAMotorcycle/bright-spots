@@ -106,7 +106,7 @@ export default function ParkMap({ parks, colorOf, tip, onPick, selected = [], ra
     <div>
       <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: "auto", display: "block" }} role="img"
         aria-label="Map of US national parks">
-        <rect x={0} y={0} width={W} height={H} fill="var(--sky-tint)" rx={10} />
+        <rect x={0} y={0} width={W} height={H} fill="var(--glacier-tint)" rx={2} />
         {outlines.map((o) => (
           <path key={o.name} d={o.d} fill="var(--surface)" stroke="var(--border)" strokeWidth={0.8} />
         ))}

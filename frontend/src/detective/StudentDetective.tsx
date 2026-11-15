@@ -11,23 +11,19 @@ import { CASES } from "./cases";
 
 function DifficultyBadge({ d }: { d: Case["difficulty"] }) {
   const map = {
-    easy: { label: "Easy", bg: "#d4edda", color: "#155724" },
-    medium: { label: "Medium", bg: "#fff3cd", color: "#856404" },
-    hard: { label: "Hard", bg: "#f8d7da", color: "#721c24" },
+    easy: { label: "Easy", variant: "success" },
+    medium: { label: "Medium", variant: "caution" },
+    hard: { label: "Hard", variant: "danger" },
   };
   const s = map[d];
-  return (
-    <span style={{ fontSize: 11, fontWeight: 600, background: s.bg, color: s.color, borderRadius: 20, padding: "2px 10px" }}>
-      {s.label}
-    </span>
-  );
+  return <span className={`badge badge-${s.variant}`}>{s.label}</span>;
 }
 
 export function CaseList({ onSelect }: { onSelect: (c: Case) => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div>
-        <h2 style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 700, fontFamily: "var(--font-display, 'Playfair Display', Georgia, serif)", color: "var(--pine)" }}>Detective Cases</h2>
+        <h2 style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 700, fontFamily: "var(--font-display)", color: "var(--pine)" }}>Detective Cases</h2>
         <p style={{ margin: 0, fontSize: 14, color: "var(--text-muted)" }}>
           Each case walks you through real NASA data: predict first, then see what the numbers say.
         </p>
@@ -40,7 +36,7 @@ export function CaseList({ onSelect }: { onSelect: (c: Case) => void }) {
             style={{
               background: "var(--surface)",
               border: "1px solid var(--border)",
-              borderRadius: 14,
+              borderRadius: "var(--radius)",
               padding: "20px 18px",
               cursor: "pointer",
               textAlign: "left",
@@ -50,8 +46,8 @@ export function CaseList({ onSelect }: { onSelect: (c: Case) => void }) {
               transition: "border-color 0.15s, box-shadow 0.15s",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "var(--accent)";
-              e.currentTarget.style.boxShadow = "0 0 0 3px var(--accent-tint)";
+              e.currentTarget.style.borderColor = "var(--selected)";
+              e.currentTarget.style.boxShadow = "0 0 0 3px var(--selected-tint)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.borderColor = "var(--border)";
@@ -119,14 +115,14 @@ function PredictStep({
           let bg = "var(--surface)";
           let border = "var(--border)";
           if (isRevealed && isSelected) {
-            bg = ch.correct ? "#d4edda" : "#f8d7da";
-            border = ch.correct ? "#2a7d4f" : "#c0392b";
+            bg = ch.correct ? "var(--success-tint)" : "var(--danger-tint)";
+            border = ch.correct ? "var(--success)" : "var(--danger)";
           } else if (isRevealed && ch.correct) {
-            bg = "#d4edda";
-            border = "#2a7d4f";
+            bg = "var(--success-tint)";
+            border = "var(--success)";
           } else if (isSelected) {
-            border = "var(--accent)";
-            bg = "var(--accent-tint)";
+            border = "var(--selected)";
+            bg = "var(--selected-tint)";
           }
           return (
             <button
@@ -136,7 +132,7 @@ function PredictStep({
               style={{
                 background: bg,
                 border: `2px solid ${border}`,
-                borderRadius: 10,
+                borderRadius: "var(--radius)",
                 padding: "12px 16px",
                 cursor: revealed ? "default" : "pointer",
                 textAlign: "left",
@@ -158,7 +154,7 @@ function PredictStep({
             background: "var(--accent)",
             color: "var(--on-accent)",
             border: "none",
-            borderRadius: 8,
+            borderRadius: "var(--radius)",
             padding: "10px 20px",
             cursor: "pointer",
             fontWeight: 600,
@@ -173,9 +169,9 @@ function PredictStep({
       {revealed && picked != null && (
         <div
           style={{
-            background: correct ? "#d4edda" : "#fff3cd",
-            border: `1px solid ${correct ? "#2a7d4f" : "#b8860b"}`,
-            borderRadius: 10,
+            background: correct ? "var(--success-tint)" : "var(--caution-tint)",
+            border: `1px solid ${correct ? "var(--success)" : "var(--caution)"}`,
+            borderRadius: "var(--radius)",
             padding: "14px 16px",
             fontSize: 14,
             lineHeight: 1.6,
@@ -193,7 +189,7 @@ function PredictStep({
             background: "var(--accent)",
             color: "var(--on-accent)",
             border: "none",
-            borderRadius: 8,
+            borderRadius: "var(--radius)",
             padding: "10px 20px",
             cursor: "pointer",
             fontWeight: 600,
@@ -253,7 +249,7 @@ function DataStep({
           style={{
             background: "var(--surface)",
             border: "1px solid var(--border)",
-            borderRadius: 12,
+            borderRadius: "var(--radius)",
             padding: 20,
           }}
         >
@@ -285,7 +281,7 @@ function DataStep({
               background: "var(--accent)",
               color: "var(--on-accent)",
               border: "none",
-              borderRadius: 8,
+              borderRadius: "var(--radius)",
               padding: "10px 20px",
               cursor: "pointer",
               fontWeight: 600,
@@ -302,7 +298,7 @@ function DataStep({
               background: "var(--accent)",
               color: "var(--on-accent)",
               border: "none",
-              borderRadius: 8,
+              borderRadius: "var(--radius)",
               padding: "10px 20px",
               cursor: "pointer",
               fontWeight: 600,
@@ -318,7 +314,7 @@ function DataStep({
             style={{
               background: "none",
               border: "1px solid var(--border)",
-              borderRadius: 8,
+              borderRadius: "var(--radius)",
               padding: "10px 20px",
               cursor: "pointer",
               fontSize: 14,
@@ -343,7 +339,7 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
           style={{
             height: 4,
             flex: 1,
-            borderRadius: 2,
+            borderRadius: "var(--radius)",
             background: i <= current ? "var(--accent)" : "var(--border)",
             transition: "background 0.2s",
           }}
@@ -431,7 +427,7 @@ export default function StudentDetective({
           style={{
             background: "none",
             border: "1px solid var(--border)",
-            borderRadius: 8,
+            borderRadius: "var(--radius)",
             padding: "6px 14px",
             cursor: "pointer",
             fontSize: 13,
@@ -453,7 +449,7 @@ export default function StudentDetective({
         style={{
           background: "var(--surface)",
           border: "1px solid var(--border)",
-          borderRadius: 14,
+          borderRadius: "var(--radius)",
           padding: "24px 20px",
           display: "flex",
           flexDirection: "column",
@@ -491,7 +487,7 @@ export default function StudentDetective({
                 background: "var(--accent)",
                 color: "var(--on-accent)",
                 border: "none",
-                borderRadius: 8,
+                borderRadius: "var(--radius)",
                 padding: "10px 20px",
                 cursor: "pointer",
                 fontWeight: 600,

@@ -12,29 +12,15 @@ interface Props {
 }
 
 function verdictBadge(verdict: string) {
-  const styles: Record<string, { bg: string; color: string; label: string }> = {
-    real:     { bg: "#d4edda", color: "#155724", label: "Real, not luck" },
-    possible: { bg: "#fff3cd", color: "#856404", label: "Possible, not proven" },
-    none:     { bg: "var(--surface-2)", color: "var(--text-muted)", label: "No clear change" },
-    short:    { bg: "var(--surface-2)", color: "var(--text-muted)", label: "Too little data" },
-    flat:     { bg: "var(--surface-2)", color: "var(--text-muted)", label: "No variation" },
+  const styles: Record<string, { variant: string; label: string }> = {
+    real:     { variant: "success", label: "Real, not luck" },
+    possible: { variant: "caution", label: "Possible, not proven" },
+    none:     { variant: "neutral", label: "No clear change" },
+    short:    { variant: "neutral", label: "Too little data" },
+    flat:     { variant: "neutral", label: "No variation" },
   };
   const s = styles[verdict] ?? styles.none;
-  return (
-    <span
-      style={{
-        display: "inline-block",
-        padding: "2px 10px",
-        borderRadius: 20,
-        fontSize: 12,
-        fontWeight: 600,
-        background: s.bg,
-        color: s.color,
-      }}
-    >
-      {s.label}
-    </span>
-  );
+  return <span className={`badge badge-${s.variant}`}>{s.label}</span>;
 }
 
 export default function ExplainerCard({
@@ -87,7 +73,7 @@ export default function ExplainerCard({
       style={{
         background: "var(--surface)",
         border: "1px solid var(--border)",
-        borderRadius: 12,
+        borderRadius: "var(--radius)",
         padding: "16px 18px",
         display: "flex",
         flexDirection: "column",

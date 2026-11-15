@@ -125,7 +125,7 @@ export default function Robust({
                   label={{ value: "Start year", position: "insideBottom", offset: -10, fontSize: 11, fill: "var(--text-muted)" }} />
                 <YAxis tick={{ fill: "var(--text-muted)", fontSize: 11 }} tickLine={false} width={44} />
                 <Tooltip formatter={(val) => [`${Number(val).toFixed(2)} per decade`, "Slope"]}
-                  contentStyle={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
+                  contentStyle={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius)", fontSize: 12 }} />
                 <ReferenceLine y={0} stroke="var(--chart-neutral)" />
                 <Line type="monotone" dataKey="slope" stroke="var(--accent)" strokeWidth={2}
                   dot={(p: { cx?: number; cy?: number; payload?: { sig: boolean }; index?: number }) => (
@@ -174,7 +174,7 @@ export default function Robust({
               </button>
             </div>
           </div>
-          <pre style={{ background: "var(--surface-2)", padding: 12, borderRadius: 8, overflowX: "auto", fontSize: 12, maxHeight: 260 }}>
+          <pre style={{ background: "var(--surface-2)", padding: 12, borderRadius: "var(--radius)", overflowX: "auto", fontSize: 12, maxHeight: 260 }}>
             {snippet(lang, data, v, per)}
           </pre>
         </div>
@@ -193,7 +193,7 @@ export default function Robust({
           <h4 style={{ margin: "8px 0" }}>Citations (BibTeX)</h4>
           <button className="btn-ghost" onClick={() => copy("bib", BIB)}>{copied === "bib" ? "Copied" : "Copy BibTeX"}</button>
         </div>
-        <pre style={{ background: "var(--surface-2)", padding: 12, borderRadius: 8, overflowX: "auto", fontSize: 11, maxHeight: 200 }}>{BIB}</pre>
+        <pre style={{ background: "var(--surface-2)", padding: 12, borderRadius: "var(--radius)", overflowX: "auto", fontSize: 11, maxHeight: 200 }}>{BIB}</pre>
       </div>
     </div>
   );

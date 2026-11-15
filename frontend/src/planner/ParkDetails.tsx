@@ -279,11 +279,7 @@ export function ParkCard({
   onViewTrend?: (parkCode: string) => void;
 }) {
   const badge = useParkTrendBadge(p.park.code);
-  const badgeColor = badge?.verdict === "real"
-    ? { bg: "#d4edda", text: "#155724" }
-    : badge?.verdict === "possible"
-      ? { bg: "#fff3cd", text: "#856404" }
-      : null;
+  const badgeVariant = badge?.verdict === "real" ? "success" : badge?.verdict === "possible" ? "caution" : null;
   return (
     <article className="card park-card" aria-labelledby={`card-${p.park.id}`}>
       <header className="park-card-head">
@@ -301,39 +297,14 @@ export function ParkCard({
           Remove
         </button>
       </header>
-      {badge && badgeColor && (
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            background: badgeColor.bg,
-            color: badgeColor.text,
-            borderRadius: 8,
-            padding: "5px 12px",
-            fontSize: 12,
-            fontWeight: 600,
-            marginBottom: 12,
-          }}
-        >
+      {badge && badgeVariant && (
+        <div className={`badge badge-${badgeVariant}`} style={{ marginBottom: "var(--space-1)" }}>
           <span>
-            📈 Warming {badge.slope_f > 0 ? "+" : ""}{badge.slope_f.toFixed(2)}°F/decade
+            Warming {badge.slope_f > 0 ? "+" : ""}{badge.slope_f.toFixed(2)}°F/decade
             · {badge.verdict === "real" ? "Real, not luck" : "Possible trend"}
           </span>
           {onViewTrend && p.park.code && (
-            <button
-              onClick={() => onViewTrend(p.park.code!)}
-              style={{
-                background: "none",
-                border: `1px solid ${badgeColor.text}`,
-                borderRadius: 6,
-                padding: "2px 8px",
-                cursor: "pointer",
-                fontSize: 11,
-                color: badgeColor.text,
-                fontWeight: 600,
-              }}
-            >
+            <button className="badge-action" onClick={() => onViewTrend(p.park.code!)}>
               See trend →
             </button>
           )}

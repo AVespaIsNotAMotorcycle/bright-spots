@@ -110,7 +110,7 @@ export default function Compare({
           </label>
         </div>
         {opposite && (
-          <p className="small" style={{ color: "var(--rust)", fontWeight: 600 }}>
+          <p className="small" style={{ color: "var(--sunset-ink)", fontWeight: 600 }}>
             These parks trend in opposite directions here. Look at the driver variables next.
           </p>
         )}
@@ -120,10 +120,10 @@ export default function Compare({
             <CartesianGrid stroke="var(--grid)" strokeDasharray="3 3" />
             <XAxis dataKey="year" tick={{ fill: "var(--text-muted)", fontSize: 11 }} tickLine={false} />
             <YAxis tick={{ fill: "var(--text-muted)", fontSize: 11 }} tickLine={false} width={44} />
-            <Tooltip contentStyle={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
+            <Tooltip contentStyle={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius)", fontSize: 12 }} />
             <Legend />
             <Line type="monotone" dataKey="a" name={nameA} stroke="var(--pine)" strokeWidth={2} dot={{ r: 2 }} connectNulls />
-            <Line type="monotone" dataKey="b" name={nameB} stroke="var(--rust)" strokeWidth={2} dot={{ r: 2 }} connectNulls />
+            <Line type="monotone" dataKey="b" name={nameB} stroke="var(--sunset)" strokeWidth={2} dot={{ r: 2 }} connectNulls />
           </LineChart>
         </ResponsiveContainer>
         <p className="micro muted">Values in {unit}{anomaly ? ", minus each park's own long-run average" : ""}.</p>

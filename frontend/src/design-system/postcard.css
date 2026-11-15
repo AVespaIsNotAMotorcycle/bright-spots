@@ -9,8 +9,8 @@
   --pc-paper:   #ffffff;             /* card stock */
   --pc-ink:     var(--text);
   --pc-rule:    var(--border);       /* centre divider and table hairlines */
-  --pc-radius:  0;                   /* paper has sharp corners */
-  --pc-edge:    22px;                /* white border around the card */
+  --pc-radius:  0;                   /* paper has sharp corners: no radius needed */
+  --pc-edge:    var(--space-2);      /* white border around the card (1rem when stacked) */
   --pc-shadow:  var(--shadow-md);
 }
 
@@ -34,56 +34,57 @@
 .pc-photo svg, .pc-photo img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
 
 .pc-info {
-  display: flex; flex-direction: column; gap: 10px; min-width: 0;
+  display: flex; flex-direction: column; gap: var(--space-0-5); min-width: 0;
   padding-left: var(--pc-edge);
   border-left: 1px solid var(--pc-rule);   /* the postcard's centre rule */
 }
 
 /* Header: name, meta line, remove × */
-.pc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-.pc-head .park-card-title { font-size: 20px; }
-.pc-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: 4px 0 0; }
-.pc-meta > span { display: inline-flex; align-items: center; gap: 4px; }
-.pc-pin { color: var(--rust); flex: none; }
+.pc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-0-5); }
+.pc-head .park-card-title { font-size: 22px; }
+.pc-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-0-25) var(--space-1); margin: var(--space-0-25) 0 0; }
+.pc-meta > span { display: inline-flex; align-items: center; gap: var(--space-0-25); }
+.pc-pin { color: var(--sunset); flex: none; }
 .pc-remove {
-  flex: none; width: 24px; height: 24px; margin: -4px -4px 0 0;
+  flex: none; width: 24px; height: 24px; margin: calc(-1 * var(--space-0-25)) calc(-1 * var(--space-0-25)) 0 0;
   display: grid; place-items: center;
-  border: 0; border-radius: 50%; background: none; cursor: pointer;
+  border: 0; border-radius: var(--radius); background: none; cursor: pointer;
   font-size: 18px; line-height: 1; color: var(--text-faint);
 }
 .pc-remove:hover, .pc-remove:focus-visible { background: var(--surface-2); color: var(--text); }
 
-.pc-trend { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pc-trend { display: flex; align-items: center; gap: var(--space-0-5); flex-wrap: wrap; }
 
 /* Table: years are the columns. Undo the app's global th/td rules (sticky cream header, borders). */
 .pc-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; }
 .pc-table th, .pc-table td {
   position: static; background: none; border-bottom: 0; color: inherit; font-weight: 400;
-  padding: 7px 0 7px 16px; text-align: right; vertical-align: middle;
+  padding: var(--space-0-5) 0 var(--space-0-5) var(--space-1); text-align: right; vertical-align: middle;
 }
 .pc-table th:first-child, .pc-table td:first-child { padding-left: 0; }
 .pc-table col.pc-label-col { width: 28%; }
 .pc-table thead th { vertical-align: bottom; padding-top: 0; }
+.pc-table thead .tag { margin-top: var(--space-0-25); }
 .pc-table tbody th { text-align: left; color: var(--text-muted); }
 .pc-table tbody tr { border-top: 1px solid var(--pc-rule); }
 
-.pc-year { display: block; margin-bottom: 3px; font-weight: 600; font-size: 12px; }
+.pc-year { display: block; margin-bottom: var(--space-0-25); font-weight: 600; font-size: 12px; }
 .pc-score-row .big-score { display: block; font-size: 24px; line-height: 1.1; }
-.pc-score-row .meter-track { flex: none; width: 100%; margin-top: 6px; }
+.pc-score-row .meter-track { flex: none; width: 100%; margin-top: var(--space-0-5); }
 
 /* Factor score: a short bar under the value, width = score. */
-.pc-bar { display: block; width: 48px; height: 3px; margin: 5px 0 0 auto; border-radius: 2px; background: var(--grid); }
-.pc-bar > span { display: block; height: 100%; margin-left: auto; border-radius: inherit; background: var(--pine-light); }
+.pc-bar { display: block; width: 48px; height: 3px; margin: var(--space-0-25) 0 0 auto; border-radius: var(--radius); background: var(--grid); }
+.pc-bar > span { display: block; height: 100%; margin-left: auto; border-radius: inherit; background: var(--pine); }
 
-.pc-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: auto 0 0; }
-.pc-key { display: inline-flex; align-items: center; gap: 6px; }
+.pc-foot { display: flex; justify-content: space-between; align-items: center; gap: var(--space-1); margin: auto 0 0; }
+.pc-key { display: inline-flex; align-items: center; gap: var(--space-0-5); }
 .pc-key .pc-bar { width: 24px; margin: 0; }
 
 /* Narrow slot: stack photo over info, drop the fixed shape and turn the rule horizontal. */
 @container (max-width: 600px) {
-  .postcard { aspect-ratio: auto; grid-template-columns: 1fr; }
+  .postcard { --pc-edge: var(--space-1); aspect-ratio: auto; grid-template-columns: 1fr; }
   .pc-photo { aspect-ratio: 3 / 2; }
   .pc-info { padding: var(--pc-edge) 0 0; border-left: 0; border-top: 1px solid var(--pc-rule); }
-  .pc-table th, .pc-table td { padding-left: 8px; }
-  .pc-table thead .tag { letter-spacing: 0.02em; padding-inline: 5px; }
+  .pc-table th, .pc-table td { padding-left: var(--space-0-5); }
+  .pc-table thead .tag { letter-spacing: 0.04em; padding-inline: var(--space-0-25); }
 }

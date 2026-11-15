@@ -106,7 +106,7 @@ export default function MapView({
           radius={(id) => (cells.get(id)?.verdict === "real" ? 8 : 5.5)}
         />
         <p className="small" style={{ marginTop: 8 }}>
-          <b style={{ color: "var(--rust)" }}>{counts.up}</b> rising · <b style={{ color: "var(--sky)" }}>{counts.down}</b> falling ·{" "}
+          <b style={{ color: "var(--rising)" }}>{counts.up}</b> rising · <b style={{ color: "var(--falling)" }}>{counts.down}</b> falling ·{" "}
           <b>{counts.none}</b> no clear change (real = passes the false-discovery-rate test, q &lt; 0.05).
         </p>
       </div>

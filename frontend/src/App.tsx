@@ -84,7 +84,7 @@ export default function App() {
             style={{
               marginLeft: 8,
               padding: "7px 12px",
-              borderRadius: 20,
+              borderRadius: "var(--radius)",
               border: "1px solid var(--border)",
               background: "none",
               color: "var(--text-muted)",

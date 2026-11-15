@@ -182,7 +182,7 @@ export function robustness(scan: StartScan[], fullSlope: number) {
 
 export const VERDICT_COLOR: Record<string, string> = {
   real: "var(--pine)",
-  possible: "#b7791f",
+  possible: "var(--caution-ink)",
   none: "var(--text-faint)",
   short: "var(--text-faint)",
   flat: "var(--text-faint)",
@@ -210,4 +210,6 @@ export function findRow(d: ParkTrends | null, v: string, p: string): TrendRow | 
 }
 
 /** Park colours for the family map. */
-export const FAMILY_COLORS = ["#2d5a27", "#8b3a1a", "#1a3a5c", "#b7791f", "#7a4e8a", "#4a8a8a"];
+// Hex, not var(): drawn into SVG fills and borders, and listed as plain values in the design sandbox.
+// Pine, sunset, glacier, caution, plum, slate.
+export const FAMILY_COLORS = ["#1f8a4c", "#ff6b35", "#0e9bb8", "#d69a1f", "#7a4e8a", "#5e646b"];

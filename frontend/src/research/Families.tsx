@@ -51,7 +51,7 @@ export default function Families({
               <span className="tag">{f.size} park{f.size === 1 ? "" : "s"}</span>
             </div>
             <p style={{ margin: "6px 0" }}><b>{f.name}</b></p>
-            <p className="small" style={{ color: f.stable ? "var(--pine)" : "#b7791f", margin: "0 0 8px" }}>
+            <p className="small" style={{ color: f.stable ? "var(--pine)" : "var(--caution-ink)", margin: "0 0 8px" }}>
               {f.stable ? "Stable" : "Not stable"}: parks stayed together in {Math.round(f.stability * 100)}% of{" "}
               {fam.bootstraps} re-runs (stable at {Math.round(fam.stable_at * 100)}%).
               {f.size <= 3 ? " Very small families are usually outliers." : ""}
@@ -66,16 +66,16 @@ export default function Families({
                       <span style={{ width: 150, flex: "none" }}>
                         {varLabel(atlas, s.variable)} · {PERIOD_LABEL[s.period] ?? s.period}
                       </span>
-                      <span style={{ position: "relative", flex: 1, height: 10, background: "var(--surface-2)", borderRadius: 4 }}>
+                      <span style={{ position: "relative", flex: 1, height: 10, background: "var(--surface-2)", borderRadius: "var(--radius)" }}>
                         <span
                           style={{
                             position: "absolute",
                             top: 0,
                             height: 10,
-                            borderRadius: 4,
+                            borderRadius: "var(--radius)",
                             width: `${w}%`,
                             left: s.z >= 0 ? "50%" : `${50 - w}%`,
-                            background: s.z >= 0 ? "var(--rust)" : "var(--sky)",
+                            background: s.z >= 0 ? "var(--sunset)" : "var(--glacier)",
                           }}
                         />
                       </span>

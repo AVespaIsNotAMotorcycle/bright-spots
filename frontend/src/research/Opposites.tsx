@@ -63,7 +63,7 @@ export default function Opposites({
                 style={{
                   display: "block", width: "100%", textAlign: "left", padding: "8px 6px",
                   border: 0, borderBottom: "1px solid var(--border)", cursor: "pointer",
-                  background: i === sel ? "var(--accent-tint)" : "none", color: "var(--text)",
+                  background: i === sel ? "var(--selected-tint)" : "none", color: "var(--text)",
                 }}
               >
                 <b>{varLabel(atlas, x.variable)}</b> · {PERIOD_LABEL[x.period] ?? x.period}
@@ -82,7 +82,7 @@ export default function Opposites({
               </h3>
               <div className="row gap-16" style={{ flexWrap: "wrap", alignItems: "flex-start" }}>
                 <div style={{ flex: 1, minWidth: 200 }}>
-                  <p className="small" style={{ color: "var(--rust)", fontWeight: 700, margin: "0 0 4px" }}>Rising ({g.up.length})</p>
+                  <p className="small" style={{ color: "var(--rising)", fontWeight: 700, margin: "0 0 4px" }}>Rising ({g.up.length})</p>
                   {g.up.slice(0, 8).map((u) => (
                     <div key={u.park} className="small">{name(u.park)}: {slopeText(u.sen, g.variable, atlas)}{" "}
                       <span style={{ color: VERDICT_COLOR[u.verdict] }}>({VERDICT_LABEL[u.verdict]})</span></div>
@@ -90,7 +90,7 @@ export default function Opposites({
                   {g.up.length > 8 && <div className="small muted">and {g.up.length - 8} more</div>}
                 </div>
                 <div style={{ flex: 1, minWidth: 200 }}>
-                  <p className="small" style={{ color: "var(--sky)", fontWeight: 700, margin: "0 0 4px" }}>Falling ({g.down.length})</p>
+                  <p className="small" style={{ color: "var(--falling)", fontWeight: 700, margin: "0 0 4px" }}>Falling ({g.down.length})</p>
                   {g.down.slice(0, 8).map((u) => (
                     <div key={u.park} className="small">{name(u.park)}: {slopeText(u.sen, g.variable, atlas)}{" "}
                       <span style={{ color: VERDICT_COLOR[u.verdict] }}>({VERDICT_LABEL[u.verdict]})</span></div>

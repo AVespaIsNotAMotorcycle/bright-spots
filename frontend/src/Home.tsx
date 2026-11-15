@@ -60,7 +60,7 @@ function ParkChip({ cell, onClick }: { cell: AtlasCell; onClick: () => void }) {
       style={{ textAlign: "left", cursor: "pointer", display: "flex", flexDirection: "column", gap: 4 }}
     >
       <strong>{PARK_NAMES[cell.park_id] ?? cell.park_id}</strong>
-      <span style={{ color: "var(--rust)", fontWeight: 600 }}>{f(cell.sen!)} per decade</span>
+      <span style={{ color: "var(--rising)", fontWeight: 600 }}>{f(cell.sen!)} per decade</span>
       <span className="micro muted">daytime high · confirmed, not luck</span>
     </button>
   );
@@ -111,7 +111,7 @@ function StudentHome({ atlas, onGo }: Pick<Props, "atlas" | "onGo">) {
               <span style={{ fontSize: 28 }}>{c.emoji}</span>
               <strong>{c.title}</strong>
               <span className="small muted">{c.subtitle}</span>
-              <span className="micro" style={{ color: "var(--rust)", fontWeight: 600 }}>
+              <span className="micro" style={{ color: "var(--rising)", fontWeight: 600 }}>
                 {c.difficulty} · {c.steps.length} steps
               </span>
             </button>

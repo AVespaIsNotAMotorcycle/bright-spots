@@ -142,11 +142,11 @@ export default function Detective({
 
   function verdictDot(verdict: string) {
     const colors: Record<string, string> = {
-      real: "#2a7d4f",
-      possible: "#b8860b",
-      none: "#aaa",
-      short: "#ccc",
-      flat: "#ccc",
+      real: "var(--success)",
+      possible: "var(--caution)",
+      none: "var(--text-faint)",
+      short: "var(--border-strong)",
+      flat: "var(--border-strong)",
     };
     return (
       <span
@@ -155,7 +155,7 @@ export default function Detective({
           width: 10,
           height: 10,
           borderRadius: "50%",
-          background: colors[verdict] ?? "#ccc",
+          background: colors[verdict] ?? "var(--border-strong)",
           marginRight: 6,
           flexShrink: 0,
         }}
@@ -173,7 +173,7 @@ export default function Detective({
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {/* Atlas header */}
       <div style={{ borderBottom: "2px solid var(--pine)", paddingBottom: 12 }}>
-        <h2 style={{ margin: "0 0 4px", fontFamily: "var(--font-display, 'Playfair Display', Georgia, serif)", fontSize: 22, fontWeight: 700, color: "var(--pine)" }}>
+        <h2 style={{ margin: "0 0 4px", fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 700, color: "var(--pine)" }}>
           {simple ? "Park Explorer" : "National Trend Atlas"}
         </h2>
         <p style={{ margin: 0, fontSize: 13, color: "var(--text-muted)" }}>
@@ -200,7 +200,7 @@ export default function Detective({
             onChange={(e) => setSelVar(e.target.value)}
             style={{
               border: "1.5px solid var(--border)",
-              borderRadius: 10,
+              borderRadius: "var(--radius)",
               padding: "7px 12px",
               background: "var(--surface)",
               cursor: "pointer",
@@ -226,7 +226,7 @@ export default function Detective({
             onChange={(e) => setSelPeriod(e.target.value)}
             style={{
               border: "1.5px solid var(--border)",
-              borderRadius: 10,
+              borderRadius: "var(--radius)",
               padding: "7px 12px",
               background: "var(--surface)",
               cursor: "pointer",
@@ -250,7 +250,7 @@ export default function Detective({
             onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
             style={{
               border: "1.5px solid var(--border)",
-              borderRadius: 10,
+              borderRadius: "var(--radius)",
               padding: "7px 12px",
               background: "var(--surface)",
               cursor: "pointer",
@@ -294,9 +294,9 @@ export default function Detective({
             alignSelf: "center",
           }}
         >
-          <strong style={{ color: "#155724" }}>{realCount} real</strong>
+          <strong style={{ color: "var(--success-ink)" }}>{realCount} real</strong>
           {" · "}
-          <strong style={{ color: "#856404" }}>{possibleCount} possible</strong>
+          <strong style={{ color: "var(--caution-ink)" }}>{possibleCount} possible</strong>
           {" · "}
           {cells.length} parks
         </div>
@@ -310,7 +310,7 @@ export default function Detective({
           .slice(0, 3);
         if (!notable.length) return null;
         return (
-          <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 10, padding: "12px 16px", fontSize: 13 }}>
+          <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "12px 16px", fontSize: 13 }}>
             <strong>Notable: </strong>
             {notable.map((c, i) => {
               const v = isTemp && useFahrenheit ? (c.sen! * 1.8) : c.sen!;
@@ -331,7 +331,7 @@ export default function Detective({
         style={{
           background: "var(--surface)",
           border: "1px solid var(--border)",
-          borderRadius: 10,
+          borderRadius: "var(--radius)",
           padding: "12px 16px",
           fontSize: 13,
           lineHeight: 1.6,
@@ -376,7 +376,7 @@ export default function Detective({
                 gap: 8,
                 background: "var(--surface)",
                 border: "1px solid var(--border)",
-                borderRadius: 10,
+                borderRadius: "var(--radius)",
                 padding: "10px 14px",
                 cursor: "pointer",
                 textAlign: "left",
@@ -384,7 +384,7 @@ export default function Detective({
                 transition: "border-color 0.15s",
               }}
               onMouseEnter={(e) =>
-                (e.currentTarget.style.borderColor = "var(--accent)")
+                (e.currentTarget.style.borderColor = "var(--selected)")
               }
               onMouseLeave={(e) =>
                 (e.currentTarget.style.borderColor = "var(--border)")
@@ -416,9 +416,9 @@ export default function Detective({
                     style={{
                       color:
                         cell.verdict === "real"
-                          ? "#155724"
+                          ? "var(--success-ink)"
                           : cell.verdict === "possible"
-                            ? "#856404"
+                            ? "var(--caution-ink)"
                             : "var(--text-muted)",
                       fontWeight: cell.verdict === "real" ? 600 : 400,
                     }}
@@ -428,7 +428,7 @@ export default function Detective({
                   {cell.sen != null && (
                     <span
                       style={{
-                        color: isRising ? "#9c3b1b" : "#2f5d3a",
+                        color: isRising ? "var(--rising)" : "var(--falling)",
                         fontVariantNumeric: "tabular-nums",
                       }}
                     >
@@ -468,7 +468,7 @@ export default function Detective({
             padding: "6px 14px",
             background: "var(--surface)",
             border: "1px solid var(--border)",
-            borderRadius: 8,
+            borderRadius: "var(--radius)",
             color: "var(--accent)",
             fontWeight: 600,
             fontSize: 12,

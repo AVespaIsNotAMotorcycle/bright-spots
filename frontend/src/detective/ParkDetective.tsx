@@ -105,13 +105,13 @@ export default function ParkDetective({
   const selectedMeta = atlas.variables[selVar];
 
   function verdictColor(verdict: string) {
-    if (verdict === "real") return "#d4edda";
-    if (verdict === "possible") return "#fff3cd";
+    if (verdict === "real") return "var(--success-tint)";
+    if (verdict === "possible") return "var(--caution-tint)";
     return "transparent";
   }
   function verdictText(verdict: string) {
-    if (verdict === "real") return "#155724";
-    if (verdict === "possible") return "#856404";
+    if (verdict === "real") return "var(--success-ink)";
+    if (verdict === "possible") return "var(--caution-ink)";
     return "var(--text-muted)";
   }
 
@@ -123,7 +123,7 @@ export default function ParkDetective({
           style={{
             background: "none",
             border: "1px solid var(--border)",
-            borderRadius: 8,
+            borderRadius: "var(--radius)",
             padding: "6px 14px",
             cursor: "pointer",
             fontSize: 13,
@@ -237,15 +237,15 @@ export default function ParkDetective({
                           borderBottom: "1px solid var(--grid)",
                           cursor: "pointer",
                           background: active
-                            ? "var(--accent-tint)"
+                            ? "var(--selected-tint)"
                             : t
                               ? verdictColor(t.verdict)
                               : "transparent",
                           outline: active
-                            ? "2px solid var(--accent)"
+                            ? "2px solid var(--selected)"
                             : "none",
                           outlineOffset: -2,
-                          borderRadius: active ? 4 : 0,
+                          borderRadius: "var(--radius)",
                           fontVariantNumeric: "tabular-nums",
                           fontSize: 12,
                           color: t ? verdictText(t.verdict) : "var(--text-muted)",
@@ -281,8 +281,8 @@ export default function ParkDetective({
               display: "inline-block",
               width: 10,
               height: 10,
-              background: "#d4edda",
-              borderRadius: 2,
+              background: "var(--success-tint)",
+              borderRadius: "var(--radius)",
               marginRight: 4,
             }}
           />
@@ -294,8 +294,8 @@ export default function ParkDetective({
               display: "inline-block",
               width: 10,
               height: 10,
-              background: "#fff3cd",
-              borderRadius: 2,
+              background: "var(--caution-tint)",
+              borderRadius: "var(--radius)",
               marginRight: 4,
             }}
           />
@@ -310,7 +310,7 @@ export default function ParkDetective({
           style={{
             background: "var(--surface)",
             border: "1px solid var(--border)",
-            borderRadius: 14,
+            borderRadius: "var(--radius)",
             padding: 20,
             display: "flex",
             flexDirection: "column",
