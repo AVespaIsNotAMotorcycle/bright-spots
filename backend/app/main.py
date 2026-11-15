@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
+from app.community.router import router as community_router
 from app.config import settings
 from app.datasets.router import router as datasets_router
 from app.explain.router import router as explain_router
@@ -34,6 +35,7 @@ app.add_middleware(
 
 app.add_middleware(GZipMiddleware, minimum_size=1024)
 
+app.include_router(community_router)
 app.include_router(datasets_router)
 app.include_router(explain_router)
 app.include_router(parks_router)

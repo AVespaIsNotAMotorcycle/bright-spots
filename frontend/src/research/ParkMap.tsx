@@ -108,9 +108,11 @@ interface Props {
   onPick?: (id: string) => void;
   selected?: string[];
   radius?: (id: string) => number;
+  /** Contour rings around a marker (0-3), like a topo map: more rings = stronger trend. */
+  rings?: (id: string) => number;
 }
 
-export default function ParkMap({ parks, colorOf, tip, onPick, selected = [], radius }: Props) {
+export default function ParkMap({ parks, colorOf, tip, onPick, selected = [], radius, rings }: Props) {
   const [features, setFeatures] = useState<Feature[]>([]);
   const [shapes, setShapes] = useState<Shapes>({});
   const [hover, setHover] = useState<string | null>(null);
@@ -198,6 +200,23 @@ export default function ParkMap({ parks, colorOf, tip, onPick, selected = [], ra
                 pointerEvents="none" />
             ) : null,
           )}
+          {/* topo contour rings: more rings = stronger confirmed trend; the strongest pulse */}
+          {rings &&
+            placed.map(({ p, pos }) => {
+              const n = rings(p.id);
+              if (!n) return null;
+              const r0 = radius?.(p.id) ?? 6;
+              const col = colorOf(p.id);
+              return (
+                <g key={"t" + p.id} pointerEvents="none">
+                  {Array.from({ length: n }, (_, k) => (
+                    <circle key={k} cx={pos[0]} cy={pos[1]} r={r0 + 5 + k * 5} fill="none" stroke={col}
+                      strokeOpacity={0.75 - k * 0.18} strokeWidth={1.3} strokeDasharray={k ? "3 2" : undefined} />
+                  ))}
+                  {n >= 3 && <circle className="st-ring" cx={pos[0]} cy={pos[1]} r={r0 + 8} fill="none" stroke={col} strokeWidth={2} />}
+                </g>
+              );
+            })}
           {/* markers keep small parks visible at this scale */}
           {placed.map(({ p, pos }) => {
             const sel = selected.includes(p.id) || chosen === p.id;

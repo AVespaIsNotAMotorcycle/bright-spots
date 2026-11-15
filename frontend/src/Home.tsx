@@ -5,6 +5,8 @@ import { NextCase, ParkOfTheDay, RankBanner } from "./detective/StudentWidgets";
 import { PARK_NAMES } from "./detective/Detective";
 import type { Atlas, AtlasCell } from "./detective/model";
 import { PERSONAS, type Persona, type Tab } from "./profile";
+import { AnomalyOfWeek, CampfirePreview, StationHero, ToolTiles, type ToolInfo } from "./research/ResearcherWidgets";
+import { CiteThis } from "./research/station";
 import type { NavState } from "./useNav";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -23,19 +25,6 @@ function topWarming(atlas: Atlas | null, n: number): AtlasCell[] {
     .filter((c) => c.verdict === "real" && c.sen != null && c.sen > 0)
     .sort((a, b) => b.sen! - a.sen!)
     .slice(0, n);
-}
-
-function verdictTotals(atlas: Atlas | null) {
-  const t = { real: 0, possible: 0, total: 0 };
-  if (!atlas) return t;
-  for (const byPeriod of Object.values(atlas.atlas))
-    for (const cells of Object.values(byPeriod))
-      for (const c of cells) {
-        t.total++;
-        if (c.verdict === "real") t.real++;
-        else if (c.verdict === "possible") t.possible++;
-      }
-  return t;
 }
 
 const f = (c: number) => `${c > 0 ? "+" : ""}${(c * 1.8).toFixed(2)}°F`;
@@ -108,23 +97,35 @@ function StudentHome({ atlas, onGo }: Pick<Props, "atlas" | "onGo">) {
   );
 }
 
-function ResearcherHome({ atlas, onGo }: Pick<Props, "atlas" | "onGo">) {
-  const totals = useMemo(() => verdictTotals(atlas), [atlas]);
+const TOOLS: ToolInfo[] = [
+  { tab: "map", icon: "🗺", title: "Topo trend map", text: "Every park on one map, with contour rings for confirmed trends.", color: "#6b7f3a" },
+  { tab: "twins", icon: "👯", title: "Twin finder", text: "Parks whose whole pattern of change matches yours.", color: "#2d5a27" },
+  { tab: "opposites", icon: "🧭", title: "Odd one out", text: "Neighbouring parks with confirmed trends going opposite ways.", color: "#c98a54" },
+  { tab: "seasons", icon: "🌗", title: "Season wheel", text: "Which months change fastest, drawn as a wheel.", color: "#3d5a73" },
+  { tab: "compare", icon: "⚖", title: "Head-to-head", text: "Two parks, one chart, scored round by round.", color: "#8b3a1a" },
+  { tab: "families", icon: "🧬", title: "Park families", text: "Parks grouped by how they change, with stability checks.", color: "#a9b88a" },
+  { tab: "robust", icon: "🧪", title: "Robustness", text: "Start-year test, methods, BibTeX, Python and R code.", color: "#4a3726" },
+  { tab: "community", icon: "🔥", title: "The Campfire", text: "Share notes and questions with other researchers.", color: "#c98a54" },
+];
+
+function ResearcherHome({ atlas, onGo, name }: Pick<Props, "atlas" | "onGo" | "name">) {
   const top = useMemo(() => topWarming(atlas, 5), [atlas]);
-  const tile = (label: string, value: string) => (
-    <div className="stat">
-      <div className="micro muted">{label}</div>
-      <div className="stat-value">{value}</div>
-    </div>
-  );
   return (
     <>
-      <div className="stat-row">
-        {tile("Trend tests", totals.total.toLocaleString())}
-        {tile("Real (q < 0.05)", totals.real.toLocaleString())}
-        {tile("Possible (p < 0.05)", totals.possible.toLocaleString())}
-        {tile("Record", "1981–2026")}
-      </div>
+      <StationHero name={name} atlas={atlas} />
+      {atlas && (
+        <AnomalyOfWeek
+          atlas={atlas}
+          onRobust={(park, v, per) => onGo("robust", { park, v, per })}
+          onCompare={(park, v, per) => onGo("compare", { park, v, per })}
+          onDiscuss={(park, v, per) => onGo("community", { park, v, per })}
+        />
+      )}
+      <section>
+        <div className="section-title" style={{ marginBottom: 8 }}>Station tools</div>
+        <ToolTiles tools={TOOLS} onGo={(t) => onGo(t as Tab)} />
+      </section>
+      <CampfirePreview onOpen={() => onGo("community")} />
       <section className="card">
         <div className="section-title">Strongest annual warming (daytime high)</div>
         <table style={{ marginTop: 8 }}>
@@ -146,32 +147,16 @@ function ResearcherHome({ atlas, onGo }: Pick<Props, "atlas" | "onGo">) {
           </tbody>
         </table>
       </section>
-      <section className="card">
-        <div className="section-title">Research tools</div>
-        <div className="card-grid" style={{ marginTop: 8 }}>
-          {([
-            ["map", "🗺 National map", "Every park coloured by its trend for any variable and period."],
-            ["families", "🧬 Park families", "Parks grouped by how they change, with bootstrap stability."],
-            ["opposites", "↔ Opposite trends", "Where the same variable rises in one park and falls in another, with driver data."],
-            ["seasons", "🌗 Season shifts", "Which months change fastest in each park, as a heat table."],
-            ["compare", "⚖ Compare parks", "Two parks on one chart, with their statistics side by side."],
-            ["robust", "🧪 Robustness", "Start-year test, signal-to-noise, methods, BibTeX, Python and R code."],
-          ] as const).map(([t, title, text]) => (
-            <button key={t} className="card" style={{ textAlign: "left", cursor: "pointer" }} onClick={() => onGo(t)}>
-              <b>{title}</b>
-              <div className="small muted" style={{ marginTop: 4 }}>{text}</div>
-            </button>
-          ))}
-        </div>
-      </section>
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
         <button className="btn" onClick={() => onGo("atlas")}>Open the full atlas →</button>
         <a className="btn-ghost" href="/api/trends/atlas" download="park-trends-atlas.json" style={{ textDecoration: "none" }}>
           ⬇ Download atlas.json
         </a>
+        <CiteThis ctx={{ tool: "Trend atlas" }} atlas={atlas} />
       </div>
       <p className="micro muted" style={{ margin: 0 }}>
-        Method: Sen's slope, Mann-Kendall (Hamed-Rao correction when autocorrelated), Benjamini-Hochberg FDR across parks.
+        Data: NASA POWER daily, one grid point per park, 1981–2025. Method: Sen's slope, Mann-Kendall
+        (Hamed-Rao correction when autocorrelated), Benjamini-Hochberg FDR across parks.
       </p>
     </>
   );
@@ -180,11 +165,11 @@ function ResearcherHome({ atlas, onGo }: Pick<Props, "atlas" | "onGo">) {
 export default function Home({ persona, name, atlas, onGo }: Props) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-      <Hero persona={persona} name={name} />
+      {persona !== "researcher" && <Hero persona={persona} name={name} />}
       {!atlas && <p className="muted">Loading trend data…</p>}
       {persona === "visitor" && <VisitorHome atlas={atlas} onGo={onGo} />}
       {persona === "student" && <StudentHome atlas={atlas} onGo={onGo} />}
-      {persona === "researcher" && <ResearcherHome atlas={atlas} onGo={onGo} />}
+      {persona === "researcher" && <ResearcherHome atlas={atlas} onGo={onGo} name={name} />}
     </div>
   );
 }

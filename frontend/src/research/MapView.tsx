@@ -4,6 +4,7 @@ import type { Atlas } from "../detective/model";
 import { PERIOD_LABEL, VERDICT_LABEL } from "../detective/model";
 import { slopeText, useInsights } from "./lib";
 import ParkMap from "./ParkMap";
+import { Source, StationStyle } from "./station";
 
 type RGB = [number, number, number];
 function lerp(a: RGB, b: RGB, t: number): RGB {
@@ -37,6 +38,7 @@ export default function MapView({
   const { data: insights, error } = useInsights();
   const [v, setV] = useState(initialVar ?? "tmax_c");
   const [per, setPer] = useState(initialPeriod ?? "annual");
+  const [topo, setTopo] = useState(true);
 
   const cells = useMemo(() => {
     const m = new Map<string, { sen: number | null; verdict: string }>();
@@ -71,6 +73,12 @@ export default function MapView({
     if (c.verdict === "possible") return css(POSSIBLE);
     return css(NONE);
   };
+  const ringsOf = (id: string) => {
+    const c = cells.get(id);
+    if (!c || c.verdict !== "real" || c.sen == null) return 0;
+    const t = Math.abs(c.sen) / maxAbs;
+    return t >= 0.75 ? 3 : t >= 0.5 ? 2 : 1;
+  };
   const tip = (id: string) => {
     const c = cells.get(id);
     return c ? `${slopeText(c.sen, v, atlas)} · ${VERDICT_LABEL[c.verdict as keyof typeof VERDICT_LABEL] ?? c.verdict}` : "no data";
@@ -79,7 +87,8 @@ export default function MapView({
   return (
     <div className="panel-stack">
       <div className="card">
-        <h2 className="section-title">National trend map</h2>
+        <StationStyle />
+        <h2 className="section-title">Topo trend map</h2>
         <p className="panel-intro">
           Each park is drawn with its real boundary. Warm colours (gold to maroon) mean a real rise, cool colours
           (aqua to indigo) a real fall. Violet means a possible but unproven trend (it passes p &lt; 0.05 but not the multiple-testing
@@ -103,13 +112,23 @@ export default function MapView({
             </select>
           </label>
         </div>
+        <label className="check" style={{ marginBottom: 8 }}>
+          <input type="checkbox" checked={topo} onChange={(e) => setTopo(e.target.checked)} /> Topo rings (confirmed trends only)
+        </label>
         <ParkMap
           parks={insights.parks}
           colorOf={colorOf}
           tip={tip}
           onPick={onOpenPark}
           radius={(id) => (cells.get(id)?.verdict === "real" ? 8 : 5.5)}
+          rings={topo ? ringsOf : undefined}
         />
+        {topo && (
+          <p className="micro muted" style={{ margin: "6px 0 0" }}>
+            Rings around a dot: 1 = confirmed trend, 2 = at least half the biggest change on this map,
+            3 (pulsing) = at least three quarters of it.
+          </p>
+        )}
         <div className="row small" style={{ gap: 8, alignItems: "center", marginTop: 10, flexWrap: "wrap" }}>
           <span>falling</span>
           <span style={{ width: 130, height: 12, borderRadius: 6, background: rampCss([...DOWN].reverse()) }} />
@@ -125,6 +144,7 @@ export default function MapView({
           <b style={{ color: "#d63c1e" }}>{counts.up}</b> rising · <b style={{ color: "#1e5abe" }}>{counts.down}</b> falling ·{" "}
           <b>{counts.none}</b> no clear change (real = passes the false-discovery-rate test, q &lt; 0.05).
         </p>
+        <Source />
       </div>
     </div>
   );

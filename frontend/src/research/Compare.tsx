@@ -3,7 +3,9 @@ import { useMemo, useState } from "react";
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { Atlas } from "../detective/model";
 import { PERIOD_LABEL, VERDICT_LABEL } from "../detective/model";
+import { headToHead } from "./insights";
 import { VERDICT_COLOR, findRow, slopeText, useInsights, usePark } from "./lib";
+import { E, Source, StationStyle, Tag } from "./station";
 
 export function Pickers({
   atlas, v, per, setV, setPer,
@@ -128,6 +130,43 @@ export default function Compare({
         </ResponsiveContainer>
         <p className="micro muted">Values in {unit}{anomaly ? ", minus each park's own long-run average" : ""}.</p>
       </div>
+
+      {ra && rb && (() => {
+        const h = headToHead(ra, rb, (x) => slopeText(x, v, atlas).replace(/^\+/, ""));
+        const lead = h.a === h.b ? null : h.a > h.b ? nameA : nameB;
+        const side = (w: "a" | "b" | "tie", me: "a" | "b") =>
+          w === me ? { background: E.pine, color: E.cream, fontWeight: 700 } : { color: E.bark };
+        return (
+          <section className="st-card" style={{ padding: 16 }}>
+            <StationStyle />
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              <Tag>⚖ Head-to-head</Tag>
+              <button className="st-btn ghost" onClick={() => set(pb, pa, v, per)}>⇄ Swap</button>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 10, margin: "12px 0" }}>
+              <b style={{ fontFamily: "var(--font-display)", fontSize: 19, color: E.pine, textAlign: "right" }}>{nameA}</b>
+              <span className="st-num" style={{ fontSize: 30 }}>{h.a} – {h.b}</span>
+              <b style={{ fontFamily: "var(--font-display)", fontSize: 19, color: E.rust }}>{nameB}</b>
+            </div>
+            <div style={{ display: "grid", gap: 6 }}>
+              {h.rounds.map((r) => (
+                <div key={r.name} style={{ display: "grid", gridTemplateColumns: "1fr 150px 1fr", gap: 8, alignItems: "center" }}>
+                  <span className="small" style={{ ...side(r.winner, "a"), textAlign: "right", padding: "4px 10px", borderRadius: 8 }}>{r.a}</span>
+                  <span className="micro" style={{ textAlign: "center", color: E.moss }}>{r.name}{r.winner === "tie" ? " · tie" : ""}</span>
+                  <span className="small" style={{ ...side(r.winner, "b"), padding: "4px 10px", borderRadius: 8 }}>{r.b}</span>
+                </div>
+              ))}
+            </div>
+            <p className="small" style={{ color: E.bark, margin: "12px 0 0" }}>
+              {lead
+                ? <>{lead} has the stronger trend evidence here: it wins more rounds.</>
+                : <>Even match: neither park's trend evidence is clearly stronger.</>}
+              {" "}A stronger trend is not a better or worse park.
+            </p>
+            <Source />
+          </section>
+        );
+      })()}
 
       <div className="card">
         <div className="table-wrap">

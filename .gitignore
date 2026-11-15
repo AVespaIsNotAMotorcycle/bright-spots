@@ -4,6 +4,7 @@ __pycache__/
 .venv/
 .pytest_cache/
 cache.db
+community.db
 
 # Node
 node_modules/

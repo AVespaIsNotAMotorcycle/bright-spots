@@ -31,6 +31,8 @@ export const TAB_LABEL: Record<Tab, string> = {
   compare: "⚖ Compare Parks",
   robust: "🧪 Robustness",
   seasons: "🌗 Season Shifts",
+  twins: "👯 Twin Finder",
+  community: "🔥 Campfire",
 };
 
 export const PERSONAS: Record<Persona, PersonaInfo> = {
@@ -55,8 +57,8 @@ export const PERSONAS: Record<Persona, PersonaInfo> = {
     emoji: "🔬",
     tagline: "Full trend atlas with statistics",
     blurb: "You want every test, every period, and the raw results.",
-    bullets: ["Sen's slope, Mann-Kendall, FDR q-values", "Park families and opposite-trend finder", "Start-year test, map, compare, Python/R export"],
-    tabs: ["home", "atlas", "map", "families", "opposites", "seasons", "compare", "robust"],
+    bullets: ["Sen's slope, Mann-Kendall, FDR q-values", "Twin finder, odd neighbours, season wheel", "Head-to-head, Cite this, and the Campfire board"],
+    tabs: ["home", "atlas", "map", "twins", "families", "opposites", "seasons", "compare", "robust", "community"],
   },
 };
 

@@ -13,6 +13,10 @@ import MapView from "./research/MapView";
 import Opposites from "./research/Opposites";
 import Robust from "./research/Robust";
 import Seasons from "./research/Seasons";
+import Community from "./research/Community";
+import Twins from "./research/Twins";
+import { StationStrip } from "./research/station";
+import { PARK_NAMES } from "./detective/Detective";
 import { PERSONAS, TAB_LABEL, loadProfile, saveProfile, type Profile, type Tab } from "./profile";
 import { useNav, type NavState } from "./useNav";
 
@@ -122,8 +126,34 @@ export default function App() {
         </nav>
       </header>
       <main>
+        {profile.persona === "researcher" && tab !== "home" && (
+          <StationStrip
+            title={TAB_LABEL[tab].replace(/^\S+\s/, "")}
+            atlas={atlas}
+            ctx={{ park: nav.park, parkName: nav.park ? PARK_NAMES[nav.park] : null, variable: nav.v, period: nav.per }}
+          />
+        )}
         {tab === "home" && (
           <Home persona={profile.persona} name={profile.name} atlas={atlas} onGo={go} />
+        )}
+        {tab === "twins" && (
+          <Twins
+            atlas={atlas}
+            park={nav.park}
+            onPark={(id) => navigate({ tab: "twins", park: id })}
+            onCompare={(a, b) => go("compare", { park: a, park2: b })}
+            onOpenPark={(id) => go("atlas", { park: id })}
+          />
+        )}
+        {tab === "community" && (
+          <Community
+            atlas={atlas}
+            name={profile.name}
+            park={nav.park}
+            v={nav.v}
+            per={nav.per}
+            onOpenPark={(park, v, per) => go("robust", { park, v: v ?? undefined, per: per ?? undefined })}
+          />
         )}
         {tab === "student" && (
           <StudentDetective

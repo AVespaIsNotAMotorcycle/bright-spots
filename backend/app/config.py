@@ -22,5 +22,8 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-haiku-5-5"  # cheapest current Claude model
 
+    # SQLite file for the researcher community board (the Campfire).
+    community_db: str = "community.db"
+
 
 settings = Settings()

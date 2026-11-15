@@ -2,7 +2,9 @@
 import { useMemo, useState } from "react";
 import type { Atlas } from "../detective/model";
 import { PERIOD_LABEL, VERDICT_LABEL } from "../detective/model";
+import { oddNeighbours } from "./insights";
 import { VERDICT_COLOR, slopeText, useInsights, varLabel, type OppGroup, type TrendRef } from "./lib";
+import { E, Source, StationStyle, Tag } from "./station";
 
 function Ref({ r, v, atlas }: { r: TrendRef | null | undefined; v: string; atlas: Atlas | null }) {
   if (!r || r.sen == null) return <span className="muted">no data</span>;
@@ -24,6 +26,8 @@ export default function Opposites({
   const { data, error } = useInsights();
   const [strongOnly, setStrongOnly] = useState(true);
   const [sel, setSel] = useState(0);
+
+  const odd = useMemo(() => (atlas && data ? oddNeighbours(atlas, data.parks) : []), [atlas, data]);
 
   const groups: OppGroup[] = useMemo(
     () => (data?.opposites ?? []).filter((g) => !strongOnly || g.tier === "strong"),
@@ -49,6 +53,38 @@ export default function Opposites({
           <input type="checkbox" checked={strongOnly} onChange={(e) => { setStrongOnly(e.target.checked); setSel(0); }} /> Strong only
         </label>
       </div>
+
+      {odd.length > 0 && (
+        <section className="st-card" style={{ padding: 16 }}>
+          <StationStyle />
+          <Tag>🧭 Odd one out: neighbours that disagree</Tag>
+          <p className="small" style={{ color: E.bark, margin: "8px 0 12px" }}>
+            Parks less than 600 km apart where the same measure has a confirmed rise in one and a confirmed fall in the other.
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 10 }}>
+            {odd.map((o) => (
+              <button key={o.up + o.down} className="st-tile" style={{ ["--tile" as string]: E.clay }}
+                onClick={() => onCompare(o.up, o.down, o.variable, o.period)}>
+                <div className="micro" style={{ color: E.moss }}>
+                  {varLabel(atlas, o.variable)} · {PERIOD_LABEL[o.period] ?? o.period} · {o.km} km apart
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginTop: 6 }}>
+                  <div>
+                    <b style={{ color: E.rust }}>▲ {name(o.up)}</b>
+                    <div className="micro">{slopeText(o.upSen, o.variable, atlas)}</div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <b style={{ color: E.dusk }}>▼ {name(o.down)}</b>
+                    <div className="micro">{slopeText(o.downSen, o.variable, atlas)}</div>
+                  </div>
+                </div>
+                <div className="micro" style={{ marginTop: 6, color: E.pine, fontWeight: 600 }}>Head-to-head →</div>
+              </button>
+            ))}
+          </div>
+          <Source extra="Both trends pass the false-discovery-rate test (q < 0.05). Why they differ is a question, not an answer." />
+        </section>
+      )}
 
       {groups.length === 0 && <p className="muted">No opposite-trend groups at this setting.</p>}
 

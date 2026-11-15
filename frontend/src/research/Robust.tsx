@@ -7,7 +7,7 @@ import { ParkSelect, Pickers } from "./Compare";
 import { findRow, pettitt, robustness, slopeText, startYearScan, useInsights, usePark } from "./lib";
 import Validation from "./Validation";
 
-const BIB = `@article{gonzalez2018,
+export const BIB = `@article{gonzalez2018,
   author  = {Gonzalez, Patrick and Wang, Fushan and Notaro, Michael and Vimont, Daniel J. and Williams, John W.},
   title   = {Disproportionate magnitude of climate change in United States national parks},
   journal = {Environmental Research Letters},

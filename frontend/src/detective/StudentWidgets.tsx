@@ -9,7 +9,7 @@ import { setSound, soundOn, play } from "./sound";
 import TrendChart from "./TrendChart";
 
 // Earth palette used by these cards.
-const E = {
+export const E = {
   pine: "#2d5a27",
   moss: "#6b7f3a",
   sage: "#a9b88a",
@@ -33,7 +33,7 @@ export function trailWord(n: number): string {
 export const trees = (n: number) => "🌲".repeat(Math.min(n, 7));
 
 // Mountain ridge silhouette for card backgrounds. Two layers, pine and moss.
-const RIDGE = `url("data:image/svg+xml;utf8,${encodeURIComponent(
+export const RIDGE = `url("data:image/svg+xml;utf8,${encodeURIComponent(
   `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 120' preserveAspectRatio='none'>
     <path d='M0 120 L0 70 L60 40 L110 66 L170 22 L230 62 L290 34 L350 70 L420 18 L480 58 L540 36 L600 60 L600 120Z' fill='${E.moss}' opacity='.35'/>
     <path d='M0 120 L0 92 L50 74 L100 94 L160 64 L220 90 L280 70 L340 96 L400 66 L470 92 L530 72 L600 88 L600 120Z' fill='${E.pine}' opacity='.45'/>
@@ -41,7 +41,7 @@ const RIDGE = `url("data:image/svg+xml;utf8,${encodeURIComponent(
 )}")`;
 
 // Faint topographic contour lines.
-const TOPO = `url("data:image/svg+xml;utf8,${encodeURIComponent(
+export const TOPO = `url("data:image/svg+xml;utf8,${encodeURIComponent(
   `<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220' fill='none' stroke='${E.bark}' stroke-opacity='.10' stroke-width='1.2'>
     <ellipse cx='110' cy='110' rx='100' ry='70'/><ellipse cx='110' cy='110' rx='76' ry='52'/>
     <ellipse cx='110' cy='110' rx='52' ry='34'/><ellipse cx='110' cy='110' rx='28' ry='17'/>
