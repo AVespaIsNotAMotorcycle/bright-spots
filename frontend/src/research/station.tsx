@@ -237,7 +237,8 @@ export function StationStrip({
   /** Off for pages that are not data (the Campfire holds opinions, which are not citable data). */
   cite?: boolean;
 }) {
-  const hash = typeof location !== "undefined" ? location.hash : "";
+  // The saved view is the path and query, e.g. "/research/trend-atlas?park=zion".
+  const hash = typeof location !== "undefined" ? location.pathname + location.search : "";
   const [saved, setSaved] = useState(() => loadSaved().some((s) => s.hash === hash));
   useEffect(() => setSaved(loadSaved().some((s) => s.hash === hash)), [hash]);
   const detail = ctxDetail(ctx, atlas);

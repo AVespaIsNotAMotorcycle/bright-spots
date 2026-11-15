@@ -84,9 +84,9 @@ All falloffs and thresholds above are provisional choices, not from a source.
 
 **API.** `GET /api/parks`, `GET /api/parks/plan?month&t_lo&t_hi[&rh_max&rain_max&avoid_bugs&stars&snowmelt&scenario]`.
 
-**Front end** (updated 15 Nov 2026). No sign-in wall: a first visit is a guest and opens on Plan. Signing up or logging in is offered from the profile menu; logging out returns to the guest, whose data is kept apart from any account's. Tabs: Plan, Mysteries, Saved, Passport, and a Research menu when research tools are on. There is no Home page; the logo, an empty URL and old `#tab=home` links all open Plan.
+**Front end** (updated 15 Nov 2026). No sign-in wall: a first visit is a guest and opens on Plan. Signing up or logging in is offered from the profile menu (`/signup`, `/login`, returning to `?next=`); logging out (`/logout`) returns to the guest, whose data is kept apart from any account's. Edit profile is `/profile`. Tabs: Plan, Mysteries, Saved, Passport, and a Research menu when research tools are on. Every tab has a real path (`/plan`, `/saved`, `/research/trend-atlas`…; old `#tab=` links still open). There is no Home page; the logo, `/` and old `#tab=home` links all open Plan.
 
-Plan is two steps, each its own URL (`#tab=planner` and `#tab=planner&step=1`), so the back button moves between them:
+Plan is two steps, each its own URL (`/plan` and `/plan?step=1`), so the back button moves between them:
 
 1. Preferences: trip moods, then months, how warm, what you're into and what to avoid, with a live count of parks that fit and a "Show my parks" button.
 2. Parks: every park on the left, ranked for next year's trend (A to Z with no ranks when no filter is set), each with a checkbox; a card per ticked park on the right. The top 3 matches start ticked; changing preferences resets the ticks to the new top 3. Each card shows this year (measured so far) and next year (trend) side by side: match score, daytime high, humidity, rain, cloud cover, and bugs when picked. There is no horizon toggle. "Details" opens the full park drawer. A link with a park (a mystery's or a saved park's "Plan") opens step 2 with that park ticked and first.

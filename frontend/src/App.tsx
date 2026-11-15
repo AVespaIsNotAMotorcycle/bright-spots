@@ -23,7 +23,7 @@ const SavedPage = lazy(() => import("./detective/SavedPage"));
 import { PARK_NAMES } from "./detective/parkNames";
 import Logo from "./brand/Logo";
 import { EXPLORER_TABS, RESEARCH_TABS, TAB_LABEL, allowedTabs, loadProfile, saveProfile, type Profile, type Tab } from "./profile";
-import { parseHash, useNav, type NavState } from "./useNav";
+import { here, safeNext, useNav, type NavState } from "./useNav";
 
 /** A small dropdown: closes on outside click, Escape and Tab; arrows move between items. */
 function Menu({
@@ -115,10 +115,8 @@ function startProfile(): Profile {
 
 export default function App() {
   const { nav, navigate, replace } = useNav();
-  const [profile, setProfile] = useState<Profile>(startProfile);
-  /** The sign-in form (from the profile menu) or the edit-profile form, over the app. */
-  const [screen, setScreen] = useState<"signin" | "edit" | null>(null);
-  const editing = screen !== null;
+  // Null only while the sign-up or log-in form is open: the guest's data is put away until they choose.
+  const [profile, setProfile] = useState<Profile | null>(startProfile);
   const [atlas, setAtlas] = useState<Atlas | null>(null);
   const [unit, setUnit] = useState<Unit>(loadUnit);
   useEffect(() => {
@@ -130,17 +128,34 @@ export default function App() {
   }, [unit]);
 
   // Research tabs only exist when research tools are on; any other tab in the URL falls back to Plan.
-  const research = profile.research;
+  const research = profile?.research ?? false;
   const allowed = useMemo(() => allowedTabs(research), [research]);
   const tab: Tab = nav.tab && allowed.includes(nav.tab) ? nav.tab : "planner";
+  const editing = !!profile && nav.page === "profile";
+  const signingIn = nav.page === "signup" || nav.page === "login";
   const hiddenResearchTab = !!nav.tab && !allowed.includes(nav.tab) && RESEARCH_TABS.includes(nav.tab);
 
+  // Account pages. Nobody has to sign in: anyone not logged in is the guest.
+  // /signup and /login show the form (an account already logged in goes on to ?next=).
+  // /logout logs an account out to the guest. /profile edits whoever is here.
   useEffect(() => {
-    // Read the hash again: Plan may already have put its settings there.
-    if (!nav.tab) replace({ ...parseHash(), tab: "planner" });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    const p = nav.page;
+    if (p === "logout") {
+      if (profile?.email) logOut();
+      else replace({ tab: "planner" });
+    } else if (p === "signup" || p === "login") {
+      if (profile?.email) goNext(nav.next, true);
+      else if (profile) {
+        // A guest opened the form: put their data away, so a new account starts empty.
+        logOutAccount(profile);
+        saveProfile(null);
+        setProfile(null);
+        setUnit(loadUnit());
+      }
+    } else if (!profile) backToGuest(); // left the form without signing in (back button, a link)
+  }, [nav.page, nav.tab, profile]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // An unknown tab in the URL (#tab=foo, or the old #tab=home) shows Plan, so fix the URL to match.
+  // An unknown path (/foo) or an old #tab=home link shows Plan, so fix the URL to match.
   useEffect(() => {
     if (nav.tab && !allowedTabs(true).includes(nav.tab)) replace({ tab: "planner" });
   }, [nav.tab, replace]);
@@ -161,11 +176,14 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [research, editing, tab, navigate]);
 
-  // Back/forward while a profile form is open closes the form and shows that page.
-  useEffect(() => {
-    if (screen === "signin") backToGuest();
-    setScreen(null);
-  }, [nav]); // eslint-disable-line react-hooks/exhaustive-deps
+  /** Go to a "next" path after logging in (or Plan), as a new page or in place. */
+  function goNext(next: string | null | undefined, inPlace = false) {
+    const to = safeNext(next) ?? "/";
+    if (inPlace) history.replaceState(null, "", to);
+    else history.pushState(null, "", to);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    window.scrollTo(0, 0);
+  }
 
   useEffect(() => {
     if (atlas) return;
@@ -180,8 +198,9 @@ export default function App() {
     saveProfile(p);
     updateAccount(p);
     // Logging in (or back in as a guest) swaps in that user's saved data; read their unit back into state.
-    if (screen === "signin") setUnit(loadUnit());
-    setScreen(null);
+    if (!editing) setUnit(loadUnit());
+    // Back to the page the form was opened from (?next=). The sign-in form leaves no back stop.
+    goNext(nav.next, !editing);
   }
 
   /** Become the guest again, with whatever the guest did last time on this device. */
@@ -192,15 +211,8 @@ export default function App() {
     setUnit(loadUnit());
   }
 
-  /** Put the current user's data away and show the sign-in form. */
-  function openSignIn() {
-    logOutAccount(profile);
-    saveProfile(null);
-    setUnit(loadUnit());
-    setScreen("signin");
-  }
-
   function setResearch(on: boolean) {
+    if (!profile) return;
     const p = { ...profile, research: on };
     setProfile(p);
     saveProfile(p);
@@ -213,18 +225,20 @@ export default function App() {
   function logOut() {
     logOutAccount(profile);
     backToGuest();
-    navigate({ tab: "planner" });
+    (nav.page === "logout" ? replace : navigate)({ tab: "planner" });
   }
 
   const go = (t: Tab, extra: Partial<NavState> = {}) => navigate({ tab: t, ...extra });
 
-  if (screen) {
+  if (!profile || editing || signingIn) {
     return (
       <div className="app">
         <Landing
-          initial={screen === "edit" ? profile : null}
+          initial={editing ? profile : null}
+          mode={nav.page === "login" ? "login" : "signup"}
+          onMode={(m) => replace({ page: m, next: nav.next })}
           onSubmit={submitProfile}
-          onCancel={screen === "edit" ? () => setScreen(null) : undefined}
+          onCancel={editing ? () => goNext(nav.next) : undefined}
         />
       </div>
     );
@@ -247,7 +261,7 @@ export default function App() {
         </nav>
         <div className="nav-right">
           {research && (
-            <Menu label={<>{RESEARCH_TABS.includes(tab) ? `Research: ${TAB_LABEL[tab]}` : "Research"} ▾</>} active={RESEARCH_TABS.includes(tab)}>
+            <Menu label={<>{RESEARCH_TABS.includes(tab) ? `Research: ${TAB_LABEL[tab]}` : "Research"} ▾</>} active={RESEARCH_TABS.includes(tab)} align="right">
               {(close) =>
                 RESEARCH_TABS.map((t) => (
                   <button key={t} type="button" role="menuitem" className={t === tab ? "on" : undefined} onClick={() => { close(); go(t); }}>
@@ -264,10 +278,10 @@ export default function App() {
                 <button type="button" role="menuitemcheckbox" aria-checked={research} onClick={() => setResearch(!research)}>
                   Research tools: {research ? "on" : "off"}
                 </button>
-                <button type="button" role="menuitem" onClick={() => { close(); setScreen("edit"); }}>
+                <button type="button" role="menuitem" onClick={() => { close(); navigate({ page: "profile", next: here() }); }}>
                   Edit profile
                 </button>
-                <button type="button" role="menuitem" onClick={() => { close(); if (profile.email) logOut(); else openSignIn(); }}>
+                <button type="button" role="menuitem" onClick={() => { close(); if (profile.email) logOut(); else navigate({ page: "signup", next: here() }); }}>
                   {profile.email ? "Log out" : "Sign up or log in"}
                 </button>
               </>

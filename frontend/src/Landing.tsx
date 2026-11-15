@@ -22,14 +22,20 @@ function ResearchSwitch({ on, set }: { on: boolean; set: (v: boolean) => void })
 
 export default function Landing({
   initial,
+  mode: modeIn,
+  onMode,
   onSubmit,
   onCancel,
 }: {
   initial?: Profile | null;
+  /** Which form the URL asked for: /signup or /login. */
+  mode?: Mode;
+  onMode?: (m: Mode) => void;
   onSubmit: (p: Profile) => void;
   onCancel?: () => void;
 }) {
-  const [mode, setMode] = useState<Mode>("signup");
+  const [own, setOwn] = useState<Mode>(modeIn ?? "signup");
+  const mode = onMode ? (modeIn ?? "signup") : own;
   const [name, setName] = useState(initial?.name ?? "");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -80,7 +86,8 @@ export default function Landing({
   };
 
   const switchTo = (m: Mode) => {
-    setMode(m);
+    if (onMode) onMode(m);
+    else setOwn(m);
     setError(null);
   };
 

@@ -33,7 +33,7 @@ describe("App", () => {
     expect(await screen.findByRole("heading", { name: "Your preferences" }, { timeout: 3000 })).toBeTruthy();
     expect(screen.queryByRole("tab", { name: "Sign up" })).toBeNull();
     expect(JSON.parse(localStorage.getItem("profile")!)).toEqual({ name: "", research: false });
-    expect(location.hash).toContain("tab=planner");
+    expect(location.pathname).toBe("/plan");
     const nav = screen.getByRole("navigation", { name: "Main" });
     expect(within(nav).getByRole("button", { name: "Plan" }).getAttribute("aria-current")).toBe("page");
   });
@@ -84,6 +84,60 @@ describe("App", () => {
     expect(JSON.parse(localStorage.getItem("wishlist")!)).toEqual(["zion"]);
   });
 
+  it("account pages have their own paths, and signing up returns to the page you were on", async () => {
+    history.replaceState(null, "", "/saved");
+    const { unmount } = render(<App />);
+    // No wall: a guest stays on /saved until they ask to sign up.
+    await screen.findByRole("navigation", { name: "Main" });
+    expect(location.pathname).toBe("/saved");
+    await openSignIn();
+    expect(location.pathname + location.search).toBe("/signup?next=%2Fsaved");
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Cy" } });
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "cy@example.com" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "parks-2026" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+    await screen.findByRole("navigation", { name: "Main" }, { timeout: 3000 });
+    expect(location.pathname).toBe("/saved");
+    // Edit profile is /profile, and Cancel goes back.
+    fireEvent.click(screen.getByRole("button", { name: "C" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit profile" }));
+    expect(location.pathname).toBe("/profile");
+    fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    expect(location.pathname).toBe("/saved");
+    unmount();
+    // /logout logs the account out to the guest, on Plan.
+    history.replaceState(null, "", "/logout");
+    render(<App />);
+    await screen.findByRole("button", { name: "?" }, { timeout: 3000 });
+    expect(location.pathname).toBe("/plan");
+    expect(JSON.parse(localStorage.getItem("profile")!)).toEqual({ name: "", research: false });
+    // The form's tabs switch the path.
+    await openSignIn();
+    fireEvent.click(screen.getByRole("tab", { name: "Log in" }));
+    expect(location.pathname).toBe("/login");
+  });
+
+  it("leaving the sign-in form with the back button brings the guest back with their data", async () => {
+    localStorage.setItem("profile", JSON.stringify({ name: "", research: false }));
+    localStorage.setItem("wishlist", JSON.stringify(["acadia"]));
+    render(<App />);
+    await openSignIn();
+    expect(localStorage.getItem("wishlist")).toBeNull();
+    history.back();
+    await screen.findByRole("navigation", { name: "Main" }, { timeout: 3000 });
+    expect(JSON.parse(localStorage.getItem("wishlist")!)).toEqual(["acadia"]);
+    expect(JSON.parse(localStorage.getItem("profile")!)).toEqual({ name: "", research: false });
+  });
+
+  it("a login link cannot send you to another site", async () => {
+    localStorage.setItem("profile", JSON.stringify({ name: "Di", research: false, email: "di@example.com" }));
+    history.replaceState(null, "", "/login?next=//evil.example");
+    render(<App />);
+    await screen.findByRole("navigation", { name: "Main" });
+    expect(location.href).not.toContain("evil");
+    expect(location.pathname).toMatch(/^\/(plan)?$/);
+  });
+
   it("a guest can open the sign-in page from the profile menu and keeps their data", async () => {
     localStorage.setItem("profile", JSON.stringify({ name: "", research: false }));
     localStorage.setItem("wishlist", JSON.stringify(["acadia"]));
@@ -125,7 +179,7 @@ describe("App", () => {
     expect(screen.queryByRole("menu")).toBeNull();
     fireEvent.click(researchMenu());
     fireEvent.click(screen.getByRole("menuitem", { name: "Topo Map" }));
-    expect(location.hash).toContain("tab=map");
+    expect(location.pathname).toBe("/research/topo-map");
   });
 
   it("with research off, there is no Research menu and a research URL falls back to Plan with a hint", async () => {
@@ -155,10 +209,11 @@ describe("App", () => {
     history.replaceState(null, "", "#tab=home");
     render(<App />);
     expect(await screen.findByRole("heading", { name: "Your preferences" }, { timeout: 3000 })).toBeTruthy();
-    expect(location.hash).toContain("tab=planner");
+    expect(location.pathname).toBe("/plan");
     fireEvent.click(within(screen.getByRole("navigation", { name: "Main" })).getByRole("button", { name: "Saved" }));
+    expect(location.pathname).toBe("/saved");
     fireEvent.click(screen.getByRole("button", { name: /^Canopy/ }));
-    expect(location.hash).toContain("tab=planner");
+    expect(location.pathname).toBe("/plan");
   });
 
   it("arrow keys move between research tools", async () => {
@@ -167,7 +222,7 @@ describe("App", () => {
     render(<App />);
     await screen.findByRole("navigation", { name: "Main" });
     fireEvent.keyDown(window, { key: "ArrowRight" });
-    expect(location.hash).toContain("tab=map");
+    expect(location.pathname).toBe("/research/topo-map");
   });
 
   it("the Campfire has no Cite this, and shows example notes when empty", async () => {
@@ -227,12 +282,12 @@ describe("App", () => {
     fireEvent.click(stars);
     expect(stars.getAttribute("aria-label")).toContain("must have");
     fireEvent.click(stars);
-    expect(location.hash).toContain("trip=");
+    expect(location.search).toContain("trip=");
     await screen.findByText(/parks? fit your trip/, undefined, { timeout: 3000 });
 
     // Step 2: every park listed, the top 3 ticked, one card each.
     fireEvent.click(screen.getByRole("button", { name: "Show my parks" }));
-    expect(location.hash).toContain("step=1");
+    expect(location.search).toContain("step=1");
     expect(screen.queryByRole("heading", { name: "Your preferences" })).toBeNull();
     const boxes = (await screen.findAllByRole("checkbox")) as HTMLInputElement[];
     expect(boxes).toHaveLength(10); // the trip fixture's parks
@@ -270,7 +325,7 @@ describe("App", () => {
     // Back to preferences.
     fireEvent.click(screen.getByRole("button", { name: "Edit preferences" }));
     expect(await screen.findByRole("heading", { name: "Your preferences" })).toBeTruthy();
-    expect(location.hash).not.toContain("step=1");
+    expect(location.search).not.toContain("step=1");
   });
 
   it("Saved tab keeps Sequoia and Kings Canyon as two parks", async () => {
