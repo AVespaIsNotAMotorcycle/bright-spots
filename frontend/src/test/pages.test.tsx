@@ -71,7 +71,21 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: "?" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Sign up or log in" }));
     expect(await screen.findByRole("tab", { name: "Sign up" })).toBeTruthy();
+    // Logged out: nobody's data is on screen.
+    expect(localStorage.getItem("wishlist")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Continue as a guest" }));
     expect(JSON.parse(localStorage.getItem("wishlist")!)).toEqual(["acadia"]);
+  });
+
+  it("a new account starts empty, even after another user on this device", async () => {
+    localStorage.setItem("detective.progress", JSON.stringify({ "crater-lake-warming": { pts: 5, max: 5, stars: 3 } }));
+    render(<App />);
+    fireEvent.change(await screen.findByLabelText("Name"), { target: { value: "Bo" } });
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "bo@example.com" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "parks-2026" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+    await screen.findByRole("navigation", { name: "Main" }, { timeout: 3000 });
+    expect(localStorage.getItem("detective.progress")).toBeNull();
   });
 
   it("with research on, the nav has the five tabs and a Research menu with every research tool", async () => {

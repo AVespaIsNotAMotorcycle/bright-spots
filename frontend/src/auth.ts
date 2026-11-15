@@ -72,9 +72,10 @@ export async function signUp(name: string, email: string, password: string, rese
   const store = load();
   if (store[e]) return "An account with this email already exists. Log in instead.";
   const salt = hex(crypto.getRandomValues(new Uint8Array(16)).buffer);
-  // A guest who signs up keeps what they did as a guest.
-  store[e] = { name: name.trim(), research, salt, hash: await hashPassword(password, salt), data: snapshot() };
+  // A new account starts empty: the guest's (or a previous user's) data on this device is not theirs.
+  store[e] = { name: name.trim(), research, salt, hash: await hashPassword(password, salt), data: {} };
   save(store);
+  restore({});
   return { name: name.trim(), research, email: e };
 }
 
@@ -92,16 +93,31 @@ export async function logIn(email: string, password: string): Promise<Profile | 
   return { name: acct.name, research: acct.research, email: e };
 }
 
-/** Log out: save this user's data into their account, then clear it from the screen. Guests keep theirs. */
+const GUEST_KEY = "guest.data";
+
+/** Log out (account or guest): put this user's data away, then clear the screen. */
 export function logOutAccount(p: Profile | null) {
-  if (!p?.email) return;
+  if (!p) return;
   try {
-    const store = load();
-    if (store[p.email]) {
-      store[p.email] = { ...store[p.email], data: snapshot() };
-      save(store);
+    if (p.email) {
+      const store = load();
+      if (store[p.email]) {
+        store[p.email] = { ...store[p.email], data: snapshot() };
+        save(store);
+      }
+    } else {
+      localStorage.setItem(GUEST_KEY, JSON.stringify(snapshot()));
     }
     restore({});
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/** Continue as a guest: bring back what the guest did last time on this device. */
+export function enterGuest() {
+  try {
+    restore(JSON.parse(localStorage.getItem(GUEST_KEY) ?? "{}") as Record<string, string>);
   } catch {
     /* storage unavailable */
   }

@@ -1,7 +1,7 @@
 // Log in / sign up, plus "continue as guest". With `initial` set it is the edit-profile form.
 import { useState } from "react";
 import Logo, { TAGLINE } from "./brand/Logo";
-import { logIn, signUp } from "./auth";
+import { enterGuest, logIn, signUp } from "./auth";
 import type { Profile } from "./profile";
 
 type Mode = "login" | "signup";
@@ -119,7 +119,7 @@ export default function Landing({
           {busy ? "One moment…" : mode === "signup" ? "Create account" : "Log in"}
         </button>
 
-        <button type="button" className="link-btn" style={{ alignSelf: "center" }} onClick={() => onSubmit({ name: "", research })}>
+        <button type="button" className="link-btn" style={{ alignSelf: "center" }} onClick={() => { enterGuest(); onSubmit({ name: "", research }); }}>
           Continue as a guest
         </button>
         <p className="micro muted" style={{ margin: 0, textAlign: "center" }}>
