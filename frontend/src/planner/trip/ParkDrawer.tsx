@@ -16,7 +16,6 @@ import {
   MONTHS_LONG,
   SOURCE_LABEL,
   reasonText,
-  scoreColor,
   temp,
   whySentence,
   type Trip,
@@ -71,54 +70,43 @@ function ThenNow({ p, trip, unit }: { p: TripPark; trip: Trip; unit: Unit }) {
   );
 }
 
-/** One picked month: 31 day squares, the best stretch outlined, dates under it. */
-function MonthDays({ bd, unit, top }: { bd: BestDays; unit: Unit; top: boolean }) {
-  if (!bd.days) return <p className="tp-note">{MONTHS_LONG[bd.month - 1]}: {bd.note}</p>;
-  const scores = bd.days.map((d) => d.score).filter((s): s is number => s != null);
-  const flat = scores.length > 0 && Math.max(...scores) - Math.min(...scores) < 3;
+/** True when every day of the month scores within 3 points: any day works. */
+const isFlat = (bd: BestDays) => {
+  const s = (bd.days ?? []).map((d) => d.score).filter((x): x is number => x != null);
+  return s.length > 0 && Math.max(...s) - Math.min(...s) < 3;
+};
+
+/** Average daytime high over the best stretch. */
+const stretchHigh = (bd: BestDays): number | null => {
   const w = bd.window;
-  const inW = (d: number) => !!w && d >= w.start && d <= w.end;
-  return (
-    <div className={`tp-md${top ? " top" : ""}`}>
-      <div className="tp-md-head">
-        <b>{MONTHS_LONG[bd.month - 1]}</b>
-        <span>{w ? <>best <b>{fmtWindow(bd)}</b> · {Math.round(w.mean)}</> : "no clear stretch"}</span>
-      </div>
-      <div className="tp-days" role="img" aria-label={`${MONTHS_LONG[bd.month - 1]}: best stretch ${fmtWindow(bd) ?? "none"}`}>
-        {bd.days.map((d) => (
-          <span key={d.day} className={inW(d.day) ? "in" : ""}
-            title={`${MONTHS_LONG[bd.month - 1].slice(0, 3)} ${d.day}: score ${d.score == null ? "–" : Math.round(d.score)}, high ${d.tmax == null ? "–" : temp(d.tmax, unit)}`}
-            style={{ background: scoreColor(d.score) }} />
-        ))}
-      </div>
-      <div className="tp-days-ax" aria-hidden><span>1</span><span>15</span><span>{bd.days.length}</span></div>
-      {flat && <p className="tp-note" style={{ margin: "2px 0 0" }}>Every day fits about the same. The stretch is only a little better.</p>}
-    </div>
-  );
-}
+  const t = (bd.days ?? []).filter((d) => w && d.day >= w.start && d.day <= w.end && d.tmax != null).map((d) => d.tmax!);
+  return t.length ? t.reduce((a, b) => a + b, 0) / t.length : null;
+};
 
 function Days({ list, picked, unit, loading }: { list: BestDays[]; picked: number[]; unit: Unit; loading: boolean }) {
   if (loading) return <p className="tp-note">Finding the best dates…</p>;
   const ranked = [...list].filter((b) => b.window).sort((a, b) => b.window!.mean - a.window!.mean || a.month - b.month);
   const best = ranked[0];
-  const byMonth = [...list].sort((a, b) => picked.indexOf(a.month) - picked.indexOf(b.month));
+  if (!best) return <p className="small" style={{ margin: 0 }}>📅 No dates to show.</p>;
+  const hi = stretchHigh(best);
+  const byMonth = [...ranked].sort((a, b) => picked.indexOf(a.month) - picked.indexOf(b.month));
   return (
     <div>
-      <div className="tp-h">📅 Best dates {picked.length > 1 && <small>in your {picked.length} months</small>}</div>
-      {best ? (
-        <p className="tp-dates">{fmtWindow(best)} <small>score {Math.round(best.window!.mean)}</small></p>
-      ) : (
-        <p className="small" style={{ margin: 0 }}>No dates to show.</p>
+      <div className="tp-h">📅 Best dates</div>
+      <p className="tp-dates">{fmtWindow(best)} <small>score {Math.round(best.window!.mean)}{hi != null && ` · about ${temp(hi, unit)} highs`}</small></p>
+      {isFlat(best) && <p className="small muted" style={{ margin: 0 }}>Any day in {MONTHS_LONG[best.month - 1]} works about as well.</p>}
+      {byMonth.length > 1 && (
+        <ul className="tp-mlist">
+          {byMonth.map((b) => (
+            <li key={b.month} className={b === best ? "top" : ""}>
+              <span>{MONTHS_LONG[b.month - 1]}</span>
+              <b>{fmtWindow(b)}</b>
+              <span className="muted">{Math.round(b.window!.mean)}</span>
+            </li>
+          ))}
+        </ul>
       )}
-      {ranked.length > 1 && (
-        <p className="small muted" style={{ margin: "0 0 8px" }}>
-          Next best: {ranked.slice(1, 3).map((b) => fmtWindow(b)).join(", ")}
-        </p>
-      )}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {byMonth.map((b) => <MonthDays key={b.month} bd={b} unit={unit} top={b === best} />)}
-      </div>
-      {list[0] && <p className="tp-note">Best 5-day stretch for your settings. {list[0].note}</p>}
+      <p className="tp-note">Best 5 days in a row for your settings. {best.note}</p>
     </div>
   );
 }

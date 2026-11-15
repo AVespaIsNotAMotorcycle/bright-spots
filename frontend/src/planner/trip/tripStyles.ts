@@ -117,15 +117,12 @@ export const TRIP_CSS = `
 .tp-hz-k{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);white-space:nowrap}
 .tp-hz b{display:block;font-size:22px;font-family:var(--font-display);font-variant-numeric:tabular-nums;line-height:1.2;margin-top:2px}
 .tp-hz b small{font-family:var(--font-body);font-size:.55em;font-weight:700;margin-left:1px;vertical-align:.5em}
-.tp-days{display:grid;grid-template-columns:repeat(31,1fr);gap:2px}
-.tp-days span{height:20px;border-radius:3px}
-.tp-days span.in{outline:2px solid #e0a82e;outline-offset:0;position:relative;z-index:1}
-.tp-days-ax{display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-top:2px}
 .tp-dates{font-family:var(--font-display);font-size:26px;font-weight:800;color:var(--pine);margin:0 0 4px}
 .tp-dates small{font-family:var(--font-body);font-size:13px;font-weight:600;color:var(--text-muted);margin-left:6px}
-.tp-md{padding:8px 10px;border:1px solid var(--border);border-radius:12px}
-.tp-md.top{border-color:#e0a82e;background:rgba(224,168,46,.07)}
-.tp-md-head{display:flex;justify-content:space-between;gap:8px;font-size:13px;margin-bottom:6px}
+.tp-mlist{list-style:none;margin:10px 0 0;padding:0;border-top:1px solid var(--border)}
+.tp-mlist li{display:grid;grid-template-columns:1fr auto 36px;gap:10px;padding:7px 4px;border-bottom:1px solid var(--border);font-size:14px}
+.tp-mlist li span:last-child{text-align:right}
+.tp-mlist li.top b{color:var(--pine)}
 .tp-card-dates{font-size:13px;margin:0;color:var(--text)}
 .tp-card-dates b{color:var(--pine)}
 /* Compare tray */
