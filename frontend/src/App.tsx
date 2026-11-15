@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import ErrorBoundary from "./ErrorBoundary";
 import Landing from "./Landing";
+import { updateAccount } from "./auth";
 import type { Atlas } from "./detective/model";
 import type { Unit } from "./planner/PrefsPanel";
 import { StationStrip } from "./research/station";
@@ -158,6 +159,7 @@ export default function App() {
   function submitProfile(p: Profile) {
     setProfile(p);
     saveProfile(p);
+    updateAccount(p);
     setEditing(false);
     navigate({ tab: "home" });
   }
@@ -167,8 +169,15 @@ export default function App() {
     const p = { ...profile, research: on };
     setProfile(p);
     saveProfile(p);
+    updateAccount(p);
     // Turning research off while on a research page would leave a blank tab: go Home.
     if (!on && RESEARCH_TABS.includes(tab)) navigate({ tab: "home" });
+  }
+
+  function logOut() {
+    setProfile(null);
+    saveProfile(null);
+    navigate({ tab: "home" });
   }
 
   const go = (t: Tab, extra: Partial<NavState> = {}) => navigate({ tab: t, ...extra });
@@ -215,12 +224,15 @@ export default function App() {
           <Menu label={initial} className="avatar" align="right">
             {(close) => (
               <>
-                <div className="menu-head">{profile.name || "Guest"}</div>
+                <div className="menu-head">{profile.name || "Guest"}{profile.email && <span className="micro muted" style={{ display: "block" }}>{profile.email}</span>}</div>
                 <button type="button" role="menuitemcheckbox" aria-checked={research} onClick={() => setResearch(!research)}>
                   Research tools: {research ? "on" : "off"}
                 </button>
                 <button type="button" role="menuitem" onClick={() => { close(); setEditing(true); }}>
                   Edit profile
+                </button>
+                <button type="button" role="menuitem" onClick={() => { close(); logOut(); }}>
+                  {profile.email ? "Log out" : "Sign up or log in"}
                 </button>
               </>
             )}

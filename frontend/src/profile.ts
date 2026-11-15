@@ -7,6 +7,8 @@ export type Tab = NonNullable<NavState["tab"]>;
 export interface Profile {
   name: string;
   research: boolean;
+  /** Set when signed in to an account; missing for guests. */
+  email?: string;
 }
 
 export const TAB_LABEL: Record<Tab, string> = {
@@ -47,10 +49,10 @@ export const PERSONAS: Record<Persona, { label: string; emoji: string; tagline: 
 const KEY = "profile";
 
 /** Old profiles had a persona: "researcher" turns research on, anything else is off. */
-export function migrate(p: { name?: unknown; persona?: unknown; research?: unknown }): Profile {
+export function migrate(p: { name?: unknown; persona?: unknown; research?: unknown; email?: unknown }): Profile {
   const name = typeof p.name === "string" ? p.name : "";
   const research = typeof p.research === "boolean" ? p.research : p.persona === "researcher";
-  return { name, research };
+  return typeof p.email === "string" && p.email ? { name, research, email: p.email } : { name, research };
 }
 
 export function loadProfile(): Profile | null {

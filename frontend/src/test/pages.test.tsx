@@ -17,6 +17,9 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
+const researchMenu = () =>
+  screen.getAllByRole("button", { name: /^Research/ }).find((b) => b.getAttribute("aria-haspopup") === "menu")!;
+
 describe("App", () => {
   it("shows the Canopy sign-up with a research switch that is off by default", async () => {
     render(<App />);
@@ -24,8 +27,33 @@ describe("App", () => {
     const sw = screen.getByRole("switch", { name: /research tools too/i });
     expect(sw.getAttribute("aria-checked")).toBe("false");
     fireEvent.click(sw);
-    fireEvent.click(screen.getByRole("button", { name: "Get started" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue as a guest" }));
     expect(JSON.parse(localStorage.getItem("profile")!)).toEqual({ name: "", research: true });
+  });
+
+  it("signs up, logs out, and logs back in with the same password", async () => {
+    render(<App />);
+    fireEvent.change(await screen.findByLabelText("Name"), { target: { value: "Ana" } });
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "Ana@Example.com" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "short" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+    expect((await screen.findByRole("alert")).textContent).toMatch(/8 characters/);
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "parks-2026" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+    await screen.findByRole("navigation", { name: "Main" }, { timeout: 3000 });
+    expect(JSON.parse(localStorage.getItem("profile")!)).toEqual({ name: "Ana", research: false, email: "ana@example.com" });
+    expect(localStorage.getItem("accounts")).not.toContain("parks-2026");
+
+    fireEvent.click(screen.getByRole("button", { name: "A" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Log out" }));
+    fireEvent.click(await screen.findByRole("tab", { name: "Log in" }));
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "ana@example.com" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "wrong-pass" } });
+    fireEvent.click(screen.getByRole("button", { name: "Log in" }));
+    expect((await screen.findByRole("alert")).textContent).toMatch(/wrong/);
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "parks-2026" } });
+    fireEvent.click(screen.getByRole("button", { name: "Log in" }));
+    await screen.findByRole("navigation", { name: "Main" }, { timeout: 3000 });
   });
 
   it("with research on, the nav has the five tabs and a Research menu with every research tool", async () => {
@@ -33,15 +61,15 @@ describe("App", () => {
     render(<App />);
     const nav = await screen.findByRole("navigation", { name: "Main" });
     expect([...nav.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["Home", "Plan", "Mysteries", "Saved", "Passport"]);
-    fireEvent.click(screen.getByRole("button", { name: /^Research/ }));
+    fireEvent.click(researchMenu());
     const items = screen.getAllByRole("menuitem").map((b) => b.textContent);
     expect(items).toEqual(["Trend Atlas", "Topo Map", "Analog Sites", "Park Families", "Odd One Out", "Season Shifts", "Head-to-Head", "Robustness", "Campfire"]);
     fireEvent.keyDown(document, { key: "Escape" });
     expect(screen.queryByRole("menu")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: /^Research/ }));
+    fireEvent.click(researchMenu());
     fireEvent.mouseDown(document.body);
     expect(screen.queryByRole("menu")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: /^Research/ }));
+    fireEvent.click(researchMenu());
     fireEvent.click(screen.getByRole("menuitem", { name: "Topo Map" }));
     expect(location.hash).toContain("tab=map");
   });

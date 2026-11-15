@@ -727,6 +727,10 @@ path.yc-series.tag-projected { stroke: var(--sky); stroke-dasharray: 2 2; }
 .signin { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; background: var(--sand) center/cover no-repeat; position: relative; }
 .signin::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(244,239,230,.55), rgba(244,239,230,.9)); }
 .signin-card { position: relative; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 18px; padding: 32px 28px; background: var(--paper); border: 1px solid var(--stone); border-radius: var(--radius); }
+.auth-tabs { display: grid; grid-template-columns: 1fr 1fr; padding: 3px; border: 1px solid var(--stone); border-radius: 99px; background: var(--sand); }
+.auth-tabs button { border: 0; background: none; padding: 8px 0; border-radius: 99px; font: 500 14px var(--font-body); color: var(--bark-2); cursor: pointer; }
+.auth-tabs button[aria-selected="true"] { background: var(--paper); color: var(--bark); box-shadow: 0 0 0 1px var(--stone); }
+.auth-error { margin: 0; padding: 8px 12px; border-radius: 10px; font-size: 13px; color: var(--clay); background: color-mix(in srgb, var(--clay) 8%, var(--paper)); border: 1px solid color-mix(in srgb, var(--clay) 30%, transparent); }
 .switch { display: flex; align-items: center; gap: 12px; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; font: inherit; color: var(--bark); }
 .switch-track { width: 38px; height: 22px; border-radius: 999px; background: var(--stone); position: relative; flex: none; transition: background .15s; }
 .switch-track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--paper); transition: transform .15s; }
