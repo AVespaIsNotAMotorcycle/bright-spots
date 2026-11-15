@@ -71,12 +71,8 @@ describe("App", () => {
     localStorage.setItem("profile", JSON.stringify({ name: "Sam", persona: "visitor" }));
     render(<App />);
     expect(await screen.findByText(/0 of \d+ parks stamped/, undefined, { timeout: 3000 })).toBeTruthy();
-    for (const t of ["🗓 Trip Planner", "🔍 Cases", "🧭 Park Explorer", "🎫 Passport"]) expect(screen.getByText(t)).toBeTruthy();
-    const sw = screen.getByRole("switch");
-    expect(sw.textContent).toContain("Science off");
-    fireEvent.click(sw);
-    expect(sw.textContent).toContain("Science on");
-    expect(localStorage.getItem("explorer.science")).toBe("true");
+    for (const t of ["🗓 Trip Planner", "♥ Saved", "🔍 Cases", "🧭 Park Explorer", "🎫 Passport"]) expect(screen.getByText(t)).toBeTruthy();
+    expect(screen.queryByRole("switch")).toBeNull();
   });
 
   it("the trip planner shows only the best matches, with why #1, chips and the drawer", async () => {
@@ -104,18 +100,13 @@ describe("App", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("the science switch adds factor scores in the planner and the full atlas in Park Explorer", async () => {
+  it("Explorer always sees plain words: no factor scores, simple Park Explorer", async () => {
     localStorage.setItem("profile", JSON.stringify({ name: "", persona: "explorer" }));
     history.replaceState(null, "", "#tab=planner&month=10");
     render(<App />);
     await screen.findByText(/Why #1\?/, undefined, { timeout: 3000 });
     expect(screen.queryAllByText(/\/100 ×/)).toHaveLength(0);
-    fireEvent.click(screen.getByRole("switch"));
-    expect(screen.getAllByText(/\/100 ×/).length).toBeGreaterThan(0);
-    expect(screen.getByRole("status").textContent).toContain("Science on");
     fireEvent.click(screen.getByText("🧭 Park Explorer"));
-    expect(await screen.findByText("National Trend Atlas", undefined, { timeout: 3000 })).toBeTruthy();
-    fireEvent.click(screen.getByRole("switch"));
     expect(await screen.findByText("Pick a question", undefined, { timeout: 3000 })).toBeTruthy();
   });
 

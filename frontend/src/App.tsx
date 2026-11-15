@@ -68,14 +68,6 @@ function NavMenu({ label, tabs, current, onGo }: { label: string; tabs: Tab[]; c
   );
 }
 
-function loadScience(): boolean {
-  try {
-    return localStorage.getItem("explorer.science") === "true";
-  } catch {
-    return false;
-  }
-}
-
 function loadUnit(): Unit {
   try {
     return localStorage.getItem("planner.unit") === '"C"' ? "C" : "F";
@@ -90,21 +82,6 @@ export default function App() {
   const [editing, setEditing] = useState(false);
   const [atlas, setAtlas] = useState<Atlas | null>(null);
   const [unit, setUnit] = useState<Unit>(loadUnit);
-  // Explorer "science" switch: off shows plain words, on adds the statistics.
-  const [science, setScience] = useState<boolean>(loadScience);
-  const [sciNote, setSciNote] = useState(false);
-  useEffect(() => {
-    if (!sciNote) return;
-    const t = setTimeout(() => setSciNote(false), 4500);
-    return () => clearTimeout(t);
-  }, [sciNote, science]);
-  useEffect(() => {
-    try {
-      localStorage.setItem("explorer.science", String(science));
-    } catch {
-      /* storage unavailable */
-    }
-  }, [science]);
   useEffect(() => {
     try {
       localStorage.setItem("planner.unit", JSON.stringify(unit));
@@ -203,20 +180,6 @@ export default function App() {
                   {TAB_LABEL[t]}
                 </button>
               ))}
-          {profile.persona === "explorer" && (
-            <button
-              role="switch"
-              aria-checked={science}
-              onClick={() => {
-                setScience((x) => !x);
-                setSciNote(true);
-              }}
-              className={`nav-tab${science ? " active" : ""}`}
-              title="Show the statistics behind each trend (p, q, every season)"
-            >
-              🔬 Science {science ? "on" : "off"}
-            </button>
-          )}
           <button
             onClick={() => setEditing(true)}
             style={{
@@ -235,13 +198,6 @@ export default function App() {
           </button>
         </nav>
       </header>
-      {sciNote && profile.persona === "explorer" && (
-        <div role="status" className="sci-toast">
-          {science
-            ? "🔬 Science on: factor scores and weights in the Trip Planner, q-values on Home, and the full atlas in Park Explorer."
-            : "🔬 Science off: plain words everywhere."}
-        </div>
-      )}
       <main>
         <ErrorBoundary key={tab} what="This page">
         <Suspense fallback={<p className="muted">Loading…</p>}>
@@ -256,7 +212,7 @@ export default function App() {
           />
         )}
         {tab === "home" && (
-          <Home persona={profile.persona} name={profile.name} atlas={atlas} onGo={go} science={science} />
+          <Home persona={profile.persona} name={profile.name} atlas={atlas} onGo={go} />
         )}
         {tab === "analogs" && (
           <Analogs
@@ -291,7 +247,7 @@ export default function App() {
         {(tab === "atlas" || tab === "explore") && (
           <Detective
             key={tab}
-            simple={tab === "explore" && !science}
+            simple={tab === "explore"}
             initialParkId={nav.park ?? null}
             onParkChange={(parkId) =>
               parkId ? navigate({ tab, park: parkId }) : navigate({ tab })
@@ -353,7 +309,6 @@ export default function App() {
             month={nav.month}
             park={nav.park}
             q={nav.q}
-            science={science}
             onState={(q) => replace({ tab: "planner", q })}
             onCase={profile.persona === "explorer" ? (caseId) => go("student", { caseId, step: 0 }) : undefined}
           />
