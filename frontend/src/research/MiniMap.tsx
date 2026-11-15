@@ -61,11 +61,10 @@ export default function MiniMap({ parks, ids, color }: { parks: ParkMeta[]; ids:
           );
         })}
       </svg>
-      {away.length > 0 && (
-        <p className="micro muted" style={{ margin: "4px 0 0" }}>
-          Also off this map: {away.map((p) => p.name).join(", ")}
-        </p>
-      )}
+      <p className="micro muted" title={away.map((p) => p.name).join(", ")}
+        style={{ margin: "4px 0 0", height: 28, overflow: "hidden" }}>
+        {away.length > 0 ? `Also in AK, HI or territories: ${away.map((p) => p.name).join(", ")}` : "All parks shown are in the lower 48."}
+      </p>
     </div>
   );
 }

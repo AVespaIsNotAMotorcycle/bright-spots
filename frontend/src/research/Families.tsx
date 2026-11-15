@@ -26,96 +26,93 @@ interface CardProps {
   colorFor: (n: number) => string;
   onOpenPark: (id: string) => void;
   onHover: (id: number | null) => void;
-  compact?: boolean;
 }
 
-function FamilyCard({ f, fam, parks, nameOf, colorFor, onOpenPark, onHover, compact }: CardProps) {
+function FamilyCard({ f, fam, parks, nameOf, colorFor, onOpenPark, onHover }: CardProps) {
   const color = colorFor(f.id);
+  const outlier = f.size <= 3;
+  const clamp2: React.CSSProperties = {
+    display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
+  };
+  const tag: React.CSSProperties = { fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 12, whiteSpace: "nowrap" };
   return (
     <div
       className="card"
-      style={{ borderTop: `4px solid ${color}`, opacity: compact ? 0.92 : 1 }}
+      style={{ borderTop: `4px solid ${color}`, display: "flex", flexDirection: "column", gap: 8 }}
       onMouseEnter={() => onHover(f.id)}
       onMouseLeave={() => onHover(null)}
     >
-      <div className="row" style={{ justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-        <h3 style={{ margin: 0 }}>
-          <span style={{ display: "inline-block", width: 12, height: 12, borderRadius: 6, background: color, marginRight: 8 }} />
-          {f.title}
-        </h3>
-        <span className="tag">{f.size} park{f.size === 1 ? "" : "s"}</span>
-      </div>
-      <p className="micro muted" style={{ margin: "4px 0 8px" }}>
-        {f.name} (compared with the average park)
-      </p>
-      <p style={{ margin: "0 0 8px" }}>
+      <h3 style={{ margin: 0, display: "flex", alignItems: "center", gap: 8, minHeight: 28 }}>
+        <span style={{ width: 12, height: 12, borderRadius: 6, background: color, flex: "none" }} />
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={f.title}>{f.title}</span>
+      </h3>
+      <p className="micro muted" style={{ margin: 0, minHeight: 32, ...clamp2 }} title={f.name}>{f.name}</p>
+
+      <div className="row" style={{ gap: 6, flexWrap: "wrap", minHeight: 24 }}>
         <span
           title={`Parks stayed together in ${Math.round(f.stability * 100)}% of ${fam.bootstraps} re-runs. Stable is ${Math.round(fam.stable_at * 100)}% or more.`}
-          style={{
-            fontSize: 12, fontWeight: 700, padding: "2px 10px", borderRadius: 12, cursor: "help",
-            background: f.stable ? "rgba(45,90,39,.14)" : "rgba(183,121,31,.16)",
-            color: f.stable ? "var(--pine)" : "#8a5a10",
-          }}
+          style={{ ...tag, cursor: "help", background: f.stable ? "rgba(45,90,39,.14)" : "rgba(183,121,31,.16)", color: f.stable ? "var(--pine)" : "#8a5a10" }}
         >
-          {f.stable ? "Stable group" : "Loose group"} · {Math.round(f.stability * 100)}%
+          {f.stable ? "Stable" : "Loose"} · {Math.round(f.stability * 100)}%
         </span>
-      </p>
+        <span style={{ ...tag, background: "var(--surface-2)", color: "var(--text)" }}>{f.size} park{f.size === 1 ? "" : "s"}</span>
+        {outlier && <span style={{ ...tag, background: "rgba(139,58,26,.12)", color: "var(--rust)" }}>Outlier</span>}
+      </div>
+
       <MiniMap parks={parks} ids={f.parks} color={color} />
 
-      {!compact && (
-        <div style={{ margin: "10px 0" }}>
-          <p className="small" style={{ fontWeight: 700, margin: "0 0 4px" }}>How its parks change, against the average park</p>
-          {f.signature.map((s) => {
-            const w = Math.min(50, Math.abs(s.z) * 22);
-            return (
-              <div key={s.variable + s.period} className="row small" style={{ gap: 6, alignItems: "center", margin: "3px 0" }}>
-                <span style={{ width: 118, flex: "none", fontSize: 12 }}>{FEATURE_LABEL[`${s.variable}|${s.period}`] ?? s.variable}</span>
-                <span style={{ position: "relative", flex: 1, height: 12, background: "var(--surface-2)", borderRadius: 5 }}>
-                  <span style={{ position: "absolute", left: "50%", top: -2, width: 1, height: 16, background: "var(--text-faint)" }} />
-                  <span
-                    style={{
-                      position: "absolute", top: 0, height: 12, borderRadius: 5, width: `${w}%`,
-                      left: s.z >= 0 ? "50%" : `${50 - w}%`,
-                      background: s.z >= 0 ? "var(--rust)" : "var(--sky)",
-                    }}
-                  />
-                </span>
-                <span style={{ width: 38, textAlign: "right", fontVariantNumeric: "tabular-nums", fontSize: 12 }}>
-                  {s.sn > 0 ? "+" : ""}{s.sn.toFixed(1)}
-                </span>
-              </div>
-            );
-          })}
-          <p className="micro muted" style={{ margin: "4px 0 0" }}>
-            Bar to the right: changing faster than the average park. Left: slower. The number is the trend per decade divided by the
-            year-to-year scatter.
-          </p>
-        </div>
-      )}
-
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
-        {f.parks.map((id) => {
-          const ag = fam.parks[id]?.agreement ?? 1;
-          const typical = ag >= 0.8;
-          const edge = ag < 0.6;
+      <div>
+        <p className="small" style={{ fontWeight: 700, margin: "2px 0 4px" }}>Change against the average park</p>
+        {f.signature.map((s) => {
+          const w = Math.min(50, Math.abs(s.z) * 22);
           return (
-            <button
-              key={id}
-              className="chip"
-              onClick={() => onOpenPark(id)}
-              title={`${Math.round(ag * 100)}% agreement with its family${edge ? " (borderline member)" : typical ? " (typical member)" : ""}`}
-              style={{
-                background: typical ? `${color}22` : undefined,
-                borderStyle: edge ? "dashed" : undefined,
-                borderColor: edge ? "#b7791f" : typical ? color : undefined,
-              }}
-            >
-              {nameOf(id)}
-            </button>
+            <div key={s.variable + s.period} className="row small" style={{ gap: 6, alignItems: "center", margin: "3px 0" }}>
+              <span style={{ width: 118, flex: "none", fontSize: 12 }}>{FEATURE_LABEL[`${s.variable}|${s.period}`] ?? s.variable}</span>
+              <span style={{ position: "relative", flex: 1, height: 12, background: "var(--surface-2)", borderRadius: 5 }}>
+                <span style={{ position: "absolute", left: "50%", top: -2, width: 1, height: 16, background: "var(--text-faint)" }} />
+                <span
+                  style={{
+                    position: "absolute", top: 0, height: 12, borderRadius: 5, width: `${w}%`,
+                    left: s.z >= 0 ? "50%" : `${50 - w}%`,
+                    background: s.z >= 0 ? "var(--rust)" : "var(--sky)",
+                  }}
+                />
+              </span>
+              <span style={{ width: 34, textAlign: "right", fontVariantNumeric: "tabular-nums", fontSize: 12 }}>
+                {s.sn > 0 ? "+" : ""}{s.sn.toFixed(1)}
+              </span>
+            </div>
           );
         })}
+        <p className="micro muted" style={{ margin: "4px 0 0" }}>Right of the line: faster than average. Left: slower.</p>
       </div>
-      <p className="micro muted" style={{ margin: "6px 0 0" }}>Tinted chip: typical member. Dashed chip: borderline, it often lands in another family.</p>
+
+      <div style={{ marginTop: "auto" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 4, height: 118, overflowY: "auto", alignContent: "flex-start", paddingRight: 2 }}>
+          {f.parks.map((id) => {
+            const ag = fam.parks[id]?.agreement ?? 1;
+            const typical = ag >= 0.8;
+            const edge = ag < 0.6;
+            return (
+              <button
+                key={id}
+                className="chip"
+                onClick={() => onOpenPark(id)}
+                title={`${Math.round(ag * 100)}% agreement with its family${edge ? " (borderline member)" : typical ? " (typical member)" : ""}`}
+                style={{
+                  fontSize: 12, padding: "3px 9px", flex: "none",
+                  background: typical ? `${color}22` : undefined,
+                  borderStyle: edge ? "dashed" : undefined,
+                  borderColor: edge ? "#b7791f" : typical ? color : undefined,
+                }}
+              >
+                {nameOf(id)}
+              </button>
+            );
+          })}
+        </div>
+        <p className="micro muted" style={{ margin: "4px 0 0" }}>Tinted: typical member. Dashed: borderline.</p>
+      </div>
     </div>
   );
 }
@@ -180,29 +177,16 @@ export default function Families({
         />
       </div>
 
-      {(() => {
-        const main = fam.families.filter((f) => f.size > 3);
-        const outliers = fam.families.filter((f) => f.size <= 3);
-        const cardProps = { fam, parks: data.parks, nameOf, colorFor, onOpenPark, onHover: setOpen };
-        return (
-          <>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 14, alignItems: "start" }}>
-              {main.map((f) => <FamilyCard key={f.id} f={f} {...cardProps} />)}
-            </div>
-            {outliers.length > 0 && (
-              <>
-                <h3 style={{ margin: "6px 0 0" }}>Outliers</h3>
-                <p className="small muted" style={{ margin: 0 }}>
-                  Families of three parks or fewer. They change unlike the rest, often because of an extreme region, so treat them as notes rather than groups.
-                </p>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12, alignItems: "start" }}>
-                  {outliers.map((f) => <FamilyCard key={f.id} f={f} compact {...cardProps} />)}
-                </div>
-              </>
-            )}
-          </>
-        );
-      })()}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(310px, 1fr))", gap: 14, alignItems: "stretch" }}>
+        {fam.families.map((f) => (
+          <FamilyCard key={f.id} f={f} fam={fam} parks={data.parks} nameOf={nameOf} colorFor={colorFor}
+            onOpenPark={onOpenPark} onHover={setOpen} />
+        ))}
+      </div>
+      <p className="small muted" style={{ margin: 0 }}>
+        Families marked "Outlier" hold three parks or fewer. They change unlike the rest, often because of an extreme region,
+        so read them as notes rather than groups.
+      </p>
 
       {eco && (
         <div className="card">
