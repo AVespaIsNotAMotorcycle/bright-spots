@@ -216,7 +216,7 @@ function VerdictGame({ step, atlas, timeUp, done, finish }: GameProps) {
       pts: d === 0 ? 2 : d === 1 ? 1 : 0, max: 2, ok: d === 0, timeout: v === "late",
       answer: `${truth === "real" ? "Real trend" : truth === "possible" ? "Maybe (possible)" : "Just noise"}${qv != null ? `, q = ${qv.toFixed(3)}` : ""}`,
       extra: series && row && meta ? (
-        <TrendChart series={series} trend={row} unit={meta.unit.includes("°") ? "°F" : meta.unit} label={`${meta.label} · ${PERIOD_LABEL[q.period] ?? q.period}`} parkName={parkName(q.parkId)} />
+        <TrendChart series={series} trend={row} unit={meta.unit.includes("°") ? "°F" : meta.unit} label={`${meta.label} · ${PERIOD_LABEL[q.period] ?? q.period}`} parkName={parkName(q.parkId)} parkId={q.parkId} />
       ) : undefined,
     });
   };

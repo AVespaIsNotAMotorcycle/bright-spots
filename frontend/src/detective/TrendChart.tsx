@@ -19,6 +19,8 @@ interface Props {
   label: string;
   /** Park name, used by the explanation. */
   parkName?: string;
+  /** Park id, used to rank this park against the others. */
+  parkId?: string;
   /** Show the "Explain it to me" button. Default true. */
   explain?: boolean;
 }
@@ -33,7 +35,7 @@ function senLine(
   return years.map((y) => ({ year: y, fit: trend.mean! + slope * (y - mid) }));
 }
 
-export default function TrendChart({ series: raw, trend: rawTrend, unit, label, parkName, explain = true }: Props) {
+export default function TrendChart({ series: raw, trend: rawTrend, unit, label, parkName, parkId, explain = true }: Props) {
   // The data files hold °C. When a chart is labelled °F, convert here so numbers match the label.
   const toF = unit === "°F";
   const conv = (v: number) => (toF ? v * 1.8 + 32 : v);
@@ -152,18 +154,13 @@ export default function TrendChart({ series: raw, trend: rawTrend, unit, label, 
       </div>
       {explain && (
         <ExplainButton
-          facts={{
-            park: parkName ?? "",
-            label: label.split(" · ")[0],
-            unit,
-            period: label.includes(" · ") ? label.split(" · ")[1] : "annual",
-            sen_per_decade: trend.sen_per_decade == null ? null : Number(trend.sen_per_decade.toFixed(3)),
-            mean: trend.mean == null ? null : Number(trend.mean.toFixed(2)),
-            first_year: series.years[0] ?? null,
-            last_year: series.years[series.years.length - 1] ?? null,
-            verdict: trend.verdict,
-            q: trend.q,
-          }}
+          park={parkName ?? ""}
+          parkId={parkId}
+          label={label.split(" · ")[0]}
+          period={label.includes(" · ") ? label.split(" · ")[1] : "annual"}
+          unit={unit}
+          series={series}
+          trend={trend}
         />
       )}
     </div>

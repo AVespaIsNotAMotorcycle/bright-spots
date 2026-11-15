@@ -358,7 +358,7 @@ export function ParkOfTheDay({ atlas, onExplore }: { atlas: Atlas; onExplore: (p
             </span>
           </div>
           {series && trend ? (
-            <TrendChart series={series} trend={trend} unit="°F" label="Daytime high · Annual" parkName={name} />
+            <TrendChart series={series} trend={trend} unit="°F" label="Daytime high · Annual" parkName={name} parkId={cell.park_id} />
           ) : (
             <div className="small muted">Loading the chart…</div>
           )}

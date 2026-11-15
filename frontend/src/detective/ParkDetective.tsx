@@ -73,7 +73,7 @@ export default function ParkDetective({
           <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontSize: 22, color: "var(--pine)" }}>{parkName}</h2>
         </div>
         <p className="small muted" style={{ margin: 0 }}>
-          Each card compares {parkName} from 1981 to 2026. Green means the change is very unlikely to be luck.
+          Each card compares {parkName} from 1981 to 2026. Tap "Explain it to me" under any chart for its story.
         </p>
         <div className="card-grid">
           {annual.map((t) => {
@@ -83,7 +83,7 @@ export default function ParkDetective({
             const isTemp = meta.unit.includes("°");
             return (
               <div key={t.variable} className="card" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <TrendChart series={series} trend={t} unit={isTemp && useFahrenheit ? "°F" : meta.unit} label={meta.label} parkName={parkName} />
+                <TrendChart series={series} trend={t} unit={isTemp && useFahrenheit ? "°F" : meta.unit} label={meta.label} parkName={parkName} parkId={parkId} />
                 <ExplainerCard parkName={parkName} trend={t} meta={meta} period="annual" periodLabel="the whole year" useFahrenheit={useFahrenheit} simple />
               </div>
             );
@@ -353,6 +353,7 @@ export default function ParkDetective({
               }
               label={selectedMeta.label}
               parkName={parkName}
+              parkId={parkId}
             />
           ) : (
             <div style={{ color: "var(--text-muted)", fontSize: 13 }}>

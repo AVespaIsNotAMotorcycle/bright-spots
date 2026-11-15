@@ -8,7 +8,7 @@ The model only receives the numbers in the request, so it cannot see anything el
 import hashlib
 import logging
 import time
-from typing import Literal
+from typing import Annotated, Literal
 
 import httpx
 from fastapi import APIRouter
@@ -33,6 +33,8 @@ class ExplainIn(BaseModel):
     last_year: int | None = None
     verdict: Verdict = "none"
     q: float | None = None
+    # Extra facts the page already worked out from the chart (record year, rank...).
+    notes: list[Annotated[str, Field(max_length=200)]] = Field(default_factory=list, max_length=8)
 
 
 class ExplainOut(BaseModel):
@@ -80,6 +82,7 @@ def template_text(p: ExplainIn) -> str:
 SYSTEM = (
     "You explain one small chart of NASA climate data to a curious 10-year-old. "
     "Write 2 or 3 short sentences in plain words, no jargon, no markdown. "
+    "Pick the two most surprising facts and lead with the most interesting one. "
     "Use ONLY the numbers given. Never invent a number, a cause or a prediction. "
     "If the verdict is 'possible', say we are not sure yet. If it is 'none', say it is just normal wiggling. "
     "Say what the dashed line means (the long-term direction) in a few words."
@@ -95,6 +98,7 @@ def _user_prompt(p: ExplainIn) -> str:
         f"average level: {p.mean if p.mean is not None else 'unknown'} {p.unit}\n"
         f"years covered: {p.first_year} to {p.last_year}\n"
         f"test verdict: {p.verdict}\n"
+        + "".join(f"fact: {n}\n" for n in p.notes)
     )
 
 

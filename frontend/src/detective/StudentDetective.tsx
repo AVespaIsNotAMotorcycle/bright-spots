@@ -160,6 +160,7 @@ function DataStep({
             unit={isTemp ? "°F" : meta.unit}
             label={`${meta.label} · ${PERIOD_LABEL[step.period!] ?? step.period}`}
             parkName={data?.park?.name}
+            parkId={step.parkId}
           />
         </div>
       )}

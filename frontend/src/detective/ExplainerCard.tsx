@@ -13,9 +13,9 @@ interface Props {
 
 function verdictBadge(verdict: string) {
   const styles: Record<string, { bg: string; color: string; label: string }> = {
-    real:     { bg: "#d4edda", color: "#155724", label: "Real, not luck" },
-    possible: { bg: "#fff3cd", color: "#856404", label: "Possible, not proven" },
-    none:     { bg: "var(--surface-2)", color: "var(--text-muted)", label: "No clear change" },
+    real:     { bg: "#d4edda", color: "#155724", label: "Confirmed trend" },
+    possible: { bg: "#fff3cd", color: "#856404", label: "Possible trend" },
+    none:     { bg: "var(--surface-2)", color: "var(--text-muted)", label: "No clear trend" },
     short:    { bg: "var(--surface-2)", color: "var(--text-muted)", label: "Too little data" },
     flat:     { bg: "var(--surface-2)", color: "var(--text-muted)", label: "No variation" },
   };
@@ -108,16 +108,21 @@ export default function ExplainerCard({
             {meta.label} · {periodLabel}
           </div>
           <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>
-            {trend.n_years} years · NASA POWER · Mann-Kendall
-            {trend.p_method && trend.p_method !== "original"
-              ? ` (${trend.p_method})`
-              : ""}
+            {simple
+              ? slope != null
+                ? `${slope > 0 ? "+" : ""}${slope.toFixed(2)} ${unit} every 10 years`
+                : "No data"
+              : <>
+                  {trend.n_years} years · NASA POWER · Mann-Kendall
+                  {trend.p_method && trend.p_method !== "original" ? ` (${trend.p_method})` : ""}
+                </>}
           </div>
         </div>
         {verdictBadge(trend.verdict)}
       </div>
 
-      <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>{sentence()}</p>
+      {/* Student cards already have the chart story above, so skip the repeated sentence. */}
+      {!simple && <p style={{ margin: 0, fontSize: 14, lineHeight: 1.5 }}>{sentence()}</p>}
 
       {!simple &&
         slope != null &&
@@ -153,10 +158,10 @@ export default function ExplainerCard({
           </div>
         )}
 
-      <div style={{ fontSize: 11, color: "var(--text-muted)", borderTop: "1px solid var(--border)", paddingTop: 8, marginTop: 2 }}>
+      {!simple && <div style={{ fontSize: 11, color: "var(--text-muted)", borderTop: "1px solid var(--border)", paddingTop: 8, marginTop: 2 }}>
         Source: NASA POWER / MERRA-2, 1981–2026 · Mann-Kendall significance test ·
         Benjamini-Hochberg FDR correction across 62 parks
-      </div>
+      </div>}
     </div>
   );
 }
