@@ -72,22 +72,17 @@ export function nextCase(): { c: Case; replay: boolean } | null {
 }
 
 const WIDGET_CSS = `
-@keyframes sw-float { 0%,100% { transform: translateY(0) rotate(-4deg) } 50% { transform: translateY(-10px) rotate(4deg) } }
-@keyframes sw-glow { 0%,100% { box-shadow: 0 0 0 0 var(--glow), 0 12px 28px rgba(0,0,0,.18) } 50% { box-shadow: 0 0 0 10px transparent, 0 16px 34px rgba(0,0,0,.22) } }
-@keyframes sw-shine { from { transform: translateX(-120%) skewX(-18deg) } to { transform: translateX(260%) skewX(-18deg) } }
-@keyframes sw-pop { from { transform: scale(.6); opacity: 0 } to { transform: scale(1); opacity: 1 } }
-.sw-hero { position: relative; overflow: hidden; animation: sw-glow 2.6s ease-in-out infinite; transition: transform .18s }
-.sw-hero:hover { transform: translateY(-4px) scale(1.01) }
-.sw-hero:active { transform: scale(.99) }
-.sw-hero .sw-shine { position: absolute; top: 0; bottom: 0; width: 40%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent); animation: sw-shine 3.4s ease-in-out infinite }
-.sw-emoji { animation: sw-float 3.2s ease-in-out infinite }
-.sw-pick { transition: transform .15s, box-shadow .15s }
-.sw-pick:hover { transform: translateY(-4px) rotate(-1deg); box-shadow: 0 10px 22px rgba(0,0,0,.2) }
-.sw-reveal { animation: sw-pop .4s cubic-bezier(.2,1.4,.4,1) both }
-@media (prefers-reduced-motion: reduce) { .sw-hero, .sw-emoji, .sw-hero .sw-shine, .sw-reveal { animation: none } }
+.sw-next { transition: transform .15s, border-color .15s, box-shadow .15s }
+.sw-next:hover { transform: translateY(-2px); border-color: var(--pine); box-shadow: var(--shadow-md) }
+.sw-next:hover .sw-go { background: var(--pine); color: var(--on-pine) }
+.sw-pick { transition: transform .15s, border-color .15s, background .15s }
+.sw-pick:hover { transform: translateY(-2px); border-color: var(--pine); background: var(--pine-tint) }
+@keyframes sw-fade { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
+.sw-reveal { animation: sw-fade .3s ease-out both }
+@media (prefers-reduced-motion: reduce) { .sw-next, .sw-pick { transition: none } .sw-reveal { animation: none } }
 `;
 
-const DIFF_LABEL = { easy: "😊 Easy", medium: "🤔 Medium", hard: "🔥 Hard" } as const;
+const DIFF_LABEL = { easy: "Easy", medium: "Medium", hard: "Hard" } as const;
 
 export function NextCase({ onPlay }: { onPlay: (c: Case) => void }) {
   const n = nextCase();
@@ -100,36 +95,48 @@ export function NextCase({ onPlay }: { onPlay: (c: Case) => void }) {
     );
   }
   const t = themeFor(n.c.steps[0], n.c.id);
+  const chip: React.CSSProperties = {
+    border: "1px solid var(--border)", borderRadius: 999, padding: "2px 10px", fontSize: 12, color: "var(--text-muted)", background: "var(--surface)",
+  };
   return (
     <button
-      className="sw-hero"
+      className="card sw-next"
       onClick={() => onPlay(n.c)}
       style={{
-        "--glow": `${t.edge}88`,
-        background: `radial-gradient(circle at 12% 20%, ${t.from}, ${t.to})`, border: `3px solid ${t.edge}`, color: "#1f2a24",
-        borderRadius: 24, padding: "26px 28px", cursor: "pointer", textAlign: "left",
-        display: "flex", gap: 22, alignItems: "center", flexWrap: "wrap", width: "100%",
-      } as React.CSSProperties}
+        display: "flex", gap: 18, alignItems: "center", textAlign: "left", cursor: "pointer", width: "100%",
+        borderLeft: "5px solid var(--pine)", color: "var(--text)",
+      }}
     >
       <style>{WIDGET_CSS}</style>
-      <span className="sw-shine" aria-hidden />
-      <span aria-hidden style={{ position: "absolute", right: -10, bottom: -34, fontSize: 170, opacity: 0.14 }}>{t.emoji[0]}</span>
-      <span className="sw-emoji" style={{ fontSize: 76, lineHeight: 1, filter: "drop-shadow(0 8px 8px rgba(0,0,0,.25))" }}>{n.c.emoji}</span>
-      <span style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minWidth: 220, position: "relative" }}>
-        <span style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <span style={{ background: "#1f2a24", color: "#fff", borderRadius: 999, padding: "3px 12px", fontSize: 11, fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" }}>
-            {n.replay ? "⭐ Go for 3 stars" : "🕵️ New mystery"}
-          </span>
-          <span style={{ background: "rgba(255,255,255,.7)", borderRadius: 999, padding: "3px 12px", fontSize: 12, fontWeight: 700 }}>
-            {DIFF_LABEL[n.c.difficulty]}
-          </span>
-          <span style={{ background: "rgba(255,255,255,.7)", borderRadius: 999, padding: "3px 12px", fontSize: 12, fontWeight: 700 }}>
-            ⏱ 5 seconds a question
-          </span>
+      <span
+        style={{
+          fontSize: 44, width: 76, height: 76, borderRadius: 16, display: "grid", placeItems: "center", flexShrink: 0,
+          background: `linear-gradient(145deg, ${t.from}, ${t.to})`, border: "1px solid var(--border)",
+        }}
+      >
+        {n.c.emoji}
+      </span>
+      <span style={{ display: "flex", flexDirection: "column", gap: 5, flex: 1, minWidth: 0 }}>
+        <span className="section-title">{n.replay ? "Go for 3 stars" : "Next case"}</span>
+        <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 24, color: "var(--pine)", lineHeight: 1.2 }}>
+          {n.c.title}
         </span>
-        <span style={{ fontFamily: "var(--font-display)", fontWeight: 900, fontSize: 30, lineHeight: 1.15 }}>{n.c.title}</span>
-        <span style={{ fontSize: 15, lineHeight: 1.5, opacity: 0.88 }}>{n.c.subtitle}</span>
-        {n.c.badge && <span style={{ fontSize: 13, fontWeight: 700 }}>🏅 Win the badge: {n.c.badge}</span>}
+        <span className="small muted">{n.c.subtitle}</span>
+        <span style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 2 }}>
+          <span style={chip}>{DIFF_LABEL[n.c.difficulty]}</span>
+          <span style={chip}>⏱ 5 seconds a question</span>
+          {n.c.badge && <span style={chip}>🏅 {n.c.badge}</span>}
+        </span>
+      </span>
+      <span
+        className="sw-go"
+        aria-hidden
+        style={{
+          width: 40, height: 40, borderRadius: "50%", border: "1.5px solid var(--pine)", color: "var(--pine)",
+          display: "grid", placeItems: "center", fontSize: 18, flexShrink: 0, transition: "background .15s, color .15s",
+        }}
+      >
+        →
       </span>
     </button>
   );
@@ -141,10 +148,10 @@ function dayIndex(now = new Date()) {
 }
 
 type Guess = "warming" | "cooling" | "flat";
-const GUESSES: { id: Guess; emoji: string; text: string; bg: string }[] = [
-  { id: "warming", emoji: "🔥", text: "Warming", bg: "linear-gradient(145deg,#ffe0cf,#ffb08a)" },
-  { id: "flat", emoji: "😐", text: "No change", bg: "linear-gradient(145deg,#eef0e4,#cfd6b8)" },
-  { id: "cooling", emoji: "❄️", text: "Cooling", bg: "linear-gradient(145deg,#dff0ff,#a9d4f5)" },
+const GUESSES: { id: Guess; emoji: string; text: string }[] = [
+  { id: "warming", emoji: "🔥", text: "Warming" },
+  { id: "flat", emoji: "➖", text: "No change" },
+  { id: "cooling", emoji: "❄️", text: "Cooling" },
 ];
 
 export function ParkOfTheDay({ atlas, onExplore }: { atlas: Atlas; onExplore: (parkId: string) => void }) {
@@ -167,72 +174,55 @@ export function ParkOfTheDay({ atlas, onExplore }: { atlas: Atlas; onExplore: (p
     play(g === truth ? "right" : "wrong");
   };
   const verdictPill =
-    cell.verdict === "real" ? { t: "✅ Real, not luck", bg: "#d4edda", c: "#155724" }
-    : cell.verdict === "possible" ? { t: "🤔 Maybe real", bg: "#fff3cd", c: "#856404" }
-    : { t: "〰️ Just wiggles", bg: "#e9e6da", c: "#5b5646" };
+    cell.verdict === "real" ? { t: "Real, not luck", bg: "#d4edda", c: "#155724" }
+    : cell.verdict === "possible" ? { t: "Possible, not proven", bg: "#fff3cd", c: "#856404" }
+    : { t: "No clear change", bg: "var(--surface-2)", c: "var(--text-muted)" };
 
   return (
-    <section
-      style={{
-        borderRadius: 24, overflow: "hidden", border: "2px solid var(--border)", background: "var(--surface)",
-        boxShadow: "0 14px 30px rgba(0,0,0,.10)",
-      }}
-    >
+    <section className="card" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <style>{WIDGET_CSS}</style>
-      <div
-        style={{
-          background: "linear-gradient(135deg,#2e5e32,#5f9a4f 55%,#e3b04b)", color: "#fff", padding: "20px 24px",
-          position: "relative", overflow: "hidden",
-        }}
-      >
-        <span aria-hidden style={{ position: "absolute", right: 14, top: -6, fontSize: 96, opacity: 0.22 }}>🌲</span>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".14em", textTransform: "uppercase", opacity: 0.9 }}>
-          🌄 Park of the day
-        </div>
-        <h3 style={{ margin: "4px 0 0", fontFamily: "var(--font-display)", fontSize: 32 }}>{name}</h3>
-      </div>
+      <div className="section-title">🌲 Park of the day</div>
+      <h3 style={{ margin: 0, fontFamily: "var(--font-display)", fontSize: 26, color: "var(--pine)" }}>{name}</h3>
 
       {!guess ? (
-        <div style={{ padding: "22px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{ fontWeight: 800, fontSize: 20 }}>Quick guess: since 1981, is {name} getting…</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }}>
+        <>
+          <div style={{ fontSize: 15 }}>Quick guess: since 1981, is its daytime high getting…</div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {GUESSES.map((g) => (
               <button
                 key={g.id}
                 className="sw-pick"
                 onClick={() => pick(g.id)}
                 style={{
-                  background: g.bg, border: "2px solid rgba(0,0,0,.14)", borderRadius: 18, padding: "18px 10px",
-                  cursor: "pointer", color: "#1f2a24", fontWeight: 800, fontSize: 16,
+                  background: "var(--surface)", border: "1.5px solid var(--border)", borderRadius: 12, padding: "10px 18px",
+                  cursor: "pointer", color: "var(--text)", fontWeight: 600, fontSize: 14, display: "flex", gap: 8, alignItems: "center",
                 }}
               >
-                <div style={{ fontSize: 40 }}>{g.emoji}</div>
+                <span style={{ fontSize: 20 }}>{g.emoji}</span>
                 {g.text}
               </button>
             ))}
           </div>
-          <div className="small muted">Tap one to see what NASA data says.</div>
-        </div>
+        </>
       ) : (
-        <div className="sw-reveal" style={{ padding: "22px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
-            <div style={{ fontSize: 48 }}>{guess === truth ? "🎉" : "🤷"}</div>
-            <div style={{ flex: 1, minWidth: 200 }}>
-              <div style={{ fontWeight: 900, fontSize: 22 }}>{guess === truth ? "You got it!" : "Not quite!"}</div>
-              <div style={{ fontSize: 14, lineHeight: 1.5 }}>
-                {truth === "flat"
-                  ? `${name} shows no clear change in its daytime high.`
-                  : `${name} is ${truth === "warming" ? "warming" : "cooling"}.`}{" "}
-                It ranks #{rank} of {cells.length} parks.
+        <div className="sw-reveal" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: 220 }}>
+              <div style={{ fontWeight: 700, color: guess === truth ? "var(--pine)" : "var(--rust)" }}>
+                {guess === truth ? "✓ You got it." : "Not quite."}
+              </div>
+              <div className="small muted">
+                {truth === "flat" ? "No clear change in its daytime high." : `It is ${truth === "warming" ? "warming" : "cooling"}.`}{" "}
+                Ranks #{rank} of {cells.length} parks.
               </div>
             </div>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: 900, fontSize: 40, color: per > 0 ? "#b5532a" : "#2b6aa3", lineHeight: 1 }}>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 30, color: per > 0 ? "var(--rust)" : "var(--sky)", lineHeight: 1 }}>
                 {per > 0 ? "+" : ""}{per.toFixed(2)}°F
               </div>
               <div className="micro muted">every 10 years</div>
             </div>
-            <span style={{ background: verdictPill.bg, color: verdictPill.c, borderRadius: 999, padding: "6px 14px", fontWeight: 800, fontSize: 13 }}>
+            <span style={{ background: verdictPill.bg, color: verdictPill.c, borderRadius: 999, padding: "3px 12px", fontWeight: 600, fontSize: 12 }}>
               {verdictPill.t}
             </span>
           </div>
@@ -242,7 +232,7 @@ export function ParkOfTheDay({ atlas, onExplore }: { atlas: Atlas; onExplore: (p
             <div className="small muted">Loading the chart…</div>
           )}
           <div>
-            <button className="btn" onClick={() => onExplore(cell.park_id)}>🧭 Explore {name}</button>
+            <button className="btn" onClick={() => onExplore(cell.park_id)}>Open in the Park Explorer →</button>
           </div>
         </div>
       )}
