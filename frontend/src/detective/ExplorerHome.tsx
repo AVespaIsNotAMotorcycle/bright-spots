@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { Atlas, AtlasCell } from "./model";
 import { PARK_NAMES } from "./parkNames";
+import { photoOf } from "./photos";
 import ParkMap from "../research/ParkMap";
 import { useInsights } from "../research/lib";
 import { E, RIDGE, TOPO } from "./theme";
@@ -38,6 +39,17 @@ const PILL: Record<string, { t: string; bg: string; c: string }> = {
 };
 
 const name = (id: string) => PARK_NAMES[id] ?? id;
+
+/** Small round park photo. */
+function Thumb({ id, size }: { id: string; size: number }) {
+  const p = photoOf(id);
+  if (!p) return <span style={{ width: size, display: "inline-block", textAlign: "center" }}>🏞️</span>;
+  return (
+    <img src={p.file} alt="" loading="lazy" title={`Photo: ${p.credit} (${p.license}), Wikimedia Commons`}
+      style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", verticalAlign: "middle", flexShrink: 0,
+        border: `2px solid ${E.cream}`, boxShadow: "0 1px 3px rgba(38,30,20,.25)" }} />
+  );
+}
 
 function Pill({ v }: { v: string }) {
   const p = PILL[v] ?? PILL.none;
@@ -139,7 +151,7 @@ export default function ExplorerHome({ atlas, onOpen }: { atlas: Atlas; onOpen: 
                   <button key={id} onClick={() => onOpen(id)}
                     style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 14px", border: 0, background: "none",
                       cursor: "pointer", color: E.bark, fontSize: 14 }}>
-                    🏞️ {n}
+                    <Thumb id={id} size={26} /> {n}
                   </button>
                 ))}
               </div>
@@ -186,10 +198,17 @@ export default function ExplorerHome({ atlas, onOpen }: { atlas: Atlas; onOpen: 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12, marginTop: 16 }}>
           {top3.map((c, i) => (
             <button key={c.park_id} className="sw-pick" onClick={() => onOpen(c.park_id)}
-              style={{ textAlign: "left", cursor: "pointer", borderRadius: 18, padding: 16, color: E.bark,
+              style={{ textAlign: "left", cursor: "pointer", borderRadius: 18, padding: 16, color: E.bark, overflow: "hidden",
                 border: `2px solid ${i === 0 ? E.clay : E.sage}`,
                 background: i === 0 ? "linear-gradient(150deg,#f6e3c4,#e9c79a)" : "linear-gradient(150deg,#f3ecd9,#e6dcc4)" }}>
-              <div style={{ fontSize: 30 }}>{medals[i]}</div>
+              {photoOf(c.park_id) && (
+                <div aria-hidden style={{ margin: "-16px -16px 10px", height: 110, position: "relative",
+                  background: `url("${photoOf(c.park_id)!.file}") center / cover no-repeat` }}
+                  title={`Photo: ${photoOf(c.park_id)!.credit} (${photoOf(c.park_id)!.license}), Wikimedia Commons`}>
+                  <span style={{ position: "absolute", left: 10, bottom: -14, fontSize: 30 }}>{medals[i]}</span>
+                </div>
+              )}
+              {!photoOf(c.park_id) && <div style={{ fontSize: 30 }}>{medals[i]}</div>}
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 19 }}>{name(c.park_id)}</div>
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 900, fontSize: 28, color: c.sen > 0 ? E.rust : E.dusk, lineHeight: 1.1, marginTop: 4 }}>
                 {fmt(per10(c.sen))}
@@ -207,7 +226,10 @@ export default function ExplorerHome({ atlas, onOpen }: { atlas: Atlas; onOpen: 
           <button onClick={() => onOpen(twist.cell.park_id)} className="sw-pick"
             style={{ display: "flex", gap: 14, alignItems: "center", width: "100%", textAlign: "left", marginTop: 14, cursor: "pointer",
               borderRadius: 16, padding: "12px 16px", border: `2px dashed ${E.dusk}`, background: "#e9eef0", color: E.bark }}>
-            <span style={{ fontSize: 30 }}>🌀</span>
+            <span style={{ position: "relative", flexShrink: 0 }}>
+              <Thumb id={twist.cell.park_id} size={52} />
+              <span style={{ position: "absolute", right: -6, bottom: -6, fontSize: 20 }}>🌀</span>
+            </span>
             <span style={{ flex: 1 }}>
               <b style={{ color: E.dusk }}>Plot twist: </b>
               {twist.kind === "opposite"
@@ -240,11 +262,14 @@ export default function ExplorerHome({ atlas, onOpen }: { atlas: Atlas; onOpen: 
           <div style={{ display: "grid", gap: 6 }}>
             {list.map((c, i) => (
               <button key={c.park_id} onClick={() => onOpen(c.park_id)}
-                style={{ display: "grid", gridTemplateColumns: "26px minmax(110px, 200px) 1fr auto", gap: 10, alignItems: "center",
+                style={{ display: "grid", gridTemplateColumns: "26px minmax(140px, 230px) 1fr auto", gap: 10, alignItems: "center",
                   border: 0, background: "none", padding: "3px 0", cursor: "pointer", color: E.bark, textAlign: "left" }}
                 className="ph-lead">
                 <span style={{ fontSize: 12, color: E.moss, textAlign: "right" }}>{i + 1}</span>
-                <b style={{ fontSize: 13.5 }}>{name(c.park_id)}</b>
+                <b style={{ fontSize: 13.5, display: "flex", alignItems: "center", gap: 8 }}>
+                  <Thumb id={c.park_id} size={26} />
+                  {name(c.park_id)}
+                </b>
                 <span style={{ height: 12, borderRadius: 6, background: E.sand, overflow: "hidden" }}>
                   <span style={{ display: "block", height: "100%", width: `${(Math.abs(c.sen ?? 0) / maxAbs) * 100}%`, borderRadius: 6,
                     background: c.verdict !== "real" || c.sen == null ? E.sage : c.sen > 0 ? `linear-gradient(90deg, ${E.clay}, ${E.rust})` : `linear-gradient(90deg, #8fb0c4, ${E.dusk})` }} />

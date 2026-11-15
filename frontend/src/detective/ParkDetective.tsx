@@ -5,6 +5,7 @@ import type { Atlas, ParkTrends, TrendRow } from "./model";
 import { PERIOD_LABEL, fmtQ } from "./model";
 import TrendChart from "./TrendChart";
 import GraceCard from "../research/GraceCard";
+import { PhotoCredit, photoOf } from "./photos";
 
 interface Props {
   parkId: string;
@@ -136,14 +137,25 @@ export default function ParkDetective({
   const periods = atlas.periods;
 
   if (simple) {
-    // Student view: one plain card per variable, annual only.
+    // Explorer view: a photo banner, then one plain card per variable, annual only.
+    const photo = photoOf(parkId);
     const annual = data.trends.filter((t) => t.period === "annual" && t.verdict !== "flat" && t.verdict !== "short");
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <button onClick={onBack} className="btn-ghost">← All parks</button>
-          <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontSize: 22, color: "var(--pine)" }}>{parkName}</h2>
+          {!photo && <h2 style={{ margin: 0, fontFamily: "var(--font-display)", fontSize: 22, color: "var(--pine)" }}>{parkName}</h2>}
         </div>
+        {photo && (
+          <div style={{ height: 220, borderRadius: 22, position: "relative", overflow: "hidden",
+            background: `linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(20,28,22,.7)), url("${photo.file}") center / cover no-repeat` }}>
+            <h2 style={{ position: "absolute", left: 22, bottom: 16, margin: 0, fontFamily: "var(--font-display)", fontSize: 34,
+              color: "#fff", textShadow: "0 2px 8px rgba(0,0,0,.6)" }}>
+              {parkName}
+            </h2>
+            <PhotoCredit photo={photo} style={{ position: "absolute", right: 12, top: 10, color: "rgba(255,255,255,.9)", textShadow: "0 1px 3px rgba(0,0,0,.7)" }} />
+          </div>
+        )}
         <p className="small muted" style={{ margin: 0 }}>
           Each card compares {parkName} from 1981 to 2026. Tap "Explain it to me" under any chart for its story.
         </p>

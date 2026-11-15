@@ -197,7 +197,7 @@ export const MORE_CASES: Case[] = [
       {
         kind: "intro",
         heading: "Welcome to the heat dome",
-        body: "Four deserts walk into a bar. The bartender asks: who has been adding 100°F days the fastest? You have 5 seconds an answer. Do not sweat it. (You will.)",
+        body: "Four deserts walk into a bar. The bartender asks: who has been adding 100°F days the fastest? Do not sweat it. (You will.)",
       },
       {
         kind: "duel",

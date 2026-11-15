@@ -389,7 +389,6 @@ export default function StudentDetective({
           {step.kind === "intro" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               <p style={{ margin: 0, fontSize: 16, lineHeight: 1.7 }}>{step.body}</p>
-              <p style={{ margin: 0, fontSize: 13, opacity: 0.75 }}>Each question gives you 5 seconds. Miss it and the point is gone.</p>
               <button onClick={nextStep} style={primaryBtn}>Start the case →</button>
             </div>
           )}
