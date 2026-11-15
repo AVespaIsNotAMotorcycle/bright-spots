@@ -26,8 +26,12 @@ const VERDICT_PILL: Record<string, { t: string; bg: string; c: string }> = {
 
 /** Student card: icon, title, the big number and a verdict pill on top; chart below. */
 function StudentTrendCard({
-  t, meta, fahrenheit, children,
-}: { t: TrendRow; meta: { label: string; unit: string }; fahrenheit: boolean; children: React.ReactNode }) {
+  t, meta, fahrenheit, chart,
+}: {
+  t: TrendRow; meta: { label: string; unit: string }; fahrenheit: boolean;
+  /** Renders the chart; gets the card header so the pop-up can show the whole card. */
+  chart: (header: React.ReactNode) => React.ReactNode;
+}) {
   const isTemp = meta.unit.includes("°");
   const toF = isTemp && fahrenheit;
   const slope = toF ? t.sen_per_decade_f ?? (t.sen_per_decade != null ? t.sen_per_decade * 1.8 : null) : t.sen_per_decade;
@@ -38,11 +42,8 @@ function StudentTrendCard({
   const up = (slope ?? 0) > 0;
   const color = t.verdict === "none" || tiny ? "var(--text-muted)" : up ? "var(--rust)" : "var(--sky)";
   const shown = slope == null ? "–" : tiny ? `≈ 0${unit}` : `${up ? "+" : slope < 0 ? "−" : ""}${Math.abs(slope) >= 10 ? Math.abs(slope).toFixed(0) : Math.abs(slope).toFixed(2)}${unit}`;
-  return (
-    <div
-      className="card"
-      style={{ display: "flex", flexDirection: "column", gap: 12, borderTop: `4px solid ${pill.c}`, paddingTop: 16 }}
-    >
+  const header = (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <span
           aria-hidden
@@ -71,7 +72,15 @@ function StudentTrendCard({
         <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 30, color, lineHeight: 1 }}>{shown}</span>
         <span className="small muted">every 10 years</span>
       </div>
-      {children}
+    </div>
+  );
+  return (
+    <div
+      className="card"
+      style={{ display: "flex", flexDirection: "column", gap: 12, borderTop: `4px solid ${pill.c}`, paddingTop: 16 }}
+    >
+      {header}
+      {chart(header)}
     </div>
   );
 }
@@ -144,9 +153,25 @@ export default function ParkDetective({
             if (!meta || !series) return null;
             const isTemp = meta.unit.includes("°");
             return (
-              <StudentTrendCard key={t.variable} t={t} meta={meta} fahrenheit={useFahrenheit}>
-                <TrendChart simple series={series} trend={t} unit={isTemp && useFahrenheit ? "°F" : meta.unit} label={meta.label} parkName={parkName} parkId={parkId} />
-              </StudentTrendCard>
+              <StudentTrendCard
+                key={t.variable}
+                t={t}
+                meta={meta}
+                fahrenheit={useFahrenheit}
+                chart={(header) => (
+                  <TrendChart
+                    simple
+                    header={header}
+                    accent={(VERDICT_PILL[t.verdict] ?? VERDICT_PILL.none).c}
+                    series={series}
+                    trend={t}
+                    unit={isTemp && useFahrenheit ? "°F" : meta.unit}
+                    label={meta.label}
+                    parkName={parkName}
+                    parkId={parkId}
+                  />
+                )}
+              />
             );
           })}
         </div>

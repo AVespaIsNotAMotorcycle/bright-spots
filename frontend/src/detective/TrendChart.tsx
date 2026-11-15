@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import ExplainButton from "./ExplainButton";
+import type { ReactNode } from "react";
 import type { TrendRow, YearlySeries } from "./model";
 
 interface Props {
@@ -26,6 +27,12 @@ interface Props {
   explain?: boolean;
   /** Student look: no title row, soft grid, shaded area, plain-words legend. */
   simple?: boolean;
+  /** Card header shown at the top of the pop-up (the whole card pops out). */
+  header?: ReactNode;
+  /** Colour of the pop-up's top edge. */
+  accent?: string;
+  /** Chart height in pixels. */
+  height?: number;
 }
 
 function senLine(
@@ -38,7 +45,7 @@ function senLine(
   return years.map((y) => ({ year: y, fit: trend.mean! + slope * (y - mid) }));
 }
 
-export default function TrendChart({ series: raw, trend: rawTrend, unit, label, parkName, parkId, explain = true, simple = false }: Props) {
+export default function TrendChart({ series: raw, trend: rawTrend, unit, label, parkName, parkId, explain = true, simple = false, header, accent, height }: Props) {
   // The data files hold °C. When a chart is labelled °F, convert here so numbers match the label.
   const toF = unit === "°F";
   const conv = (v: number) => (toF ? v * 1.8 + 32 : v);
@@ -85,7 +92,7 @@ export default function TrendChart({ series: raw, trend: rawTrend, unit, label, 
       >
         {label}
       </div>}
-      <ResponsiveContainer width="100%" height={simple ? 170 : 180}>
+      <ResponsiveContainer width="100%" height={height ?? (simple ? 170 : 180)}>
         <ComposedChart data={data} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
           {simple && (
             <defs>
@@ -185,6 +192,20 @@ export default function TrendChart({ series: raw, trend: rawTrend, unit, label, 
           unit={unit}
           series={series}
           trend={trend}
+          accent={accent}
+          card={
+            <>
+              {header ?? (
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 22, color: "var(--pine)" }}>
+                  {label}{parkName ? ` · ${parkName}` : ""}
+                </div>
+              )}
+              <TrendChart
+                series={raw} trend={rawTrend} unit={unit} label={label} parkName={parkName} parkId={parkId}
+                simple explain={false} height={280}
+              />
+            </>
+          }
         />
       )}
     </div>

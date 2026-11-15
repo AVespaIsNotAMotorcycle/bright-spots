@@ -3,6 +3,7 @@
 // rank among parks...), so each chart reads differently. When the server has an AI key,
 // the AI rewrites those same facts in friendlier words; otherwise the built story is shown.
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import type { Atlas, TrendRow, YearlySeries } from "./model";
 import { buildStory } from "./story";
@@ -15,6 +16,10 @@ interface Props {
   unit: string;
   series: YearlySeries;
   trend: TrendRow;
+  /** The whole card (header + bigger chart), shown at the top of the pop-up. */
+  card?: ReactNode;
+  /** Colour of the pop-up's top edge. */
+  accent?: string;
 }
 
 interface Reply { text: string; source: "ai" | "template" }
@@ -136,9 +141,11 @@ export default function ExplainButton(p: Props) {
               className="xp-card"
               onClick={(e) => e.stopPropagation()}
               style={{
-                width: "min(460px, 100%)", background: "var(--surface)", color: "var(--text)",
-                border: "1px solid var(--border)", borderTop: "5px solid var(--pine)", borderRadius: 18,
-                boxShadow: "0 24px 48px rgba(38,30,20,.28)", padding: "20px 22px 18px", position: "relative",
+                width: p.card ? "min(760px, 100%)" : "min(460px, 100%)", maxHeight: "calc(100vh - 32px)", overflowY: "auto",
+                background: "var(--surface)", color: "var(--text)",
+                border: "1px solid var(--border)", borderTop: `5px solid ${p.accent ?? "var(--pine)"}`, borderRadius: 20,
+                boxShadow: "0 24px 48px rgba(38,30,20,.28)", padding: "22px 24px 18px", position: "relative",
+                display: "flex", flexDirection: "column", gap: 14,
               }}
             >
               <button
@@ -151,14 +158,20 @@ export default function ExplainButton(p: Props) {
               >
                 ×
               </button>
-              <div className="section-title">🔎 What this chart says</div>
-              <h3 style={{ margin: "4px 0 12px", fontFamily: "var(--font-display)", fontSize: 22, color: "var(--pine)", paddingRight: 24 }}>
-                {p.label}{p.park ? ` at ${p.park}` : ""}
-              </h3>
-              <p style={{ margin: 0, fontSize: 15.5, lineHeight: 1.65 }}>{reply.text}</p>
+              {p.card ? (
+                <div style={{ paddingRight: 28, display: "flex", flexDirection: "column", gap: 12 }}>{p.card}</div>
+              ) : (
+                <h3 style={{ margin: 0, fontFamily: "var(--font-display)", fontSize: 22, color: "var(--pine)", paddingRight: 24 }}>
+                  {p.label}{p.park ? ` at ${p.park}` : ""}
+                </h3>
+              )}
+              <div style={{ background: "var(--surface-2)", border: "1px solid var(--border)", borderRadius: 14, padding: "14px 16px" }}>
+                <div className="section-title" style={{ marginBottom: 6 }}>🔎 What this chart says</div>
+                <p style={{ margin: 0, fontSize: 15.5, lineHeight: 1.65 }}>{reply.text}</p>
+              </div>
               <div
                 style={{
-                  marginTop: 14, paddingTop: 10, borderTop: "1px solid var(--border)",
+                  paddingTop: 2,
                   display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap",
                 }}
               >
