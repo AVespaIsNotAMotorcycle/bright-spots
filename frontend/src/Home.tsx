@@ -1,6 +1,6 @@
 // Home screen. Content depends on the persona chosen at sign-up.
 import { CASES, type Case } from "./detective/cases";
-import { PassportPreview } from "./detective/Passport";
+import { PassportPreview } from "./detective/PassportPage";
 import { NextCase, ParkOfTheDay, RankBanner } from "./detective/StudentWidgets";
 import { GuessTheTwin } from "./detective/TwinGame";
 import type { Atlas } from "./detective/model";

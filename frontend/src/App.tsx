@@ -19,7 +19,7 @@ const Robust = lazy(() => import("./research/Robust"));
 const Seasons = lazy(() => import("./research/Seasons"));
 const Community = lazy(() => import("./research/Community"));
 const Analogs = lazy(() => import("./research/Analogs"));
-const Passport = lazy(() => import("./detective/Passport"));
+const Passport = lazy(() => import("./detective/PassportPage"));
 import { PARK_NAMES } from "./detective/parkNames";
 import { PERSONAS, TAB_LABEL, loadProfile, saveProfile, type Profile, type Tab } from "./profile";
 import { useNav, type NavState } from "./useNav";
