@@ -94,7 +94,6 @@ export default function Postcard({ name, p, trip, unit, trend, npsCode, onPlan, 
             <>
               <p className="pc-best">
                 {p.ok ? <>Best for you: <b>{MONTHS[p.best_month - 1]}</b></> : <>Misses one of your musts all year. Closest: <b>{MONTHS[p.best_month - 1]}</b></>}
-                <span className="muted"> · numbers below are for {MONTHS[p.best_month - 1]}</span>
               </p>
               <table className="pc-table">
                 <colgroup><col className="pc-label-col" /><col /><col /><col /></colgroup>
