@@ -83,7 +83,7 @@ export default function ParkDetective({
             const isTemp = meta.unit.includes("°");
             return (
               <div key={t.variable} className="card" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <TrendChart series={series} trend={t} unit={isTemp && useFahrenheit ? "°F" : meta.unit} label={meta.label} />
+                <TrendChart series={series} trend={t} unit={isTemp && useFahrenheit ? "°F" : meta.unit} label={meta.label} parkName={parkName} />
                 <ExplainerCard parkName={parkName} trend={t} meta={meta} period="annual" periodLabel="the whole year" useFahrenheit={useFahrenheit} simple />
               </div>
             );
@@ -352,6 +352,7 @@ export default function ParkDetective({
                   : selectedMeta.unit
               }
               label={selectedMeta.label}
+              parkName={parkName}
             />
           ) : (
             <div style={{ color: "var(--text-muted)", fontSize: 13 }}>

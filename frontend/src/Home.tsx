@@ -1,6 +1,7 @@
 // Home screen. Content depends on the persona chosen at sign-up.
 import { useMemo } from "react";
 import { CASES } from "./detective/cases";
+import { NextCase, ParkOfTheDay, RankBanner } from "./detective/StudentWidgets";
 import { PARK_NAMES } from "./detective/Detective";
 import type { Atlas, AtlasCell } from "./detective/model";
 import { PERSONAS, type Persona, type Tab } from "./profile";
@@ -95,39 +96,14 @@ function VisitorHome({ atlas, onGo }: Pick<Props, "atlas" | "onGo">) {
 }
 
 function StudentHome({ atlas, onGo }: Pick<Props, "atlas" | "onGo">) {
-  const warming = useMemo(() => topWarming(atlas, 1)[0], [atlas]);
   return (
     <>
-      <section>
-        <div className="section-title" style={{ marginBottom: 8 }}>Start a detective case</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
-          {CASES.map((c) => (
-            <button
-              key={c.id}
-              className="card"
-              onClick={() => onGo("student", { caseId: c.id, step: 0 })}
-              style={{ textAlign: "left", cursor: "pointer", display: "flex", flexDirection: "column", gap: 6 }}
-            >
-              <span style={{ fontSize: 28 }}>{c.emoji}</span>
-              <strong>{c.title}</strong>
-              <span className="small muted">{c.subtitle}</span>
-              <span className="micro" style={{ color: "var(--rust)", fontWeight: 600 }}>
-                {c.difficulty}
-              </span>
-            </button>
-          ))}
-        </div>
-      </section>
-      {warming && (
-        <section className="card">
-          <div className="section-title">Today's clue</div>
-          <p style={{ margin: "6px 0 10px" }}>
-            <strong>{PARK_NAMES[warming.park_id] ?? warming.park_id}</strong> is warming {f(warming.sen!)} every 10 years,
-            and the test says it is very unlikely to be luck. Can you find a park going the other way?
-          </p>
-          <button className="btn" onClick={() => onGo("explore")}>Open the Park Explorer →</button>
-        </section>
-      )}
+      <RankBanner />
+      <NextCase onPlay={(c) => onGo("student", { caseId: c.id, step: 0 })} />
+      {atlas && <ParkOfTheDay atlas={atlas} onExplore={(park) => onGo("explore", { park })} />}
+      <div>
+        <button className="btn-ghost" onClick={() => onGo("student")}>See all {CASES.length} cases →</button>
+      </div>
     </>
   );
 }

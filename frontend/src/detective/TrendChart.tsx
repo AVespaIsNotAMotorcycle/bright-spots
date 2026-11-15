@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import ExplainButton from "./ExplainButton";
 import type { TrendRow, YearlySeries } from "./model";
 
 interface Props {
@@ -16,6 +17,10 @@ interface Props {
   trend: TrendRow;
   unit: string;
   label: string;
+  /** Park name, used by the explanation. */
+  parkName?: string;
+  /** Show the "Explain it to me" button. Default true. */
+  explain?: boolean;
 }
 
 function senLine(
@@ -28,7 +33,18 @@ function senLine(
   return years.map((y) => ({ year: y, fit: trend.mean! + slope * (y - mid) }));
 }
 
-export default function TrendChart({ series, trend, unit, label }: Props) {
+export default function TrendChart({ series: raw, trend: rawTrend, unit, label, parkName, explain = true }: Props) {
+  // The data files hold °C. When a chart is labelled °F, convert here so numbers match the label.
+  const toF = unit === "°F";
+  const conv = (v: number) => (toF ? v * 1.8 + 32 : v);
+  const series: YearlySeries = toF ? { years: raw.years, values: raw.values.map((v) => (v == null ? v : conv(v))) } : raw;
+  const trend: TrendRow = toF
+    ? {
+        ...rawTrend,
+        mean: rawTrend.mean == null ? null : conv(rawTrend.mean),
+        sen_per_decade: rawTrend.sen_per_decade == null ? null : rawTrend.sen_per_decade * 1.8,
+      }
+    : rawTrend;
   const fit = senLine(series.years, trend);
   const data = series.years.map((y, i) => ({
     year: y,
@@ -134,6 +150,22 @@ export default function TrendChart({ series, trend, unit, label }: Props) {
         <span style={{ color: "var(--accent-2)" }}>— — trend (Sen's slope)</span>
         <span>· · long-run mean</span>
       </div>
+      {explain && (
+        <ExplainButton
+          facts={{
+            park: parkName ?? "",
+            label: label.split(" · ")[0],
+            unit,
+            period: label.includes(" · ") ? label.split(" · ")[1] : "annual",
+            sen_per_decade: trend.sen_per_decade == null ? null : Number(trend.sen_per_decade.toFixed(3)),
+            mean: trend.mean == null ? null : Number(trend.mean.toFixed(2)),
+            first_year: series.years[0] ?? null,
+            last_year: series.years[series.years.length - 1] ?? null,
+            verdict: trend.verdict,
+            q: trend.q,
+          }}
+        />
+      )}
     </div>
   );
 }

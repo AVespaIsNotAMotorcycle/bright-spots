@@ -148,6 +148,52 @@ export function saveResult(caseId: string, pts: number, max: number): CaseResult
   return { pts, max, stars };
 }
 
+// ── Streaks: days in a row, and best run of right answers ─────────────────
+
+const DAYS_KEY = "detective.days";
+const BEST_KEY = "detective.bestStreak";
+const dayStr = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+
+interface DaysState { last: string; count: number }
+
+function readDays(): DaysState {
+  try {
+    return JSON.parse(localStorage.getItem(DAYS_KEY) ?? "") as DaysState;
+  } catch {
+    return { last: "", count: 0 };
+  }
+}
+
+/** Days in a row the student has played. Zero once a day has been missed. */
+export function dayStreak(now = new Date()): number {
+  const s = readDays();
+  return s.last === dayStr(now) || s.last === dayStr(addDays(now, -1)) ? s.count : 0;
+}
+
+/** Call after any answer. Counts today once. */
+export function touchToday(now = new Date()) {
+  const s = readDays();
+  const today = dayStr(now);
+  if (s.last === today) return;
+  const count = s.last === dayStr(addDays(now, -1)) ? s.count + 1 : 1;
+  try {
+    localStorage.setItem(DAYS_KEY, JSON.stringify({ last: today, count }));
+  } catch {
+    /* private mode: ignore */
+  }
+}
+
+export const bestAnswerStreak = (): number => Number(localStorage.getItem(BEST_KEY) ?? 0) || 0;
+
+export function noteAnswerStreak(n: number) {
+  try {
+    if (n > bestAnswerStreak()) localStorage.setItem(BEST_KEY, String(n));
+  } catch {
+    /* private mode: ignore */
+  }
+}
+
 export function rankTitle(totalStars: number): { title: string; emoji: string; next: number | null } {
   const tiers: [number, string, string][] = [
     [0, "Trail Rookie", "🥾"],

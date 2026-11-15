@@ -8,6 +8,8 @@ import { PERIOD_LABEL } from "./model";
 import TrendChart from "./TrendChart";
 import type { Side, Step } from "./cases";
 import { ANIMS, CARD_CSS, themeFor } from "./cardTheme";
+import { play } from "./sound";
+import { SoundToggle } from "./StudentWidgets";
 import {
   QUESTION_SECONDS, cellOf, fmtRate, makeFact, parkName, shown, sideLabel, useTrends,
 } from "./games";
@@ -214,7 +216,7 @@ function VerdictGame({ step, atlas, timeUp, done, finish }: GameProps) {
       pts: d === 0 ? 2 : d === 1 ? 1 : 0, max: 2, ok: d === 0, timeout: v === "late",
       answer: `${truth === "real" ? "Real trend" : truth === "possible" ? "Maybe (possible)" : "Just noise"}${qv != null ? `, q = ${qv.toFixed(3)}` : ""}`,
       extra: series && row && meta ? (
-        <TrendChart series={series} trend={row} unit={meta.unit.includes("°") ? "°F" : meta.unit} label={`${meta.label} · ${PERIOD_LABEL[q.period] ?? q.period}`} />
+        <TrendChart series={series} trend={row} unit={meta.unit.includes("°") ? "°F" : meta.unit} label={`${meta.label} · ${PERIOD_LABEL[q.period] ?? q.period}`} parkName={parkName(q.parkId)} />
       ) : undefined,
     });
   };
@@ -386,10 +388,12 @@ function Confetti() {
 }
 
 export default function QuizCard({
-  step, atlas, caseId, index, isLast, onScore, onNext,
+  step, atlas, caseId, index, isLast, streak, onScore, onNext,
 }: {
   step: Step; atlas: Atlas; caseId: string; index: number; isLast: boolean;
-  onScore: (pts: number, max: number) => void; onNext: () => void;
+  /** Right answers in a row before this question. */
+  streak: number;
+  onScore: (pts: number, max: number, ok: boolean) => void; onNext: () => void;
 }) {
   const t = themeFor(step, caseId);
   const anim = ANIMS[(index + caseId.length) % ANIMS.length];
@@ -407,6 +411,9 @@ export default function QuizCard({
   }, []);
   const running = started && ready && !answer;
   useEffect(() => {
+    if (running && ms > 0 && ms <= 3000 && ms % 1000 === 0) play("tick");
+  }, [running, ms]);
+  useEffect(() => {
     if (!running || ms <= 0) return;
     const id = setTimeout(() => setMs((m) => m - 100), 100);
     return () => clearTimeout(id);
@@ -415,14 +422,19 @@ export default function QuizCard({
   // Let the student see which option they picked, then flip.
   useEffect(() => {
     if (!answer) return;
-    const id = setTimeout(() => setFlipped(true), answer.timeout ? 250 : 600);
+    const id = setTimeout(() => {
+      setFlipped(true);
+      play("flip");
+    }, answer.timeout ? 250 : 600);
     return () => clearTimeout(id);
   }, [answer]);
 
   const finish = (a: Answer) => {
     setAnswer(a);
-    onScore(a.pts, a.max);
+    onScore(a.pts, a.max, a.ok);
+    play(a.timeout ? "late" : a.ok ? (streak + 1 >= 3 ? "streak" : "right") : "wrong");
   };
+  const runStreak = answer?.ok ? streak + 1 : 0;
   const gp: GameProps = { step, atlas, timeUp: running && ms <= 0, done: !!answer, finish };
   const didYouKnow = answer?.ok ? makeFact(step, atlas, index) : null;
   const partial = !!answer && !answer.ok && !answer.timeout && answer.pts > 0;
@@ -462,7 +474,11 @@ export default function QuizCard({
             }}
           >
             <span aria-hidden style={{ position: "absolute", right: 16, top: 44, fontSize: 70, opacity: 0.18 }}>{t.emoji[0]}</span>
-            {!answer ? <TimerBar ms={ms} /> : <div style={{ height: 10 }} />}
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ flex: 1 }}>{!answer ? <TimerBar ms={ms} /> : <div style={{ height: 10 }} />}</div>
+              {streak >= 1 && <span title="Right answers in a row" style={{ fontWeight: 900 }}>🔥 {streak}</span>}
+              <SoundToggle />
+            </div>
             <div style={{ position: "relative" }}>
               <h3 style={{ margin: "0 0 6px", fontSize: 24, fontWeight: 900, lineHeight: 1.2 }}>{step.heading}</h3>
               {step.kind !== "myth" && <p style={{ margin: 0, fontSize: 15, lineHeight: 1.55 }}>{step.body}</p>}
@@ -490,6 +506,9 @@ export default function QuizCard({
             {flipped && answer?.ok && <Confetti />}
             <div style={{ fontSize: 46, lineHeight: 1 }}>{back.emoji}</div>
             <h3 style={{ margin: 0, fontSize: 26, fontWeight: 900 }}>{back.head}</h3>
+            {runStreak >= 2 && (
+              <div style={{ fontWeight: 800, fontSize: 15 }}>🔥 {runStreak} right in a row!</div>
+            )}
             {answer && (
               <div style={{ background: "rgba(255,255,255,.65)", borderRadius: 12, padding: "10px 14px", fontSize: 15 }}>
                 <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase", opacity: 0.65 }}>

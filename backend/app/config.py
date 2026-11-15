@@ -17,5 +17,10 @@ class Settings(BaseSettings):
     # (Nominatim usage policy asks apps to identify themselves).
     nominatim_contact: str = ""
 
+    # Optional: lets "Explain it to me" rewrite chart explanations with a small model.
+    # Without a key, the app uses its built-in data-only sentences.
+    anthropic_api_key: str = ""
+    anthropic_model: str = "claude-haiku-4-5"
+
 
 settings = Settings()

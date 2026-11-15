@@ -6,7 +6,9 @@ import TrendChart from "./TrendChart";
 import ExplainerCard from "./ExplainerCard";
 import type { Case, Step } from "./cases";
 import { CASES } from "./cases";
-import { GAME_KINDS, loadProgress, saveResult, rankTitle } from "./games";
+import { GAME_KINDS, loadProgress, saveResult, touchToday, noteAnswerStreak } from "./games";
+import { RankBanner } from "./StudentWidgets";
+import { play } from "./sound";
 import QuizCard from "./quiz";
 import type { CaseResult } from "./games";
 import FlashCard, { themeFor } from "./cardTheme";
@@ -29,9 +31,6 @@ function DifficultyBadge({ d }: { d: Case["difficulty"] }) {
 
 export function CaseList({ onSelect }: { onSelect: (c: Case) => void }) {
   const progress = loadProgress();
-  const totalStars = CASES.reduce((n, c) => n + (progress[c.id]?.stars ?? 0), 0);
-  const solved = CASES.filter((c) => progress[c.id]).length;
-  const rank = rankTitle(totalStars);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div>
@@ -40,22 +39,7 @@ export function CaseList({ onSelect }: { onSelect: (c: Case) => void }) {
           Each case walks you through real NASA data: predict first, then see what the numbers say.
         </p>
       </div>
-      <div
-        style={{
-          display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
-          background: "var(--accent-tint)", border: "1px solid var(--border)", borderRadius: 14, padding: "12px 16px",
-        }}
-      >
-        <div style={{ fontSize: 34 }}>{rank.emoji}</div>
-        <div style={{ flex: 1, minWidth: 160 }}>
-          <div style={{ fontWeight: 800, fontSize: 16 }}>{rank.title}</div>
-          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
-            {solved} of {CASES.length} cases solved
-            {rank.next != null && ` · ${rank.next - totalStars} more ⭐ to level up`}
-          </div>
-        </div>
-        <div style={{ fontWeight: 800, fontSize: 18 }}>⭐ {totalStars}</div>
-      </div>
+      <RankBanner />
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
         {CASES.map((c) => (
           <button
@@ -175,6 +159,7 @@ function DataStep({
             trend={trend}
             unit={isTemp ? "°F" : meta.unit}
             label={`${meta.label} · ${PERIOD_LABEL[step.period!] ?? step.period}`}
+            parkName={data?.park?.name}
           />
         </div>
       )}
@@ -266,6 +251,7 @@ export default function StudentDetective({
   const [stepIndex, setStepIndex] = useState(navStep ?? 0);
   const [scores, setScores] = useState<Record<number, { pts: number; max: number }>>({});
   const [result, setResult] = useState<CaseResult | null>(null);
+  const [streak, setStreak] = useState(0); // right answers in a row, this case
 
   // Sync from URL (back/forward landed on student tab with a case in URL).
   useEffect(() => {
@@ -280,6 +266,7 @@ export default function StudentDetective({
     setStepIndex(0);
     setScores({});
     setResult(null);
+    setStreak(0);
     onNavChange?.(c.id, 0);
   }
 
@@ -360,7 +347,14 @@ export default function StudentDetective({
             caseId={activeCase.id}
             index={stepIndex}
             isLast={isLast}
-            onScore={(pts, max) => setScores((s) => ({ ...s, [stepIndex]: { pts, max } }))}
+            streak={streak}
+            onScore={(pts, max, ok) => {
+              setScores((s) => ({ ...s, [stepIndex]: { pts, max } }));
+              const n = ok ? streak + 1 : 0;
+              setStreak(n);
+              noteAnswerStreak(n);
+              touchToday();
+            }}
             onNext={nextStep}
           />
         </>
@@ -404,6 +398,9 @@ function CaseClosed({
   onBack: () => void;
   onPlanner?: { label: string; go: () => void };
 }) {
+  useEffect(() => {
+    play("star");
+  }, []);
   const verdict =
     result.stars === 3 ? "Case closed. Flawless." : result.stars === 2 ? "Case closed. Solid work." : "Case closed. Try again for more stars.";
   const btn = { borderRadius: 8, padding: "10px 20px", cursor: "pointer", fontWeight: 600, fontSize: 14 } as const;
