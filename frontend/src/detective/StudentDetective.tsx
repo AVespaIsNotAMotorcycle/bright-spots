@@ -6,6 +6,8 @@ import TrendChart from "./TrendChart";
 import ExplainerCard from "./ExplainerCard";
 import type { Case, Step } from "./cases";
 import { CASES } from "./cases";
+import { GameStep, GAME_KINDS, loadProgress, saveResult, rankTitle } from "./games";
+import type { CaseResult } from "./games";
 
 // ── Case list ──────────────────────────────────────────────────────────────
 
@@ -24,6 +26,10 @@ function DifficultyBadge({ d }: { d: Case["difficulty"] }) {
 }
 
 export function CaseList({ onSelect }: { onSelect: (c: Case) => void }) {
+  const progress = loadProgress();
+  const totalStars = CASES.reduce((n, c) => n + (progress[c.id]?.stars ?? 0), 0);
+  const solved = CASES.filter((c) => progress[c.id]).length;
+  const rank = rankTitle(totalStars);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div>
@@ -31,6 +37,22 @@ export function CaseList({ onSelect }: { onSelect: (c: Case) => void }) {
         <p style={{ margin: 0, fontSize: 14, color: "var(--text-muted)" }}>
           Each case walks you through real NASA data: predict first, then see what the numbers say.
         </p>
+      </div>
+      <div
+        style={{
+          display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap",
+          background: "var(--accent-tint)", border: "1px solid var(--border)", borderRadius: 14, padding: "12px 16px",
+        }}
+      >
+        <div style={{ fontSize: 34 }}>{rank.emoji}</div>
+        <div style={{ flex: 1, minWidth: 160 }}>
+          <div style={{ fontWeight: 800, fontSize: 16 }}>{rank.title}</div>
+          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+            {solved} of {CASES.length} cases solved
+            {rank.next != null && ` · ${rank.next - totalStars} more ⭐ to level up`}
+          </div>
+        </div>
+        <div style={{ fontWeight: 800, fontSize: 18 }}>⭐ {totalStars}</div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
         {CASES.map((c) => (
@@ -65,6 +87,11 @@ export function CaseList({ onSelect }: { onSelect: (c: Case) => void }) {
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <DifficultyBadge d={c.difficulty} />
+              {progress[c.id] && (
+                <span title="Best result" style={{ fontSize: 13 }}>
+                  {"⭐".repeat(progress[c.id].stars)}
+                </span>
+              )}
               <span style={{ fontSize: 13, color: "var(--accent)", fontWeight: 600 }}>
                 {c.steps.length} steps →
               </span>
@@ -375,26 +402,35 @@ export default function StudentDetective({
     navCaseId ? (CASES.find((c) => c.id === navCaseId) ?? null) : null,
   );
   const [stepIndex, setStepIndex] = useState(navStep ?? 0);
+  const [scores, setScores] = useState<Record<number, { pts: number; max: number }>>({});
+  const [result, setResult] = useState<CaseResult | null>(null);
 
   // Sync from URL (back/forward landed on student tab with a case in URL).
   useEffect(() => {
     const c = navCaseId ? (CASES.find((x) => x.id === navCaseId) ?? null) : null;
     setActiveCase(c);
     setStepIndex(navStep ?? 0);
+    if ((navStep ?? 0) === 0) { setScores({}); setResult(null); }
   }, [navCaseId, navStep]);
 
   function startCase(c: Case) {
     setActiveCase(c);
     setStepIndex(0);
+    setScores({});
+    setResult(null);
     onNavChange?.(c.id, 0);
   }
 
   function nextStep() {
     if (!activeCase) return;
     if (stepIndex + 1 >= activeCase.steps.length) {
-      setActiveCase(null);
-      setStepIndex(0);
-      onNavChange?.(null, null);
+      const vals = Object.values(scores);
+      const max = vals.reduce((n, v) => n + v.max, 0);
+      if (max > 0) {
+        setResult(saveResult(activeCase.id, vals.reduce((n, v) => n + v.pts, 0), max));
+      } else {
+        backToCases();
+      }
     } else {
       const next = stepIndex + 1;
       setStepIndex(next);
@@ -403,6 +439,7 @@ export default function StudentDetective({
   }
 
   function backToCases() {
+    setResult(null);
     setActiveCase(null);
     setStepIndex(0);
     onNavChange?.(null, null);
@@ -410,6 +447,21 @@ export default function StudentDetective({
 
   if (!activeCase) {
     return <CaseList onSelect={startCase} />;
+  }
+
+  if (result) {
+    return (
+      <CaseClosed
+        c={activeCase}
+        result={result}
+        onAgain={() => startCase(activeCase)}
+        onBack={backToCases}
+        onPlanner={(() => {
+          const link = activeCase.steps.find((s) => s.plannerLink)?.plannerLink;
+          return link ? { label: link.label, go: () => onGoPlanner(link.month) } : undefined;
+        })()}
+      />
+    );
   }
 
   const step = activeCase.steps[stepIndex];
@@ -476,6 +528,7 @@ export default function StudentDetective({
             {step.kind === "examine" && "🔍 Examine the data"}
             {step.kind === "analyze" && "📊 Statistical analysis"}
             {step.kind === "interpret" && "💡 What it means"}
+            {(GAME_KINDS as readonly string[]).includes(step.kind) && "🎮 Your move"}
           </div>
           <h3 style={{ margin: "0 0 4px", fontSize: 18, fontWeight: 700 }}>
             {step.heading}
@@ -508,6 +561,17 @@ export default function StudentDetective({
           <PredictStep step={step} onNext={nextStep} />
         )}
 
+        {(GAME_KINDS as readonly string[]).includes(step.kind) && (
+          <GameStep
+            key={`${activeCase.id}-${stepIndex}`}
+            step={step}
+            atlas={atlas}
+            onScore={(pts, max) => setScores((s) => ({ ...s, [stepIndex]: { pts, max } }))}
+            onNext={nextStep}
+            nextLabel={isLast ? "Finish case 🏁" : "Next →"}
+          />
+        )}
+
         {(step.kind === "examine" || step.kind === "analyze" || step.kind === "interpret") && (
           <DataStep
             step={step}
@@ -517,6 +581,64 @@ export default function StudentDetective({
             isLast={isLast}
           />
         )}
+      </div>
+    </div>
+  );
+}
+
+// ── End-of-case screen ────────────────────────────────────────────────────
+
+function CaseClosed({
+  c, result, onAgain, onBack, onPlanner,
+}: {
+  c: Case;
+  result: CaseResult;
+  onAgain: () => void;
+  onBack: () => void;
+  onPlanner?: { label: string; go: () => void };
+}) {
+  const verdict =
+    result.stars === 3 ? "Case closed. Flawless." : result.stars === 2 ? "Case closed. Solid work." : "Case closed. Try again for more stars.";
+  const btn = { borderRadius: 8, padding: "10px 20px", cursor: "pointer", fontWeight: 600, fontSize: 14 } as const;
+  return (
+    <div
+      style={{
+        background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14,
+        padding: "32px 20px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
+      }}
+    >
+      <div style={{ fontSize: 56 }}>{c.emoji}</div>
+      <div style={{ fontSize: 26, letterSpacing: 4 }}>
+        {[1, 2, 3].map((n) => (
+          <span key={n} style={{ opacity: n <= result.stars ? 1 : 0.2 }}>⭐</span>
+        ))}
+      </div>
+      <h3 style={{ margin: 0, fontSize: 20 }}>{verdict}</h3>
+      <div style={{ fontSize: 14, color: "var(--text-muted)" }}>
+        {result.pts} of {result.max} points
+      </div>
+      {c.badge && (
+        <div
+          style={{
+            border: "2px dashed var(--accent)", background: "var(--accent-tint)", borderRadius: 999,
+            padding: "8px 18px", fontWeight: 700,
+          }}
+        >
+          Badge: {c.badge}
+        </div>
+      )}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center", marginTop: 6 }}>
+        <button onClick={onAgain} style={{ ...btn, background: "var(--accent)", color: "var(--on-accent)", border: "none" }}>
+          Play again
+        </button>
+        {onPlanner && (
+          <button onClick={onPlanner.go} style={{ ...btn, background: "none", border: "1px solid var(--border)" }}>
+            🗓 {onPlanner.label}
+          </button>
+        )}
+        <button onClick={onBack} style={{ ...btn, background: "none", border: "1px solid var(--border)" }}>
+          ← All cases
+        </button>
       </div>
     </div>
   );
