@@ -5,7 +5,7 @@ import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import { FAMILY_COLORS, VERDICT_COLOR } from "../research/lib";
 import { OFF_TOKEN, TOKEN_GROUPS } from "./tokens";
 import { HORIZONS, fmtDistance, fmtRain, fmtTemp, horizonTitle, pct } from "../planner/ParkDetails";
-import { FACTOR_LABEL, MONTHS, distanceKm, type FactorKey, type Horizon, type ParkPlan, type Place, type Plan } from "../planner/model";
+import { FACTOR_LABEL, MONTHS, distanceKm, type FactorKey, type Horizon, type HorizonKey, type ParkPlan, type Place, type Plan } from "../planner/model";
 import type { Unit } from "../planner/PrefsPanel";
 import type { TrendBadge } from "../detective/useParkTrendBadge";
 
@@ -241,6 +241,23 @@ const PC_ROWS: { label: string; value?: (h: Horizon, unit: Unit) => string; fact
 
 const compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
 
+/** What each horizon's score range is made of (from SPEC: scoring). */
+const RANGE_NOTE: Record<HorizonKey, string> = {
+  this_year: "Measured, so there is one score and no range",
+  next_year: "Scores at the low and high ends of the forecast window",
+  y2050: "Scores across the six climate models",
+};
+
+/** Map location marker. */
+function PinIcon() {
+  return (
+    <svg className="pc-pin" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+      <path d="M8 1.2a4.8 4.8 0 0 0-4.8 4.8c0 3.6 4.8 8.8 4.8 8.8s4.8-5.2 4.8-8.8A4.8 4.8 0 0 0 8 1.2Z" fill="currentColor" />
+      <circle cx="8" cy="6" r="1.8" fill="var(--pc-paper)" />
+    </svg>
+  );
+}
+
 /** The one-sided postcard: park photo on the left, the full park card on the right. */
 function Postcard({ p, plan, unit, place, trend, mood = "dawn", onRemove, onViewTrend }: {
   p: ParkPlan; plan: Plan; unit: Unit; place: Place | null; trend?: TrendBadge | null; mood?: Mood;
@@ -256,10 +273,14 @@ function Postcard({ p, plan, unit, place, trend, mood = "dawn", onRemove, onView
           <header className="pc-head">
             <div>
               <h3 id={`pc-${p.park.id}`} className="park-card-title">{p.park.name}</h3>
-              <p className="micro muted">
-                {p.park.states.join(", ")}
-                {place && ` · ${fmtDistance(distanceKm(place, p.park), unit)} from ${place.name.split(",")[0]}`}
-                {p.park.visitors_2025 != null && ` · ${compact.format(p.park.visitors_2025)} visitors in 2025`}
+              <p className="micro muted pc-meta">
+                <span>{p.park.states.join(", ")}</span>
+                {place && (
+                  <span title={`Distance from ${place.name}`}>
+                    <PinIcon />{fmtDistance(distanceKm(place, p.park), unit)}
+                  </span>
+                )}
+                {p.park.visitors_2025 != null && <span>{compact.format(p.park.visitors_2025)} visitors in 2025</span>}
               </p>
             </div>
             {onRemove && <button type="button" className="pc-remove" onClick={onRemove} aria-label={`Remove ${p.park.short}`}>×</button>}
@@ -274,32 +295,52 @@ function Postcard({ p, plan, unit, place, trend, mood = "dawn", onRemove, onView
             </div>
           )}
 
-          <table className="pc-table" aria-label={`Match score and conditions for ${month}`}>
+          <table className="pc-table">
             <colgroup><col className="pc-label-col" /><col /><col /><col /></colgroup>
             <thead>
+              <tr>
+                <td />
+                {HORIZONS.map((hz) => (
+                  <th key={hz.key} scope="col">
+                    <span className="pc-year">{month} {horizonTitle(hz.key, plan)}</span>
+                    <span className={`tag ${hz.tagClass}`}>{hz.tag}</span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
               <tr className="pc-score-row">
-                <th scope="col" className="pc-corner micro muted">Match · {month}</th>
+                <th scope="row">Match score</th>
                 {HORIZONS.map((hz) => {
                   const h = p[hz.key];
                   const lo = h.low ?? h.score, hi = h.high ?? h.score;
                   const ranged = h.score != null && lo != null && hi != null && lo !== hi;
                   return (
-                    <th key={hz.key} scope="col">
-                      <span className="pc-year">{horizonTitle(hz.key, plan)} <span className={`tag ${hz.tagClass}`}>{hz.tag}</span></span>
-                      <span className="big-score num">{h.score == null ? "n/a" : Math.round(h.score)}</span>
-                      {ranged && <span className="pc-range num">{Math.round(lo!)}–{Math.round(hi!)}</span>}
+                    <td key={hz.key} className="num">
+                      <span className="big-score">{h.score == null ? "n/a" : Math.round(h.score)}</span>
                       {h.score != null && (
                         <div className="meter-track">
                           {ranged && <div className="meter-range" style={{ left: `${lo}%`, width: `${hi! - lo!}%` }} />}
                           <div className="meter-dot" style={{ left: `${h.score}%` }} />
                         </div>
                       )}
-                    </th>
+                    </td>
                   );
                 })}
               </tr>
-            </thead>
-            <tbody>
+              <tr>
+                <th scope="row">Score range</th>
+                {HORIZONS.map((hz) => {
+                  const h = p[hz.key];
+                  const lo = h.low ?? h.score, hi = h.high ?? h.score;
+                  const ranged = h.score != null && lo != null && hi != null && lo !== hi;
+                  return (
+                    <td key={hz.key} className="num" title={RANGE_NOTE[hz.key]}>
+                      {ranged ? `${Math.round(lo!)}–${Math.round(hi!)}` : "–"}
+                    </td>
+                  );
+                })}
+              </tr>
               {rows.map((r) => (
                 <tr key={r.factor}>
                   <th scope="row">{r.label}</th>
@@ -308,9 +349,9 @@ function Postcard({ p, plan, unit, place, trend, mood = "dawn", onRemove, onView
                     const f = h.factors[r.factor];
                     const score = f == null ? null : Math.round(f * 100);
                     return (
-                      <td key={hz.key} className="num" title={score == null ? undefined : `${FACTOR_LABEL[r.factor]} score ${score}`}>
-                        {r.value ? r.value(h, unit) : score == null && "–"}
-                        {score != null && <span className="pc-bar" role="img" aria-label={`score ${score}`}><span style={{ width: `${score}%` }} /></span>}
+                      <td key={hz.key} className="num" title={score == null ? undefined : `${FACTOR_LABEL[r.factor]}: fits your preferences ${score}/100`}>
+                        {r.value ? r.value(h, unit) : score == null ? "–" : `${score}/100`}
+                        {score != null && <span className="pc-bar" aria-hidden="true"><span style={{ width: `${score}%` }} /></span>}
                       </td>
                     );
                   })}
@@ -319,11 +360,10 @@ function Postcard({ p, plan, unit, place, trend, mood = "dawn", onRemove, onView
             </tbody>
           </table>
 
-          {p.park.code && (
-            <p className="micro pc-foot">
-              <a href={`https://www.nps.gov/${p.park.code}/`} target="_blank" rel="noreferrer">{p.park.short} on nps.gov →</a>
-            </p>
-          )}
+          <p className="micro muted pc-foot">
+            <span className="pc-key"><span className="pc-bar" aria-hidden="true"><span style={{ width: "70%" }} /></span>Fit to your preferences</span>
+            {p.park.code && <a href={`https://www.nps.gov/${p.park.code}/`} target="_blank" rel="noreferrer">{p.park.short} on nps.gov →</a>}
+          </p>
         </div>
       </article>
     </div>
@@ -331,6 +371,7 @@ function Postcard({ p, plan, unit, place, trend, mood = "dawn", onRemove, onView
 }
 
 // Sample data in the planner's own shape (metric, like the API), for layout only.
+// A measured year has no range (low = high = score); the other two do.
 const SAMPLE_PLAN: Plan = { month: 11, this_year: 2026, next_year: 2027, scenario: "ssp245", parks: [] };
 const SAMPLE_PLACE: Place = { name: "Los Angeles, CA", lat: 34.05, lon: -118.24 };
 function sampleHorizon(score: number, low: number, high: number, values: Horizon["values"], factors: Horizon["factors"]): Horizon {
@@ -338,7 +379,7 @@ function sampleHorizon(score: number, low: number, high: number, values: Horizon
 }
 const SAMPLE_PARK: ParkPlan = {
   park: { id: "jotr", code: "jotr", name: "Joshua Tree National Park", short: "Joshua Tree", states: ["CA"], lat: 33.87, lon: -115.9, visitors_2025: 3_000_000 },
-  this_year: sampleHorizon(82, 76, 88, { tmax: 21.7, rh: 24, precip: 10, cloud: 12 }, { temperature: 0.92, humidity: 0.95, rain: 0.97, stars: 0.9, bugs: 0.85 }),
+  this_year: sampleHorizon(82, 82, 82, { tmax: 21.7, rh: 24, precip: 10, cloud: 12 }, { temperature: 0.92, humidity: 0.95, rain: 0.97, stars: 0.9, bugs: 0.85 }),
   next_year: sampleHorizon(74, 61, 85, { tmax: 22.8, rh: 26, precip: 13, cloud: 14 }, { temperature: 0.86, humidity: 0.93, rain: 0.94, stars: 0.86, bugs: 0.8 }),
   y2050: sampleHorizon(69, 50, 83, { tmax: 24.4, rh: 25, precip: 8, cloud: 12 }, { temperature: 0.74, humidity: 0.94, rain: 0.98, stars: 0.9, bugs: 0.72 }),
 };
@@ -737,7 +778,7 @@ export default function Sandbox() {
           <Section id="postcard" kicker="Aesthetic" title="Postcard" proposed
             intro="A one-sided park postcard: photo on the left, the full park card on the right (all three year scores, conditions with factor-score bars, trend, links), on white card stock with square paper corners. The illustration is a placeholder until park photos land; edit the --pc-* tokens in the panel.">
             <Specimen label=".postcard · photo 40% | park card 60%">
-              <div style={{ width: "min(100%, 760px)" }}>
+              <div style={{ width: "min(100%, 880px)" }}>
                 <Postcard p={SAMPLE_PARK} plan={SAMPLE_PLAN} unit="F" place={SAMPLE_PLACE} trend={SAMPLE_TREND}
                   onRemove={() => {}} onViewTrend={() => {}} />
               </div>
