@@ -181,12 +181,6 @@ button, input, select { font: inherit; color: inherit; }
   text-shadow: 0.06em 0.06em 0 var(--sunset-tint);
 }
 
-.topbar .title::before {
-  content: "⛰ ";
-  font-family: var(--font-body);
-  font-size: 20px;
-  text-shadow: none;
-}
 
 /* ── Typography ── */
 .headline {
@@ -197,11 +191,11 @@ button, input, select { font: inherit; color: inherit; }
 }
 
 .section-title {
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  color: var(--text);
   margin: 0;
 }
 
@@ -350,6 +344,8 @@ button, input, select { font: inherit; color: inherit; }
 .btn-ghost:hover { border-color: var(--pine); box-shadow: 0 2px 0 var(--pine), var(--shadow-md); }
 .btn-ghost:active { background: var(--pine-tint); transform: translateY(2px); box-shadow: var(--shadow-inset); }
 .btn-ghost:disabled { color: var(--text-faint); border-color: var(--border); box-shadow: none; transform: none; cursor: not-allowed; }
+/* Topbar profile button: a raised ghost key with an icon, set apart from the tabs. */
+.profile-btn { display: inline-flex; align-items: center; gap: var(--space-0-5); margin-left: var(--space-0-5); font-size: 13px; }
 
 .link-btn {
   white-space: nowrap;
@@ -625,7 +621,7 @@ th { position: sticky; top: 0; background: var(--surface); color: var(--text-mut
 .prefs-head { justify-content: space-between; margin-bottom: var(--space-1); }
 .prefs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-1) var(--space-2); }
 .pref-block { display: flex; flex-direction: column; gap: var(--space-0-5); }
-.pref-title { margin: 0; font-size: 14px; font-weight: 600; }
+.pref-title { margin: 0; font-size: 15px; font-weight: 700; }
 
 .month-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-0-25); }
 .month-grid .chip { padding: var(--space-0-25) 0; }
@@ -680,7 +676,7 @@ th { position: sticky; top: 0; background: var(--surface); color: var(--text-mut
 .suggest-list { list-style: none; margin: var(--space-0-5) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-0-5); }
 .suggestion {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: var(--space-0-5); align-items: center;
   padding: var(--space-0-5) var(--space-1);
   border: 1.5px solid var(--border);
@@ -690,44 +686,36 @@ th { position: sticky; top: 0; background: var(--surface); color: var(--text-mut
   box-shadow: var(--shadow-sm);
 }
 .suggestion:hover { border-color: var(--glacier); box-shadow: var(--shadow-md); transform: translateY(-1px); }
-.suggestion.selected,
-.park-row.selected { border-color: var(--glacier); background: var(--glacier-tint); }
-.suggestion-name { font-weight: 600; }
-.suggestion-scores { display: flex; gap: var(--space-0-5); font-size: 14px; font-variant-numeric: tabular-nums; }
+.suggestion.selected { border-color: var(--glacier); background: var(--glacier-tint); }
+
+/* Step 2: every park not in the two short lists, behind an expander. */
+.more-parks { margin-top: var(--space-1); border-top: 1px solid var(--border); padding-top: var(--space-1); }
+.more-parks > summary { cursor: pointer; list-style-position: inside; }
+.more-parks-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
 
 /* Park cards */
 .cards-head { margin: var(--space-0-25) 0 var(--space-0-5); }
 .empty-cards { margin: 0; }
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: var(--space-1); }
-
-.park-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-1); }
-.park-card-head p { margin: var(--space-0-25) 0 0; }
-.park-card-scores { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-1); margin: var(--space-1) 0 var(--space-0-5); }
-.park-card .details { padding: var(--space-0-25) 0 0; }
-.park-card .table-wrap { max-height: none; }
+.postcard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 620px), 1fr)); gap: var(--space-2); }
+.cards-section .score-explainer p { margin: 0; }
+.cards-section .score-explainer .notes { margin: var(--space-0-5) 0 0; }
 
 .park-card-title {
   margin: 0; font: 400 20px/1.15 var(--font-display);
   letter-spacing: 0.01em;
   color: var(--pine-ink);
 }
-.park-card-score { display: flex; flex-direction: column; gap: var(--space-0-5); }
 .big-score { font-size: 30px; font-weight: 700; line-height: 1.1; color: var(--text); }
-.park-card .meter-track { flex: none; width: 100%; }
-.park-card .detail-table { width: 100%; }
-.park-card .detail-table tbody th { width: 42%; }
 
-/* Ranked list */
-.all-parks > summary { cursor: pointer; list-style-position: inside; font-weight: 600; }
-.all-parks[open] > summary { margin-bottom: var(--space-0-5); }
-label.park-row { border: 1.5px solid transparent; border-radius: var(--radius); }
+/* Ranked list: read-only rows. */
+.all-parks > h2 { margin-bottom: var(--space-0-5); }
+.park-row.static { cursor: default; }
+.park-row.static:hover { background: transparent; }
 
 @media (max-width: 640px) {
   .card-grid { grid-template-columns: 1fr; }
   .suggest-grid { grid-template-columns: 1fr; }
-  .suggestion { grid-template-columns: auto 1fr; }
-  .suggestion-scores { grid-column: 2; }
-  .park-card-scores { grid-template-columns: 1fr; }
 }
 
 /* ── Hover daily chart ── */
@@ -791,10 +779,7 @@ path.yc-series.tag-projected { stroke: var(--sunset); stroke-dasharray: 2 2; }
 }
 
 /* ── Park suggestions: aligned score columns, reason line, trend pill ── */
-.suggestion {
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: start;
-}
+.suggestion { align-items: start; }
 .suggestion input[type="checkbox"] { margin-top: var(--space-0-25); }
 .suggestion-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .suggestion-name { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-0-5); font-weight: 600; }
@@ -805,21 +790,6 @@ path.yc-series.tag-projected { stroke: var(--sunset); stroke-dasharray: 2 2; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.suggestion-why { font-size: 12px; font-weight: 500; }
-.suggestion-why.good { color: var(--success-ink); }
-.suggestion-why.ok { color: var(--text-muted); }
-.suggestion-why.bad { color: var(--danger-ink); }
-
-.suggestion-scores,
-.suggest-head { display: grid; grid-template-columns: repeat(3, 68px); gap: var(--space-0-25); }
-.suggest-head {
-  justify-content: end;
-  padding: 0 var(--space-1) var(--space-0-25) 0;
-  text-align: right;
-}
-.score-col { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2; }
-.score-num { font-size: 18px; font-weight: 700; }
-.score-range { font-size: 11px; color: var(--text-muted); }
 
 /* Trend pill: the badge treatment, compact. */
 .trend-pill {
@@ -837,12 +807,6 @@ path.yc-series.tag-projected { stroke: var(--sunset); stroke-dasharray: 2 2; }
 .trend-pill.real { background: var(--sunset-tint); color: var(--rising); }
 .trend-pill.possible { background: var(--surface-2); color: var(--text-muted); }
 
-@media (max-width: 640px) {
-  .suggestion { grid-template-columns: auto minmax(0, 1fr); }
-  .suggestion-scores { grid-column: 2; justify-content: start; }
-  .suggest-head { justify-content: start; padding-left: var(--space-2); }
-  .score-col { align-items: flex-start; }
-}
 
 .score-explainer {
   margin: 0 0 var(--space-1);

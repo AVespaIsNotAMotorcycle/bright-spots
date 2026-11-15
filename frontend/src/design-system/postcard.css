@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   Postcard layer — PROPOSED, sandbox only (not imported by the app)
+   Postcard layer: used by the Trip Planner's "Your parks" cards and the sandbox
    One-sided card: park photo on the left, the full park card on the
    right, split by a postcard rule, on white stock with a wide white
    border and square paper corners.
@@ -83,6 +83,13 @@
 .pc-foot { display: flex; justify-content: space-between; align-items: center; gap: var(--space-1); margin: auto 0 0; }
 .pc-key { display: inline-flex; align-items: center; gap: var(--space-0-5); }
 .pc-key .pc-bar { width: 24px; margin: 0; }
+
+/* Medium slot (e.g. two postcards side by side): tighten the stamps so they stay inside their columns. */
+@container (max-width: 760px) {
+  .postcard { grid-template-columns: 1fr 2.2fr; }
+  .pc-table th, .pc-table td { padding-left: var(--space-0-5); }
+  .pc-table thead .tag { letter-spacing: 0.04em; padding-inline: var(--space-0-25); }
+}
 
 /* Narrow slot: stack photo over info, drop the fixed shape and turn the rule horizontal. */
 @container (max-width: 600px) {

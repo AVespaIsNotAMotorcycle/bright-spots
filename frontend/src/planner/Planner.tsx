@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import LocationPicker from "./LocationPicker";
 import { useParkTrendBadge } from "../detective/useParkTrendBadge";
-import { HORIZONS, Meter, ParkCard, fmtDistance, horizonTitle } from "./ParkDetails";
+import { HORIZONS, Meter, fmtDistance, horizonTitle } from "./ParkDetails";
+import Postcard from "./Postcard";
 import PrefsPanel, { type Unit } from "./PrefsPanel";
 import {
   MONTHS,
   distanceKm,
-  explainTemp,
   fToC,
   fetchPlan,
   nearestParks,
@@ -59,89 +59,67 @@ function ScenarioChips({ value, onChange }: { value: Prefs["scenario"]; onChange
   );
 }
 
-function TrendPill({ code, unit }: { code: string | null; unit: Unit }) {
-  const b = useParkTrendBadge(code);
-  if (!b || (b.verdict !== "real" && b.verdict !== "possible")) return null;
-  const slope = unit === "F" ? b.slope_f : b.slope_f / 1.8;
-  const real = b.verdict === "real";
-  return (
-    <span
-      className={`trend-pill ${real ? "real" : "possible"}`}
-      title={`Daytime high trend since 1981: ${real ? "confirmed, very unlikely to be luck" : "possible, not yet confirmed"}`}
-    >
-      {slope >= 0 ? "▲" : "▼"} {slope > 0 ? "+" : ""}
-      {slope.toFixed(1)}°{unit}/decade{real ? "" : "?"}
-    </span>
-  );
-}
-
-function SuggestHead({ plan }: { plan: Plan }) {
-  return (
-    <div className="suggest-head micro muted" aria-hidden="true">
-      {HORIZONS.map((hz) => (
-        <span key={hz.key} className="score-col">
-          <strong>{horizonTitle(hz.key, plan)}</strong>
-          <span>{hz.key === "this_year" ? "measured or typical" : hz.tag.toLowerCase()}</span>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function Suggestion({
-  p,
-  plan,
-  sub,
-  selected,
-  onToggle,
-  prefs,
-  unit,
-}: {
-  p: ParkPlan;
-  plan: Plan;
-  sub: string;
-  selected: boolean;
-  onToggle: () => void;
-  prefs: Prefs;
-  unit: Unit;
-}) {
-  const why = explainTemp(p.this_year.values.tmax, prefs.tLo, prefs.tHi, unit);
+/** One checklist row in step 2: just the park and where it is. */
+function Suggestion({ p, sub, selected, onToggle }: { p: ParkPlan; sub?: string; selected: boolean; onToggle: () => void }) {
   const states = p.park.states.join(", ");
   return (
     <li>
       <label className={`suggestion ${selected ? "selected" : ""}`}>
         <input type="checkbox" checked={selected} onChange={onToggle} />
         <span className="suggestion-main">
-          <span className="suggestion-name">
-            {p.park.short} <TrendPill code={p.park.code} unit={unit} />
-          </span>
-          <span className="suggestion-sub" title={`${states} · ${sub}`}>
-            {states} · {sub}
-          </span>
-          {why && <span className={`suggestion-why ${why.tone}`}>{why.text}</span>}
-        </span>
-        <span className="suggestion-scores num">
-          {HORIZONS.map((hz) => {
-            const h = p[hz.key];
-            const range = h.score != null && h.low != null && h.high != null && Math.round(h.low) !== Math.round(h.high);
-            return (
-              <span
-                key={hz.key}
-                className="score-col"
-                title={`${horizonTitle(hz.key, plan)} ${hz.tag.toLowerCase()} score${range ? `, range ${Math.round(h.low!)}–${Math.round(h.high!)}` : ""}`}
-              >
-                <span className="score-num">{h.score == null ? "–" : Math.round(h.score)}</span>
-                {range && hz.key !== "this_year" && (
-                  <span className="score-range">
-                    {Math.round(h.low!)}–{Math.round(h.high!)}
-                  </span>
-                )}
-              </span>
-            );
-          })}
+          <span className="suggestion-name">{p.park.short}</span>
+          <span className="suggestion-sub">{sub ? `${states} · ${sub}` : states}</span>
         </span>
       </label>
     </li>
+  );
+}
+
+/** A selected park as a design-system postcard, with its warming trend fetched in. */
+function ParkPostcard({ p, plan, unit, place, onRemove, onViewTrend }: {
+  p: ParkPlan; plan: Plan; unit: Unit; place: Place | null; onRemove: () => void; onViewTrend?: (code: string) => void;
+}) {
+  const trend = useParkTrendBadge(p.park.code);
+  const code = p.park.code;
+  return (
+    <Postcard
+      p={p} plan={plan} unit={unit} place={place} trend={trend}
+      onRemove={onRemove}
+      onViewTrend={onViewTrend && code ? () => onViewTrend(code) : undefined}
+    />
+  );
+}
+
+/**
+ * How to read the cards: the match score, then what each year's numbers are built from.
+ * The year notes come from the API per park; most are the same for every park, so each is
+ * shown once, and a note that only some parks carry names them.
+ */
+function ScoreGuide({ plan, prefs, unit, chosen }: { plan: Plan; prefs: Prefs; unit: Unit; chosen: ParkPlan[] }) {
+  const notes = HORIZONS.flatMap((hz) => {
+    const byNote = new Map<string, string[]>();
+    for (const p of chosen) for (const n of p[hz.key].notes) byNote.set(n, [...(byNote.get(n) ?? []), p.park.short]);
+    return [...byNote].map(([text, parks]) => ({ hz, text, parks: parks.length < chosen.length ? parks : null }));
+  });
+  return (
+    <div className="score-explainer small">
+      <p>
+        <strong>What the match score means.</strong> Each park gets a <strong>match score from 0 to 100</strong> for a trip
+        in <strong>{MONTHS[prefs.month - 1]}</strong>, based on what you picked above: {prefsSummary(prefs, unit).join(", ")}.
+        100 means the park fits all of it, 0 means it fits none. Higher is a better fit. Use it to compare parks and
+        choose which to look at closely; it is not a quality rating.
+      </p>
+      {notes.length > 0 && (
+        <ul className="notes">
+          {notes.map(({ hz, text, parks }) => (
+            <li key={hz.key + text}>
+              <strong>{horizonTitle(hz.key, plan)}:</strong> {text}
+              {parks && <span className="muted"> ({parks.join(", ")})</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -197,6 +175,11 @@ export default function Planner({ onViewTrend, initialMonth }: { onViewTrend?: (
     () => (plan ? popularParks(plan.parks, SUGGEST_N, new Set(near.map((p) => p.park.id))) : []),
     [plan, near],
   );
+  const others = useMemo(() => {
+    const shown = new Set([...near, ...popular].map((p) => p.park.id));
+    return (plan?.parks ?? []).filter((p) => !shown.has(p.park.id)).sort((a, b) => a.park.short.localeCompare(b.park.short));
+  }, [plan, near, popular]);
+  const othersSelected = others.filter((p) => selected.includes(p.park.id)).length;
   const ranked = useMemo(() => (plan ? rankParks(plan.parks, rankBy) : []), [plan, rankBy]);
   const byId = useMemo(() => new Map(plan?.parks.map((p) => [p.park.id, p]) ?? []), [plan]);
   const chosen = selected.map((id) => byId.get(id)).filter((p): p is ParkPlan => p != null);
@@ -214,58 +197,49 @@ export default function Planner({ onViewTrend, initialMonth }: { onViewTrend?: (
           </h2>
           <span className="small muted">{loading ? "Updating…" : ""}</span>
         </header>
-        <p className="score-explainer small">
-          <strong>What the number means.</strong> Each park gets a <strong>match score from 0 to 100</strong> for a trip in{" "}
-          <strong>{MONTHS[prefs.month - 1]}</strong>, based on what you picked above: {prefsSummary(prefs, unit).join(", ")}.
-          100 means the park fits all of it, 0 means it fits none. Use it to compare parks and choose which to look at
-          closely. It is not a quality rating. Tick parks to compare them below.
-        </p>
         <LocationPicker place={place} onPlace={setPlace} />
         {plan && (
           <div className="suggest-grid">
             <div>
               <h3 className="pref-title">Near you</h3>
               {place ? (
-                <>
-                <SuggestHead plan={plan} />
                 <ul className="suggest-list">
                   {near.map((p) => (
                     <Suggestion
                       key={p.park.id}
                       p={p}
-                      plan={plan}
                       sub={fmtDistance(distanceKm(place, p.park), unit)}
                       selected={selected.includes(p.park.id)}
                       onToggle={() => toggle(p.park.id)}
-                      prefs={prefs}
-                      unit={unit}
                     />
                   ))}
                 </ul>
-                </>
               ) : (
                 <p className="small muted">Share a location or search for a place to see the five closest parks.</p>
               )}
             </div>
             <div>
               <h3 className="pref-title">Most visited nationwide</h3>
-              <SuggestHead plan={plan} />
               <ul className="suggest-list">
                 {popular.map((p) => (
-                  <Suggestion
-                    key={p.park.id}
-                    p={p}
-                    plan={plan}
-                    sub={`${((p.park.visitors_2025 ?? 0) / 1e6).toFixed(1)}M visitors in 2025`}
-                    selected={selected.includes(p.park.id)}
-                    onToggle={() => toggle(p.park.id)}
-                    prefs={prefs}
-                    unit={unit}
-                  />
+                  <Suggestion key={p.park.id} p={p} selected={selected.includes(p.park.id)} onToggle={() => toggle(p.park.id)} />
                 ))}
               </ul>
             </div>
           </div>
+        )}
+        {plan && others.length > 0 && (
+          <details className="more-parks">
+            <summary className="pref-title">
+              More parks ({others.length})
+              {othersSelected > 0 && <span className="small muted"> · {othersSelected} selected</span>}
+            </summary>
+            <ul className="suggest-list more-parks-list">
+              {others.map((p) => (
+                <Suggestion key={p.park.id} p={p} selected={selected.includes(p.park.id)} onToggle={() => toggle(p.park.id)} />
+              ))}
+            </ul>
+          </details>
         )}
       </section>
 
@@ -282,12 +256,13 @@ export default function Planner({ onViewTrend, initialMonth }: { onViewTrend?: (
               </button>
             )}
           </header>
+          <ScoreGuide plan={plan} prefs={prefs} unit={unit} chosen={chosen} />
           {chosen.length === 0 ? (
-            <p className="small muted empty-cards">Select parks above, or from the full list below, to see a detailed card for each.</p>
+            <p className="small muted empty-cards">Select parks above to see a postcard for each.</p>
           ) : (
-            <div className="card-grid">
+            <div className="postcard-grid">
               {chosen.map((p) => (
-                <ParkCard key={p.park.id} p={p} plan={plan} unit={unit} place={place} onRemove={() => toggle(p.park.id)} onViewTrend={onViewTrend} />
+                <ParkPostcard key={p.park.id} p={p} plan={plan} unit={unit} place={place} onRemove={() => toggle(p.park.id)} onViewTrend={onViewTrend} />
               ))}
             </div>
           )}
@@ -295,8 +270,8 @@ export default function Planner({ onViewTrend, initialMonth }: { onViewTrend?: (
       )}
 
       {plan && (
-        <details className="card all-parks">
-          <summary className="section-title">All {plan.parks.length} parks, ranked</summary>
+        <section className="card all-parks" aria-labelledby="all-title">
+          <h2 id="all-title" className="section-title">All {plan.parks.length} parks, ranked</h2>
           <div className="row gap-16 wrap results-bar">
             <div className="row gap-8 wrap" role="group" aria-label="Rank by">
               <span className="micro muted">Rank by</span>
@@ -320,20 +295,20 @@ export default function Planner({ onViewTrend, initialMonth }: { onViewTrend?: (
           <ol className="park-list">
             {ranked.map((p, i) => (
               <li key={p.park.id}>
-                <label className={`park-row ${selected.includes(p.park.id) ? "selected" : ""}`}>
+                <div className="park-row static">
                   <span className="num muted">{i + 1}</span>
                   <span className="park-name">
-                    <input type="checkbox" checked={selected.includes(p.park.id)} onChange={() => toggle(p.park.id)} /> {p.park.short}
+                    {p.park.short}
                     <span className="micro muted"> {p.park.states.join(", ")}</span>
                   </span>
                   {HORIZONS.map((hz) => (
                     <Meter key={hz.key} h={p[hz.key]} label={horizonTitle(hz.key, plan)} />
                   ))}
-                </label>
+                </div>
               </li>
             ))}
           </ol>
-        </details>
+        </section>
       )}
 
       <footer className="micro muted sources">
