@@ -70,7 +70,7 @@ export function SoundToggle() {
         padding: "4px 10px", cursor: "pointer", fontSize: 13, color: E.bark, fontWeight: 600,
       }}
     >
-      {on ? "🐦 Sounds on" : "🔇 Sounds off"}
+      {on ? "🌿 Nature sounds on" : "🔇 Sounds off"}
     </button>
   );
 }
