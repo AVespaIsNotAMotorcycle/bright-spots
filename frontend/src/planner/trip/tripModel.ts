@@ -116,7 +116,7 @@ export const AVOIDS: Chip[] = [
   { key: "uv", emoji: "🔆", label: "Strong UV", hint: "High daily UV from NASA POWER.", source: "nasa" },
   { key: "snow_trails", emoji: "❄️", label: "Snow on trails", hint: "Snow on the ground.", source: "nasa" },
   { key: "crowds", emoji: "👥", label: "Crowds", hint: "Parks with fewer visitors a year.", source: "visitors" },
-  { key: "fire", emoji: "🔥", label: "Fire season", hint: "Fires seen by satellite within 25 km, 2015-2024.", source: "fires" },
+  { key: "fire", emoji: "🔥", label: "Fire season", hint: "Fire heat spots seen by satellite within 25 km, 2015-2024. Lava also shows up (Hawaiʻi Volcanoes).", source: "fires" },
   { key: "smoke", emoji: "🌫️", label: "Hazy or smoky air", hint: "Days with lots of smoke, dust or haze in the air.", source: "nasa" },
 ];
 
@@ -270,9 +270,9 @@ export function reasonText(r: Reason, u: Unit): string {
     case "rain": return `${v.toFixed(0)} rainy days`;
     case "muggy": return `dew point ${temp(v, u)}`;
     case "gray": return `${Math.round(v)}% cloud`;
-    case "uv": return v > 2.6 ? "very strong UV" : v > 2 ? "strong UV" : "gentle UV";
+    case "uv": return v > 2.6 ? "UV among the highest of the parks" : v > 2 ? "UV above most parks" : "gentle UV";
     case "crowds": return `${(v / 1e6).toFixed(1)}M visitors a year`;
-    case "fire": return v < 0.5 ? "no fires seen" : `${v.toFixed(0)} fire spots a month`;
+    case "fire": return v < 0.5 ? "no fires seen" : `${v.toFixed(0)} heat spots a month`;
     case "smoke": return v < 0.5 ? "clear air" : `${v.toFixed(0)} hazy days`;
     default: return "";
   }
@@ -315,7 +315,7 @@ export function scoreColor(s: number | null): string {
 }
 
 export const HORIZON_LABEL = (h: HorizonKey, t: Pick<Trip, "this_year" | "next_year"> | null) =>
-  h === "this_year" ? `${t?.this_year ?? ""} measured` : h === "next_year" ? `${t?.next_year ?? ""} forecast` : "2050 model";
+  h === "this_year" ? `${t?.this_year ?? ""} so far` : h === "next_year" ? `${t?.next_year ?? ""} trend` : "2050 model";
 
 /** Every feel band, so temperature hides no park. */
 export const ALL_FEELS = FEELS.map((f) => f.id);

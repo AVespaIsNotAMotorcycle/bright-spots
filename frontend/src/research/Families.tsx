@@ -148,7 +148,7 @@ export default function Families({
     <div className="panel-stack st-page">
       <StationStyle />
       <div className="card">
-        <h2 className="section-title">🧬 Parks that change together</h2>
+        <h2 className="section-title">Parks that change together</h2>
         <p className="panel-intro">
           Each park gets a change fingerprint: for {fam.features.length} variable and season pairs, the trend divided by
           the park's year-to-year scatter. Parks with similar fingerprints share a family (average-linkage clustering).

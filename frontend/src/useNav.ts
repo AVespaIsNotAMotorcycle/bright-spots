@@ -26,14 +26,21 @@ export interface NavState {
   q: string | null;
 }
 
+/** A whole number in [lo, hi], else null (guards bad links like step=abc). */
+function intIn(v: string | null, lo: number, hi: number): number | null {
+  if (v == null || v === "") return null;
+  const n = Number(v);
+  return Number.isInteger(n) && n >= lo && n <= hi ? n : null;
+}
+
 export function parseHash(): NavState {
   const p = new URLSearchParams(location.hash.slice(1));
   return {
     tab:    (p.get("tab") as NavState["tab"]) ?? null,
     caseId: p.get("case"),
-    step:   p.has("step") ? Number(p.get("step")) : null,
+    step:   intIn(p.get("step"), 0, 999),
     park:   p.get("park"),
-    month:  p.has("month") ? Number(p.get("month")) : null,
+    month:  intIn(p.get("month"), 1, 12),
     park2:  p.get("park2"),
     v:      p.get("v"),
     per:    p.get("per"),

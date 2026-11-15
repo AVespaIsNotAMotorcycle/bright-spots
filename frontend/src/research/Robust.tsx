@@ -90,7 +90,7 @@ export default function Robust({
     <div className="panel-stack st-page">
       <StationStyle />
       <div className="card">
-        <h2 className="section-title">🧪 Does the trend survive a different start year?<Tip text="We re-run Sen's slope and Mann-Kendall starting at every year that leaves at least 15 years. A robust trend keeps its direction and stays significant for most start years." /></h2>
+        <h2 className="section-title">Does the trend survive a different start year?<Tip text="We re-run Sen's slope and Mann-Kendall starting at every year that leaves at least 15 years. A robust trend keeps its direction and stays significant for most start years." /></h2>
         <p className="panel-intro">
           A trend can come from picking a convenient start year. This re-runs the test for every start year that leaves at
           least 15 years of data. A robust trend keeps its direction and stays significant across most of them.

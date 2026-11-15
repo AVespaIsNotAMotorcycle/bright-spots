@@ -58,20 +58,22 @@ export function CaseList({ onSelect }: { onSelect: (c: Case) => void }) {
 
 // ── Live data fetch for examine/analyze steps ──────────────────────────────
 
-function useParkTrends(parkId: string | undefined): ParkTrends | null {
-  const [cache, setCache] = useState<Record<string, ParkTrends>>({});
-  const [loading, setLoading] = useState(false);
+/** Trend data for one park. `null` while loading; `"error"` if the fetch failed. */
+function useParkTrends(parkId: string | undefined, retry = 0): ParkTrends | null | "error" {
+  const [cache, setCache] = useState<Record<string, ParkTrends | "error">>({});
+
+  useEffect(() => {
+    if (!parkId) return;
+    let live = true;
+    fetch(`/api/trends/parks/${parkId}`)
+      .then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json() as Promise<ParkTrends>; })
+      .then((d) => { if (live) setCache((c) => ({ ...c, [parkId]: d })); })
+      .catch(() => { if (live) setCache((c) => ({ ...c, [parkId]: "error" })); });
+    return () => { live = false; };
+  }, [parkId, retry]);
 
   if (!parkId) return null;
-  if (cache[parkId]) return cache[parkId];
-  if (!loading) {
-    setLoading(true);
-    fetch(`/api/trends/parks/${parkId}`)
-      .then((r) => r.json() as Promise<ParkTrends>)
-      .then((d) => setCache((c) => ({ ...c, [parkId]: d })))
-      .finally(() => setLoading(false));
-  }
-  return null;
+  return cache[parkId] ?? null;
 }
 
 // ── Examine / Analyze step (shows the actual chart + card) ────────────────
@@ -89,7 +91,10 @@ function DataStep({
   onGoPlanner?: (month: number) => void;
   isLast: boolean;
 }) {
-  const data = useParkTrends(step.parkId);
+  const [retry, setRetry] = useState(0);
+  const got = useParkTrends(step.parkId, retry);
+  const failed = got === "error";
+  const data = failed ? null : got;
 
   let trend: TrendRow | null = null;
   if (data && step.variable && step.period) {
@@ -110,8 +115,14 @@ function DataStep({
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6 }}>{step.body}</p>
 
-      {step.parkId && !data && (
+      {step.parkId && !data && !failed && (
         <div style={{ color: "var(--text-muted)", fontSize: 13 }}>Loading data…</div>
+      )}
+      {failed && (
+        <div role="alert" style={{ color: "var(--text-muted)", fontSize: 13 }}>
+          Could not load data.{" "}
+          <button type="button" className="btn-ghost" onClick={() => setRetry((n) => n + 1)}>Try again</button>
+        </div>
       )}
 
       {series && trend && meta && (
@@ -192,7 +203,7 @@ function DataStep({
               fontSize: 14,
             }}
           >
-            ← Back to cases
+            ← Back to mysteries
           </button>
         )}
       </div>
@@ -296,8 +307,9 @@ export default function StudentDetective({
     );
   }
 
-  const step = activeCase.steps[stepIndex];
-  const isLast = stepIndex === activeCase.steps.length - 1;
+  const safeIndex = Math.max(0, Math.min(stepIndex, activeCase.steps.length - 1));
+  const step = activeCase.steps[safeIndex];
+  const isLast = safeIndex === activeCase.steps.length - 1;
   const isGame = (GAME_KINDS as readonly string[]).includes(step.kind);
   const primaryBtn = {
     background: "#1f2a24", color: "#fff", border: "none", borderRadius: 10,
@@ -312,7 +324,7 @@ export default function StudentDetective({
           onClick={backToCases}
           style={{ background: "none", border: "1px solid var(--border)", borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 13 }}
         >
-          ← All cases
+          ← All mysteries
         </button>
         <div style={{ fontWeight: 700, fontSize: 16 }}>
           {activeCase.emoji} {activeCase.title}
@@ -436,7 +448,7 @@ function CaseClosed({
           </button>
         )}
         <button onClick={onBack} style={{ ...btn, background: "none", border: "1px solid var(--border)" }}>
-          ← All cases
+          ← All mysteries
         </button>
       </div>
     </div>

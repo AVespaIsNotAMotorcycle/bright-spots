@@ -18,6 +18,7 @@ interface Account {
 export const USER_KEYS = [
   "detective.progress", "detective.days", "detective.bestStreak", "detective.sound",
   "wishlist", "trip.state", "planner.unit", "born", "station.saved",
+  "campfire.name", "campfire.id",
 ];
 
 function snapshot(): Record<string, string> {

@@ -79,7 +79,7 @@ export async function drawTripCard(p: TripPark, unit: Unit, changed: string | nu
   }
   ctx.fillStyle = "#6b5d49";
   ctx.font = "500 24px Outfit, system-ui, sans-serif";
-  ctx.fillText("Park Trend Detective · NASA POWER climate data" + (photo ? ` · Photo: ${photo.credit.slice(0, 40)} (${photo.license})` : ""), 64, H - 40, W - 128);
+  ctx.fillText("Canopy · NASA POWER climate data" + (photo ? ` · Photo: ${photo.credit.slice(0, 40)} (${photo.license})` : ""), 64, H - 40, W - 128);
   return new Promise((res) => c.toBlob(res, "image/png"));
 }
 

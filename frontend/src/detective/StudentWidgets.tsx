@@ -274,7 +274,7 @@ export function ParkOfTheDay({ atlas, onExplore, science = false }: { atlas: Atl
       {!guess ? (
         <div style={{ padding: "18px 22px 20px", display: "flex", flexDirection: "column", gap: 14, flex: 1 }}>
           <div style={{ fontWeight: 600, fontSize: 16, color: E.bark }}>Quick guess: since 1981, is {name} getting…</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(96px, 1fr))", gap: 10 }}>
             {GUESSES.map((g) => (
               <button
                 key={g.id}

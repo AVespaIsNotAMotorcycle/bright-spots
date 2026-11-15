@@ -127,6 +127,11 @@ export default function App() {
     if (!nav.tab) replace({ tab: "home" });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // An unknown tab in the URL (#tab=foo) shows Home, so fix the URL to match.
+  useEffect(() => {
+    if (nav.tab && !allowedTabs(true).includes(nav.tab)) replace({ tab: "home" });
+  }, [nav.tab, replace]);
+
   // Research tools on: ← and → move between the research tools, unless typing or using a control.
   useEffect(() => {
     if (!research || editing || !RESEARCH_TABS.includes(tab)) return;
@@ -160,8 +165,11 @@ export default function App() {
     setProfile(p);
     saveProfile(p);
     updateAccount(p);
+    // Logging in swaps in that user's saved data; read their unit back into state.
+    if (!editing) setUnit(loadUnit());
     setEditing(false);
-    navigate({ tab: "home" });
+    // Keep a deep link (e.g. a shared trip) and an edit in place; otherwise go Home.
+    if (!editing && !nav.tab) navigate({ tab: "home" });
   }
 
   function setResearch(on: boolean) {
@@ -176,6 +184,7 @@ export default function App() {
 
   function logOut() {
     logOutAccount(profile);
+    setUnit(loadUnit()); // the stored unit was just put away with the account
     setProfile(null);
     saveProfile(null);
     navigate({ tab: "home" });

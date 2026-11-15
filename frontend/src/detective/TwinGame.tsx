@@ -99,7 +99,7 @@ export function GuessTheTwin({ atlas, onExplore }: { atlas: Atlas; onExplore: (p
           <div style={{ fontWeight: 600, fontSize: 16, color: E.bark }}>
             Pick the park whose weather has changed the same way.
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(96px, 1fr))", gap: 10 }}>
             {round.options.map((id) => {
               const ph = photoOf(id);
               return (

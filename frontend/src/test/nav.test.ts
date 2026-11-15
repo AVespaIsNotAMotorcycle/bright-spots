@@ -41,6 +41,14 @@ describe("hash round-trip", () => {
     history.replaceState(null, "", "#tab=planner&park=crla");
     expect(parseHash()).toMatchObject({ tab: "planner", park: "crla", month: null });
   });
+  it("drops a bad step or month instead of crashing", () => {
+    for (const bad of ["abc", "-1", "2.5", ""]) {
+      history.replaceState(null, "", `#tab=student&case=c1&step=${bad}&month=${bad}`);
+      expect(parseHash()).toMatchObject({ step: null, month: null });
+    }
+    history.replaceState(null, "", "#month=13");
+    expect(parseHash().month).toBeNull();
+  });
   it("an empty hash is all null", () => {
     expect(toHash({})).toBe("#");
     expect(parseHash().tab).toBeNull();

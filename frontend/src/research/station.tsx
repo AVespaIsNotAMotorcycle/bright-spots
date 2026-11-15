@@ -118,14 +118,14 @@ function citations(ctx: CiteContext, atlas: Atlas | null) {
   ].filter(Boolean).join(", ");
   const url = typeof location !== "undefined" ? location.href : REPO;
   const apa =
-    `Park Trend Detective. (${year}). ${view ? `${view} ` : ""}[Data set and web app]. NASA Space Apps Challenge. ` +
+    `Canopy. (${year}). ${view ? `${view} ` : ""}[Data set and web app]. NASA Space Apps Challenge. ` +
     `Retrieved ${today}, from ${url}\n\n` +
     `NASA Langley Research Center. (n.d.). NASA Prediction Of Worldwide Energy Resources (POWER), daily data. ` +
     `Retrieved ${today}, from https://power.larc.nasa.gov/\n\n` +
     `Acknowledgement (requested by NASA POWER): ${POWER_ACK}`;
   const bib =
-    `@misc{parktrenddetective${year},\n  title  = {Park Trend Detective${view ? `: ${view}` : ""}},\n` +
-    `  author = {{Park Trend Detective team}},\n  year   = {${year}},\n  note   = {NASA Space Apps Challenge. Accessed ${today}},\n` +
+    `@misc{canopy${year},\n  title  = {Canopy${view ? `: ${view}` : ""}},\n` +
+    `  author = {{Canopy team}},\n  year   = {${year}},\n  note   = {NASA Space Apps Challenge. Accessed ${today}},\n` +
     `  url    = {${REPO}}\n}\n` + BIB;
   return { apa, bib, view };
 }
@@ -170,7 +170,7 @@ export function CiteThis({ ctx, atlas, label = "❝ Cite this" }: { ctx: CiteCon
                   style={{ border: 0, background: "none", fontSize: 22, cursor: "pointer", color: E.bark }}>×</button>
               </div>
               <h3 style={{ fontFamily: "var(--font-display)", color: E.pine, margin: "10px 0 2px" }}>Cite this</h3>
-              <p className="small" style={{ margin: "0 0 12px", color: E.bark }}>{c.view || "Park Trend Detective atlas"}</p>
+              <p className="small" style={{ margin: "0 0 12px", color: E.bark }}>{c.view || "Canopy atlas"}</p>
               <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
                 {(["apa", "bib"] as const).map((f) => (
                   <button key={f} className={`st-btn${fmt === f ? "" : " ghost"}`} onClick={() => setFmt(f)}>

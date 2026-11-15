@@ -736,3 +736,8 @@ path.yc-series.tag-projected { stroke: var(--sky); stroke-dasharray: 2 2; }
 .switch-track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--paper); transition: transform .15s; }
 .switch[aria-checked="true"] .switch-track { background: var(--moss); }
 .switch[aria-checked="true"] .switch-track::after { transform: translateX(16px); }
+
+/* Reduced motion everywhere, not only on the parts that opted in. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

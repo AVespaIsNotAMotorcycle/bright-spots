@@ -225,7 +225,7 @@ function VerdictGame({ step, atlas, timeUp, done, finish }: GameProps) {
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <div style={{ fontWeight: 700, fontSize: 13 }}>{sideLabel(atlas, side)}</div>
       {series ? <DotChart years={series.years} values={series.values} /> : <div style={{ opacity: 0.7, fontSize: 13 }}>Loading the dots…</div>}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(96px, 1fr))", gap: 8 }}>
         {V_OPTS.map((o) => (
           <button
             key={o.v}

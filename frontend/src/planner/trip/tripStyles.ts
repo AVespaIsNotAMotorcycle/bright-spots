@@ -9,7 +9,7 @@ export const TRIP_CSS = `
 .tp-h small{font-size:11px;letter-spacing:0;text-transform:none;font-weight:500;color:var(--text-muted)}
 .tp-hero{border-radius:22px;padding:22px 24px;color:#fff;position:relative;overflow:hidden;
   background:linear-gradient(120deg,rgba(31,42,36,.92),rgba(45,90,39,.78)),var(--tp-hero,none) center/cover}
-.tp-hero h2{margin:0;font-family:var(--font-display);font-size:34px;line-height:1.1}
+.tp-hero h1{margin:0;font-family:var(--font-display);font-size:34px;line-height:1.1}
 .tp-hero p{margin:6px 0 14px;opacity:.85}
 .tp-moods{display:flex;gap:8px;flex-wrap:wrap}
 .tp-mood{flex:0 0 auto;border:1.5px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:14px;
@@ -170,7 +170,7 @@ export const TRIP_CSS = `
   .tp-side{position:fixed;inset:auto 0 0 0;max-height:85vh;border-radius:22px 22px 0 0;z-index:40;transform:translateY(105%);transition:transform .25s}
   .tp-side.open{transform:none}
   .tp-edit{display:inline-flex;position:sticky;top:8px;z-index:30;align-self:flex-start}
-  .tp-hero h2{font-size:26px}
+  .tp-hero h1{font-size:26px}
   .tp-row{grid-template-columns:22px 44px 1fr auto}
   .tp-row img{width:44px;height:44px}
   .tp-row .hide-sm{display:none}
@@ -181,7 +181,7 @@ export const TRIP_CSS = `
 .tp-side{background:var(--paper);border:1px solid var(--stone);border-radius:var(--radius);box-shadow:none}
 .tp-h{color:var(--bark-2);font-weight:500}
 .tp-hero{background:none;color:var(--bark);border-radius:0;padding:0 0 18px;border-bottom:1px solid var(--stone);overflow:visible}
-.tp-hero h2{font-weight:400;font-size:clamp(28px,4vw,38px);color:var(--bark)}
+.tp-hero h1{font-weight:400;font-size:clamp(28px,4vw,38px);color:var(--bark)}
 .tp-hero p{opacity:1;color:var(--bark-2)}
 .tp-mood{border:1px solid var(--stone);background:var(--paper);color:var(--bark);border-radius:99px;font-weight:500;padding:7px 13px;font-size:13.5px}
 .tp-mood:hover{background:var(--paper);border-color:var(--moss)}

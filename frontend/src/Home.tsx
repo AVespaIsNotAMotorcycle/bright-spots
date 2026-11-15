@@ -41,7 +41,7 @@ export default function Home({ name, research, atlas, onGo }: Props) {
       </section>
 
       <Safe what="Park picks">
-        <RightNow month={now} onOpen={(code, id) => onGo("planner", { park: code ?? id })} />
+        <RightNow month={now} onOpen={(_code, id) => onGo("planner", { park: id })} />
       </Safe>
 
       <section className="hm-sec" aria-label="Play today">
@@ -64,7 +64,7 @@ export default function Home({ name, research, atlas, onGo }: Props) {
         ))}
       </section>
 
-      <p className="hm-credit">Data: NASA POWER, Daymet, NASA GRACE, NASA FIRMS and NPS visitor counts.</p>
+      <p className="hm-credit">Data: NASA POWER, GRACE, FIRMS and GIBS night lights. Checked against NOAA GHCN-Daily. 2050 from WorldClim CMIP6. Park list and visitors: Wikipedia.</p>
     </div>
   );
 }

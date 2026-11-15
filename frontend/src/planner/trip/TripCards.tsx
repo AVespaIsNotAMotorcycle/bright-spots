@@ -45,7 +45,7 @@ export function Badges({ p, caseFor }: { p: TripPark; caseFor?: Case }) {
   const drop = p.change_2050 != null && p.change_2050 <= -10;
   return (
     <div className="tp-badges">
-      {drop && <span className="tp-badge warn" title="Same month, 2050 climate model average (WorldClim CMIP6): temperature and rain change">⏳ Go before it changes: {Math.round(p.change_2050!)} by 2050</span>}
+      {drop && <span className="tp-badge warn" title="Same month, 2050 climate model average (WorldClim CMIP6): temperature and rain change. Score points, not degrees">⏳ Go before it changes: {Math.round(p.change_2050!)} points by 2050</span>}
       {shift && <span className="tp-badge warn" title="Best month of the whole year, now vs the 2050 model">📆 Best month moves {MONTHS[p.best_now! - 1]} → {MONTHS[p.best_2050! - 1]} by 2050</span>}
       {caseFor && <span className="tp-badge case">🔍 {caseFor.title}</span>}
     </div>
@@ -120,7 +120,7 @@ export function Heart({ on, name, onToggle }: { on: boolean; name: string; onTog
 export function Tile({ p, onOpen, heart }: { p: TripPark; onOpen: () => void; heart: React.ReactNode }) {
   const photo = photoOf(p.park.code);
   return (
-    <div className="tp-tile" role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => e.key === "Enter" && onOpen()}
+    <div className="tp-tile" role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onOpen())}
       aria-label={`${p.park.short}. Open details`}>
       {photo ? <img src={photo.file} alt="" loading="lazy" /> : <div className="ph" />}
       {heart}
@@ -140,7 +140,7 @@ export function Row({ p, rank, unit, onOpen, actions, plain = false, trend }: {
   const best = p.reasons.filter((r) => r.score != null && r.score >= 0.75).slice(0, 2);
   if (plain) {
     return (
-      <div className="tp-row plain" role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => e.key === "Enter" && onOpen()}
+      <div className="tp-row plain" role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onOpen())}
         aria-label={`${p.park.short}. Open details`}>
         {photo ? <img src={photo.file} alt="" loading="lazy" /> : <span style={{ fontSize: 32 }}>🏞️</span>}
         <span style={{ minWidth: 0 }}>
@@ -152,7 +152,7 @@ export function Row({ p, rank, unit, onOpen, actions, plain = false, trend }: {
     );
   }
   return (
-    <div className={`tp-row${p.ok ? "" : " off"}`} role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => e.key === "Enter" && onOpen()}
+    <div className={`tp-row${p.ok ? "" : " off"}`} role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onOpen())}
       aria-label={`${rank}. ${p.park.short}, ${p.ok ? `score ${Math.round(p.score ?? 0)}` : "misses one of your musts"}`}>
       <span className="muted small" style={{ textAlign: "right" }}>{rank}</span>
       {photo ? <img src={photo.file} alt="" loading="lazy" /> : <span style={{ fontSize: 32 }}>🏞️</span>}

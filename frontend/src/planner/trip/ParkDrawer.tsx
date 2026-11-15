@@ -39,8 +39,8 @@ function ThenNow({ p, trip, unit }: { p: TripPark; trip: Trip; unit: Unit }) {
   const then = early.length ? early.reduce((a, b) => a + b, 0) / early.length : null;
   const cells = [
     { t: "1980s", kind: "10-yr avg", tmax: then, score: null as number | null },
-    { t: String(trip.this_year), kind: "one year", tmax: p.values.this_year?.tmax ?? null, score: p.scores.this_year },
-    { t: String(trip.next_year), kind: "trend line", tmax: p.values.next_year?.tmax ?? null, score: p.scores.next_year },
+    { t: String(trip.this_year), kind: "so far", tmax: p.values.this_year?.tmax ?? null, score: p.scores.this_year },
+    { t: String(trip.next_year), kind: "trend", tmax: p.values.next_year?.tmax ?? null, score: p.scores.next_year },
     { t: "2050", kind: "model", tmax: p.values.y2050?.tmax ?? null, score: p.scores.y2050 },
   ];
   return (
@@ -63,8 +63,8 @@ function ThenNow({ p, trip, unit }: { p: TripPark; trip: Trip; unit: Unit }) {
         Each box comes from a different source, so small ups and downs between them are not a trend.
       </p>
       <p className="tp-note">
-        1980s: NASA POWER mean of 1981–1990. Forecast: this month's real trend extended one year, not a weather forecast.
-        2050: WorldClim CMIP6 average of 6 models, {trip.scenario === "ssp585" ? "high" : "middle"} emissions; only temperature and rain change.
+        1980s: NASA POWER mean of 1981–1990. This year: measured months only; others use the 1991–2020 normal. Next year: the month's trend extended one year when the trend is real, else the 1991–2020 normal. Not a weather forecast.
+        2050: WorldClim CMIP6 average of 6 models, {trip.scenario === "ssp585" ? "high" : "middle"} emissions; only temperature and rain change; humidity, cloud and snow stay at today's normal.
       </p>
     </div>
   );
@@ -167,7 +167,7 @@ export default function ParkDrawer({ p, trip, state, unit, science = false, plai
           {science && (
             <p className="tp-note" style={{ marginTop: 0 }}>
               🔬 Score = sum of (factor × weight) ÷ sum of weights × 100 ={" "}
-              <b>{Math.round(p.score ?? 0)}</b>. Weights: daytime high 2, must 1.5, nice 1. A must below 50 hides the park.
+              <b>{Math.round(p.score ?? 0)}</b>. Weights: daytime high 2, must 1.5, nice 1, and rain, gray sky and muggy air 0.5 each. A must below 50 hides the park.
             </p>
           )}
           <div className="tp-bars">

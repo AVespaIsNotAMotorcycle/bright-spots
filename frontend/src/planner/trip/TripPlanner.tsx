@@ -71,6 +71,20 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
   onCase?: (caseId: string) => void;
 }) {
   const [state, setState] = useState<TripState>(() => initial(q, month));
+  // Settings that came from a shared link (null once the viewer changes anything).
+  const [fromLink] = useState<string | null>(() => {
+    const d = decodeState(q);
+    if (!d) return null;
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem(KEY);
+    } catch {
+      /* storage unavailable */
+    }
+    const enc = encodeState(d);
+    return enc === saved ? null : enc;
+  });
+  const linkEnc = useRef<string | null>(fromLink);
   const [trip, setTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,8 +125,10 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
   // Save, put it in the URL, and fetch (debounced so fast tapping makes one request).
   useEffect(() => {
     const enc = encodeState(state);
+    // A shared link shows its settings but must not overwrite the viewer's own until they edit.
+    if (linkEnc.current !== null && enc !== linkEnc.current) linkEnc.current = null;
     try {
-      localStorage.setItem(KEY, enc);
+      if (linkEnc.current === null) localStorage.setItem(KEY, enc);
     } catch {
       /* storage unavailable */
     }
@@ -162,7 +178,8 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
   // Open the park a case sent us to, once.
   useEffect(() => {
     const want = wanted.current;
-    const hit = want && trip ? trip.parks.find((p) => p.park.code === want) : undefined;
+    // Park id first (Sequoia and Kings Canyon share code seki), then NPS code from case links.
+    const hit = want && trip ? (trip.parks.find((p) => p.park.id === want) ?? trip.parks.find((p) => p.park.code === want)) : undefined;
     if (want && hit && opened.current !== want) {
       opened.current = want;
       setOpen(hit.park.id);
@@ -236,7 +253,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
         <button className="btn tp-edit" onClick={() => setSheet(true)}>⚙ Edit trip · {monthsText}</button>
 
         <section className="tp-hero" style={heroPhoto ? ({ "--tp-hero": `url("${heroPhoto.file}")` } as React.CSSProperties) : undefined}>
-          <h2>Where should you go?</h2>
+          <h1>Where should you go?</h1>
           <p>Pick a mood, or build your own trip on the left. Every score comes from NASA climate data.</p>
           <div className="tp-moods" role="group" aria-label="Trip moods">
             {MOODS.map((m) => (
