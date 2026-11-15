@@ -7,16 +7,13 @@ PROVISIONAL design choices, not values from a source; see the MVP open decisions
 
 from __future__ import annotations
 
-import math
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
-# Provisional falloffs.
-# Temperature: smooth (Gaussian) decay, so far-off parks still differ instead of
-# all hitting 0. A daytime high this far outside the ideal range scores 0.5.
-TEMP_HALF_C = 5.0
-# Humidity: linear; this far above the user's maximum scores 0.
+# Provisional falloffs: how far outside the user's limit a factor reaches 0.
+TEMP_FALLOFF_C = 8.0  # daytime high this far outside the ideal range scores 0
 RH_FALLOFF_PCT = 20.0  # humidity this far above the user's maximum scores 0
+DEW_FALLOFF_C = 5.0  # dew point this far above the user's maximum scores 0
 # Rain: double the user's maximum scores 0.
 
 # Provisional bug-activity proxy (mosquitoes and biting flies): activity needs warmth
@@ -29,7 +26,9 @@ BUG_RAIN_FULL_MM = 100.0  # monthly rain giving full standing-water term
 # snowmelt season to speak of. Provisional.
 SNOWPACK_MIN_CM = 5.0
 
-VARS = ("tmax", "t2m", "rh", "precip", "cloud", "snow")
+VARS = ("tmax", "t2m", "rh", "dewpoint", "precip", "cloud", "snow")
+# A variable missing from older bundles behaves as "no data".
+_EMPTY = {"normal": None, "this_year": None, "next_year": None, "y2050": None}
 
 
 @dataclass(frozen=True)
@@ -42,6 +41,7 @@ class Prefs:
     avoid_bugs: bool = False
     stars: bool = False
     snowmelt: bool = False
+    dew_max: float | None = None  # C, None = no preference
 
 
 @dataclass
@@ -62,7 +62,11 @@ def temp_score(tmax: float, lo: float, hi: float) -> float:
     if lo <= tmax <= hi:
         return 1.0
     dist = lo - tmax if tmax < lo else tmax - hi
-    return math.exp(-math.log(2) * (dist / TEMP_HALF_C) ** 2)
+    return clamp01(1 - dist / TEMP_FALLOFF_C)
+
+
+def dewpoint_score(dew: float, dew_max: float) -> float:
+    return 1.0 if dew <= dew_max else clamp01(1 - (dew - dew_max) / DEW_FALLOFF_C)
 
 
 def humidity_score(rh: float, rh_max: float) -> float:
@@ -111,6 +115,9 @@ def score(
         f["humidity"] = (
             None if v["rh"] is None else humidity_score(v["rh"], prefs.rh_max)
         )
+    if prefs.dew_max is not None:
+        dew = v.get("dewpoint")
+        f["dewpoint"] = None if dew is None else dewpoint_score(dew, prefs.dew_max)
     if prefs.rain_max is not None:
         f["rain"] = (
             None if v["precip"] is None else rain_score(v["precip"], prefs.rain_max)
@@ -129,9 +136,7 @@ def score(
 
 
 def _pick(entry: dict, var: str, key: str, part: str = "value") -> float | None:
-    if var not in entry:
-        return None
-    h = entry[var].get(key)
+    h = entry[var][key]
     if h is None:
         return None
     return h if isinstance(h, (int, float)) else h.get(part)
@@ -140,22 +145,21 @@ def _pick(entry: dict, var: str, key: str, part: str = "value") -> float | None:
 def score_park(climate: dict, prefs: Prefs, scenario: str) -> dict[str, Scored]:
     """Scores for this_year, next_year and y2050 for one park's bundled climate."""
     months = climate["months"]
-    m = months[prefs.month - 1]
-    normal = {var: m[var]["normal"] if var in m else None for var in VARS}
-    normal_melt = melt_shares([months[i]["snow"]["normal"] if "snow" in months[i] else None for i in range(12)])
+    m = {**{var: _EMPTY for var in VARS}, **months[prefs.month - 1]}
+    normal = {var: m[var]["normal"] for var in VARS}
+    normal_melt = melt_shares([months[i]["snow"]["normal"] for i in range(12)])
     out: dict[str, Scored] = {}
 
     # This year: measured where available, otherwise the normal (and say so).
-    measured = {var: m[var]["this_year"] if var in m else None for var in VARS}
+    measured = {var: m[var]["this_year"] for var in VARS}
     this_vals = {
         var: measured[var] if measured[var] is not None else normal[var] for var in VARS
     }
     this_melt = melt_shares(
         [
-            (months[i]["snow"]["this_year"]
+            months[i]["snow"]["this_year"]
             if months[i]["snow"]["this_year"] is not None
-            else months[i]["snow"]["normal"])
-            if "snow" in months[i] else None
+            else months[i]["snow"]["normal"]
             for i in range(12)
         ]
     )
@@ -170,7 +174,7 @@ def score_park(climate: dict, prefs: Prefs, scenario: str) -> dict[str, Scored]:
     def at(part: str) -> dict[str, float | None]:
         return {
             var: _pick(m, var, "next_year", part)
-            if var in m and m[var].get("next_year") is not None
+            if m[var]["next_year"] is not None
             else normal[var]
             for var in VARS
         }
@@ -178,12 +182,23 @@ def score_park(climate: dict, prefs: Prefs, scenario: str) -> dict[str, Scored]:
     mid, lo, hi = (score(at(p), prefs, normal_melt) for p in ("value", "low", "high"))
     mid.low, mid.high = _range(mid, lo, hi)
     mid.notes.append(
-        "Forecast from the record: the 1991 onward trend for this month extended one year, "
-        "range = year-to-year scatter. Not a weather forecast."
+        "Forecast from the record: where this month's atlas trend is real (q < 0.05), "
+        "that trend extended one year; otherwise the 1991-2020 normal. "
+        "Range = year-to-year scatter. Not a weather forecast."
     )
+    trend_vars = [
+        v
+        for v in ("tmax", "dewpoint", "precip")
+        if (m[v]["next_year"] or {}).get("basis") == "trend"
+    ]
+    if trend_vars:
+        names = {"tmax": "daytime high", "dewpoint": "dew point", "precip": "rain"}
+        mid.notes.append(
+            "Real trend applied: " + ", ".join(names[v] for v in trend_vars) + "."
+        )
     out["next_year"] = mid
 
-    # 2050: projected temperature and precipitation; humidity, cloud and snow keep
+    # 2050: projected temperature and precipitation; humidity, dew point, cloud and snow keep
     # the normal (not projected in the bundled data).
     def proj(part: str) -> dict[str, float | None]:
         vals = dict(normal)
@@ -193,7 +208,7 @@ def score_park(climate: dict, prefs: Prefs, scenario: str) -> dict[str, Scored]:
                 vals[var] = p[scenario][part]
         return vals
 
-    has_proj = bool(m.get("tmax", {}).get("y2050")) and scenario in (m.get("tmax", {}).get("y2050") or {})
+    has_proj = bool(m["tmax"]["y2050"]) and scenario in (m["tmax"]["y2050"] or {})
     if has_proj:
         mid, lo, hi = (
             score(proj(p), prefs, normal_melt) for p in ("value", "low", "high")
@@ -201,7 +216,7 @@ def score_park(climate: dict, prefs: Prefs, scenario: str) -> dict[str, Scored]:
         mid.low, mid.high = _range(mid, lo, hi)
         mid.notes.append(
             "Projected (2041-2060, CMIP6 via WorldClim): temperature and rain change; "
-            "humidity, cloud and snow shown at today's normal."
+            "humidity, dew point, cloud and snow shown at today's normal."
         )
         if prefs.snowmelt and normal_melt is not None:
             mid.notes.append(

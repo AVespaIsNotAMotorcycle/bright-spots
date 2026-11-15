@@ -8,7 +8,9 @@ import {
   nearestParks,
   planQuery,
   popularParks,
+  rangeFromCity,
   rankParks,
+  CITY_BAND_C,
   type Horizon,
   type ParkPlan,
   type Prefs,
@@ -51,14 +53,19 @@ describe("planQuery", () => {
   });
   it("includes humidity and rain limits when set", () => {
     expect(planQuery({ ...base, rhMax: 60, rainMax: 76.2 })).toMatchObject({ rh_max: "60", rain_max: "76.2" });
+    expect(planQuery({ ...base, dewMax: 15.5556 })).toMatchObject({ dew_max: "15.56" });
+    expect(planQuery(base)).not.toHaveProperty("dew_max");
   });
 });
 
 describe("rankParks", () => {
   const parks = [plan("Zion", 50, 80, null), plan("Acadia", 90, 60, 70), plan("Badlands", 70, 80, 75)];
-  it("ranks by the chosen horizon, ties by name", () => {
+  it("ranks by the chosen horizon, ties by the mean over all horizons, then name", () => {
     expect(rankParks(parks, "this_year").map((p) => p.park.short)).toEqual(["Acadia", "Badlands", "Zion"]);
+    // Badlands and Zion tie at 80 next year; Badlands' mean (75) beats Zion's (65).
     expect(rankParks(parks, "next_year").map((p) => p.park.short)).toEqual(["Badlands", "Zion", "Acadia"]);
+    const tied = [plan("B", 50, 80, 50), plan("A", 50, 80, 50), plan("C", 90, 80, 90)];
+    expect(rankParks(tied, "next_year").map((p) => p.park.short)).toEqual(["C", "A", "B"]);
   });
   it("puts parks without a score last", () => {
     expect(rankParks(parks, "y2050").map((p) => p.park.short)).toEqual(["Badlands", "Acadia", "Zion"]);
@@ -92,5 +99,18 @@ describe("nearestParks and popularParks", () => {
   it("orders by 2025 visitors, skipping given ids and unknown counts", () => {
     expect(popularParks(parks, 3).map((p) => p.park.short)).toEqual(["Smokies", "Acadia", "Rocky"]);
     expect(popularParks(parks, 2, new Set(["smokies"])).map((p) => p.park.short)).toEqual(["Acadia", "Rocky"]);
+  });
+});
+
+describe("rangeFromCity", () => {
+  const normals = {
+    lat: 0,
+    lon: 0,
+    period: "1991-2020",
+    months: Array.from({ length: 12 }, (_, i) => ({ month: i + 1, tmax: i === 6 ? 30 : null, rh: null, precip: null })),
+  };
+  it("centres the range on the city's normal high for the month", () => {
+    expect(rangeFromCity(normals, 7)).toEqual([30 - CITY_BAND_C, 30 + CITY_BAND_C]);
+    expect(rangeFromCity(normals, 1)).toBeNull();
   });
 });

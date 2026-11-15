@@ -5,6 +5,8 @@ import Detective from "./detective/Detective";
 import StudentDetective from "./detective/StudentDetective";
 import type { Atlas } from "./detective/model";
 import Planner from "./planner/Planner";
+import PlannerShadow from "./planner/PlannerShadow";
+import type { Unit } from "./planner/PrefsPanel";
 import Compare from "./research/Compare";
 import Families from "./research/Families";
 import MapView from "./research/MapView";
@@ -14,11 +16,27 @@ import Seasons from "./research/Seasons";
 import { PERSONAS, TAB_LABEL, loadProfile, saveProfile, type Profile, type Tab } from "./profile";
 import { useNav, type NavState } from "./useNav";
 
+function loadUnit(): Unit {
+  try {
+    return localStorage.getItem("planner.unit") === '"C"' ? "C" : "F";
+  } catch {
+    return "F";
+  }
+}
+
 export default function App() {
   const { nav, navigate, replace } = useNav();
   const [profile, setProfile] = useState<Profile | null>(loadProfile);
   const [editing, setEditing] = useState(false);
   const [atlas, setAtlas] = useState<Atlas | null>(null);
+  const [unit, setUnit] = useState<Unit>(loadUnit);
+  useEffect(() => {
+    try {
+      localStorage.setItem("planner.unit", JSON.stringify(unit));
+    } catch {
+      /* storage unavailable */
+    }
+  }, [unit]);
 
   // Each persona only gets its own tabs; a URL for another persona's tab
   // falls back to Home.
@@ -159,10 +177,9 @@ export default function App() {
           />
         )}
         {tab === "planner" && (
-          <Planner
-            onViewTrend={(code) => go(exploreTab, { park: code })}
-            initialMonth={nav.month ?? undefined}
-          />
+          <PlannerShadow>
+            <Planner unit={unit} setUnit={setUnit} />
+          </PlannerShadow>
         )}
       </main>
     </div>

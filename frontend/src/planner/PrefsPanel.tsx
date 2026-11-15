@@ -1,11 +1,17 @@
+import { useEffect, useState } from "react";
+import FavouriteCity, { type FavouriteCityValue } from "./FavouriteCity";
 import RangeSlider from "./RangeSlider";
-import { MONTHS, cToF, fToC, inToMm, mmToIn, type Prefs } from "./model";
+import { MONTHS, cToF, fToC, inToMm, mmToIn, rangeFromCity, type Prefs } from "./model";
 
 export type Unit = "F" | "C";
 
 // Slider bounds in display units.
 const TEMP_RANGE = { F: { min: 20, max: 110, step: 1 }, C: { min: -7, max: 43, step: 0.5 } };
 const RAIN_RANGE = { F: { min: 0, max: 12, step: 0.5 }, C: { min: 0, max: 300, step: 10 } };
+const DEW_RANGE = { F: { min: 35, max: 80, step: 1 }, C: { min: 2, max: 27, step: 0.5 } };
+// PROVISIONAL default when the limit is switched on: 60 °F is a common "starts to
+// feel muggy" guideline, not a value from the spec.
+const DEW_DEFAULT_F = 60;
 
 export default function PrefsPanel({
   prefs,
@@ -23,7 +29,18 @@ export default function PrefsPanel({
   const fromT = (v: number) => (unit === "F" ? fToC(v) : v);
   const snap = (v: number) => Math.round(v / t.step) * t.step;
   const r = RAIN_RANGE[unit];
+  const d = DEW_RANGE[unit];
   const rainShown = prefs.rainMax == null ? null : unit === "F" ? mmToIn(prefs.rainMax) : prefs.rainMax;
+  const [city, setCity] = useState<FavouriteCityValue | null>(null);
+  // A favourite city sets the range from its normal for the travel month, and
+  // follows month changes until the user moves the slider.
+  useEffect(() => {
+    if (!city) return;
+    const r = rangeFromCity(city.normals, prefs.month);
+    if (r) set({ tLo: r[0], tHi: r[1] });
+    // set is recreated each render; city and month are the inputs.
+  }, [city, prefs.month]);
+  const cityHigh = city?.normals.months[prefs.month - 1]?.tmax;
 
   return (
     <section className="card prefs-panel" aria-labelledby="prefs-title">
@@ -66,11 +83,28 @@ export default function PrefsPanel({
             step={t.step}
             low={snap(toT(prefs.tLo))}
             high={snap(toT(prefs.tHi))}
-            onChange={(lo, hi) => set({ tLo: fromT(lo), tHi: fromT(hi) })}
+            onChange={(lo, hi) => {
+              setCity(null);
+              set({ tLo: fromT(lo), tHi: fromT(hi) });
+            }}
             labelLow="Lowest comfortable daytime high"
             labelHigh="Highest comfortable daytime high"
             format={(v) => `${unit === "F" ? Math.round(v) : v.toFixed(1)}°${unit}`}
           />
+          {city && cityHigh != null ? (
+            <p className="small city-note">
+              Matched to <strong>{city.name}</strong> in {MONTHS[prefs.month - 1]}: average high{" "}
+              {unit === "F" ? `${Math.round(cToF(cityHigh))}°F` : `${cityHigh.toFixed(1)}°C`} (NASA POWER, {city.normals.period}).{" "}
+              <button className="link-btn small" onClick={() => setCity(null)}>
+                unlink
+              </button>
+            </p>
+          ) : (
+            <>
+              <span className="micro muted">or match a city you like:</span>
+              <FavouriteCity onPick={setCity} />
+            </>
+          )}
         </div>
 
         <div className="pref-block">
@@ -93,6 +127,32 @@ export default function PrefsPanel({
             </label>
           ) : (
             <p className="small muted">Any humidity is fine.</p>
+          )}
+          <label className="check pref-title">
+            <input
+              type="checkbox"
+              checked={prefs.dewMax != null}
+              onChange={(e) => set({ dewMax: e.target.checked ? fToC(DEW_DEFAULT_F) : null })}
+            />
+            Limit dew point (mugginess)
+          </label>
+          {prefs.dewMax != null ? (
+            <label className="slider-row">
+              <input
+                type="range"
+                min={d.min}
+                max={d.max}
+                step={d.step}
+                value={Math.round(toT(prefs.dewMax) / d.step) * d.step}
+                aria-label="Maximum dew point"
+                onChange={(e) => set({ dewMax: fromT(Number(e.target.value)) })}
+              />
+              <span className="num">
+                ≤ {unit === "F" ? `${Math.round(cToF(prefs.dewMax))}°F` : `${prefs.dewMax.toFixed(1)}°C`}
+              </span>
+            </label>
+          ) : (
+            <p className="small muted">Dew point doesn't matter.</p>
           )}
         </div>
 

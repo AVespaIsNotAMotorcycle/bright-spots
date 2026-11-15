@@ -13,7 +13,7 @@ from __future__ import annotations
 import calendar
 from collections.abc import Sequence
 
-DAILY_VARS = ("tmax", "rh", "precip", "cloud")
+DAILY_VARS = ("tmax", "rh", "dewpoint", "precip", "cloud")
 BOUNDS = {"rh": (0.0, 100.0), "cloud": (0.0, 100.0), "precip": (0.0, None)}
 
 # Day-of-year index (0-based, non-leap year) of each month's middle.
@@ -95,6 +95,8 @@ def curves(daily: dict, climate: dict, scenario: str) -> dict:
         bool(months[0]["tmax"]["y2050"]) and scenario in months[0]["tmax"]["y2050"]
     )
     for var in DAILY_VARS:
+        if var not in daily["normal"] or var not in months[0]:
+            continue  # bundles built before the variable was added
         normal_daily = daily["normal"][var]
         normal_monthly = monthly(var, lambda h: h["normal"])
         out["normal"][var] = normal_daily

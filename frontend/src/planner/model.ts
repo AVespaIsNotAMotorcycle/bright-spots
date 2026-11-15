@@ -11,14 +11,14 @@ export interface Park {
   visitors_2025: number | null;
 }
 
-export type FactorKey = "temperature" | "humidity" | "rain" | "bugs" | "stars" | "snowmelt";
+export type FactorKey = "temperature" | "humidity" | "dewpoint" | "rain" | "bugs" | "stars" | "snowmelt";
 
 export interface Horizon {
   score: number | null;
   low: number | null;
   high: number | null;
   factors: Partial<Record<FactorKey, number | null>>;
-  values: Partial<Record<"tmax" | "t2m" | "rh" | "precip" | "cloud" | "snow", number | null>>;
+  values: Partial<Record<"tmax" | "t2m" | "rh" | "dewpoint" | "precip" | "cloud" | "snow", number | null>>;
   notes: string[];
 }
 
@@ -45,6 +45,8 @@ export interface Prefs {
   tLo: number;
   tHi: number;
   rhMax: number | null; // %
+  /** Max dew point, °C (mugginess). */
+  dewMax?: number | null;
   rainMax: number | null; // mm per month
   avoidBugs: boolean;
   stars: boolean;
@@ -57,6 +59,7 @@ export const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "
 export const FACTOR_LABEL: Record<FactorKey, string> = {
   temperature: "Daytime high",
   humidity: "Humidity",
+  dewpoint: "Dew point",
   rain: "Rain",
   bugs: "Few bugs (estimate)",
   stars: "Clear skies",
@@ -79,11 +82,23 @@ export function planQuery(p: Prefs): Record<string, string> {
     scenario: p.scenario,
   };
   if (p.rhMax != null) q.rh_max = String(p.rhMax);
+  if (p.dewMax != null) q.dew_max = p.dewMax.toFixed(2);
   if (p.rainMax != null) q.rain_max = p.rainMax.toFixed(1);
   return q;
 }
 
-/** Highest score first; parks without a score for that horizon go last, by name. */
+const HORIZON_KEYS: HorizonKey[] = ["this_year", "next_year", "y2050"];
+
+/** Mean score over the horizons that have one (tie-breaker). */
+function meanScore(p: ParkPlan): number {
+  const xs = HORIZON_KEYS.map((k) => p[k].score).filter((v): v is number => v != null);
+  return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : -1;
+}
+
+/**
+ * Highest score for the chosen horizon first; ties go to the better mean over all
+ * three horizons, then by name. Parks without a score for that horizon go last.
+ */
 export function rankParks(parks: ParkPlan[], by: HorizonKey): ParkPlan[] {
   return [...parks].sort((a, b) => {
     const sa = a[by].score,
@@ -91,7 +106,7 @@ export function rankParks(parks: ParkPlan[], by: HorizonKey): ParkPlan[] {
     if (sa == null && sb == null) return a.park.short.localeCompare(b.park.short);
     if (sa == null) return 1;
     if (sb == null) return -1;
-    return sb - sa || a.park.short.localeCompare(b.park.short);
+    return sb - sa || meanScore(b) - meanScore(a) || a.park.short.localeCompare(b.park.short);
   });
 }
 
@@ -146,7 +161,7 @@ export async function geocode(q: string): Promise<Place[]> {
   return resp.json();
 }
 
-export type DailyVar = "tmax" | "rh" | "precip" | "cloud";
+export type DailyVar = "tmax" | "rh" | "dewpoint" | "precip" | "cloud";
 type Curves = Record<DailyVar, (number | null)[]>;
 
 /** 365-day curves per horizon (Feb 29 dropped); see GET /api/parks/{id}/daily. */
@@ -181,38 +196,27 @@ export function fetchDaily(parkId: string, scenario: string): Promise<DailyCurve
 /** First day-of-year index (0-based, non-leap) of each month, plus 365. */
 export const MONTH_STARTS = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365];
 
-/** One plain sentence on how a park's daytime high compares with the user's ideal range. */
-export function explainTemp(
-  tmaxC: number | null | undefined,
-  tLoC: number,
-  tHiC: number,
-  unit: "F" | "C",
-): { text: string; tone: "good" | "bad" | "ok" } | null {
-  if (tmaxC == null) return null;
-  const show = (c: number) => (unit === "F" ? `${Math.round(cToF(c))}°F` : `${Math.round(c)}°C`);
-  // Differences convert by the scale factor only (no +32).
-  const gap = (c: number) => (unit === "F" ? `${Math.round(c * 1.8)}°F` : `${Math.round(c)}°C`);
-  const range = `${show(tLoC)}–${show(tHiC)}`;
-  if (tmaxC < tLoC) {
-    const d = tLoC - tmaxC;
-    return { text: `Too cold: highs of ${show(tmaxC)}, ${gap(d)} under your ${range}`, tone: d > 4 ? "bad" : "ok" };
-  }
-  if (tmaxC > tHiC) {
-    const d = tmaxC - tHiC;
-    return { text: `Too hot: highs of ${show(tmaxC)}, ${gap(d)} over your ${range}`, tone: d > 4 ? "bad" : "ok" };
-  }
-  return { text: `Highs of ${show(tmaxC)} fit your ${range}`, tone: "good" };
+export interface CityNormals {
+  lat: number;
+  lon: number;
+  period: string;
+  months: { month: number; tmax: number | null; rh: number | null; precip: number | null }[];
 }
 
-/** The preferences that currently make up the score, as short phrases. */
-export function prefsSummary(p: Prefs, unit: "F" | "C"): string[] {
-  const t = (c: number) => (unit === "F" ? `${Math.round(cToF(c))}°F` : `${Math.round(c)}°C`);
-  const out = [`daytime highs of ${t(p.tLo)}–${t(p.tHi)}`];
-  if (p.rhMax != null) out.push(`humidity under ${Math.round(p.rhMax)}%`);
-  if (p.rainMax != null)
-    out.push(`rain under ${unit === "F" ? `${mmToIn(p.rainMax).toFixed(1)} in` : `${Math.round(p.rainMax)} mm`} a month`);
-  if (p.avoidBugs) out.push("few bugs");
-  if (p.stars) out.push("clear night skies");
-  if (p.snowmelt) out.push("snowmelt season (waterfalls)");
-  return out;
+/** 1991-2020 monthly normals at a place (NASA POWER), for "favourite city" trip match. */
+export async function fetchCityNormals(lat: number, lon: number): Promise<CityNormals> {
+  const resp = await fetch(`/api/parks/city-normals?${new URLSearchParams({ lat: lat.toFixed(4), lon: lon.toFixed(4) })}`);
+  if (!resp.ok) throw new Error(`${resp.status}: city climate unavailable`);
+  return resp.json();
+}
+
+/**
+ * PROVISIONAL half-width of the ideal daytime-high range set from a favourite city:
+ * the city's normal for the travel month ± this many °C.
+ */
+export const CITY_BAND_C = 3;
+
+export function rangeFromCity(normals: CityNormals, month: number): [number, number] | null {
+  const t = normals.months[month - 1]?.tmax;
+  return t == null ? null : [t - CITY_BAND_C, t + CITY_BAND_C];
 }

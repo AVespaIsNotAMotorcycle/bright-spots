@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import type { Atlas } from "../atlas/model";
+import TrendBadges from "./TrendBadges";
 import YearChart from "./YearChart";
-import { useParkTrendBadge } from "../detective/useParkTrendBadge";
 import {
   FACTOR_LABEL,
   MONTHS,
@@ -79,12 +80,13 @@ const pct = (v: number | null | undefined) => (v == null ? "–" : `${Math.round
 const DAILY_LABEL: Record<DailyVar, string> = {
   tmax: "Daytime high",
   rh: "Humidity",
+  dewpoint: "Dew point",
   precip: "Rain per day",
   cloud: "Cloud cover",
 };
 
 function dailyFormat(v: DailyVar, unit: Unit): (x: number) => string {
-  if (v === "tmax") return (x) => (unit === "F" ? `${Math.round(cToF(x))}°F` : `${Math.round(x)}°C`);
+  if (v === "tmax" || v === "dewpoint") return (x) => (unit === "F" ? `${Math.round(cToF(x))}°F` : `${Math.round(x)}°C`);
   if (v === "precip") return (x) => (unit === "F" ? `${mmToIn(x).toFixed(2)} in` : `${x.toFixed(1)} mm`);
   return (x) => `${Math.round(x)}%`;
 }
@@ -158,6 +160,7 @@ export function Details({ p, plan, unit }: { p: ParkPlan; plan: Plan; unit: Unit
   const rows: [string, DailyVar, (h: Horizon) => string][] = [
     ["Daytime high", "tmax", (h) => fmtTemp(h.values.tmax, unit)],
     ["Humidity", "rh", (h) => pct(h.values.rh)],
+    ["Dew point", "dewpoint", (h) => fmtTemp(h.values.dewpoint, unit)],
     ["Rain (month)", "precip", (h) => fmtRain(h.values.precip, unit)],
     ["Cloud cover", "cloud", (h) => pct(h.values.cloud)],
   ];
@@ -269,21 +272,15 @@ export function ParkCard({
   unit,
   place,
   onRemove,
-  onViewTrend,
+  atlas,
 }: {
   p: ParkPlan;
   plan: Plan;
   unit: Unit;
   place: Place | null;
   onRemove: () => void;
-  onViewTrend?: (parkCode: string) => void;
+  atlas: Atlas | null;
 }) {
-  const badge = useParkTrendBadge(p.park.code);
-  const badgeColor = badge?.verdict === "real"
-    ? { bg: "#d4edda", text: "#155724" }
-    : badge?.verdict === "possible"
-      ? { bg: "#fff3cd", text: "#856404" }
-      : null;
   return (
     <article className="card park-card" aria-labelledby={`card-${p.park.id}`}>
       <header className="park-card-head">
@@ -296,50 +293,12 @@ export function ParkCard({
             {place && ` · ${fmtDistance(distanceKm(place, p.park), unit)} from ${place.name.split(",")[0]}`}
             {p.park.visitors_2025 != null && ` · ${p.park.visitors_2025.toLocaleString()} visitors in 2025`}
           </p>
+          <TrendBadges atlas={atlas} parkId={p.park.id} month={plan.month} fahrenheit={unit === "F"} />
         </div>
         <button className="link-btn small" onClick={onRemove} aria-label={`Remove ${p.park.short}`}>
           Remove
         </button>
       </header>
-      {badge && badgeColor && (
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            background: badgeColor.bg,
-            color: badgeColor.text,
-            borderRadius: 8,
-            padding: "5px 12px",
-            fontSize: 12,
-            fontWeight: 600,
-            marginBottom: 12,
-          }}
-        >
-          <span>
-            📈 Warming {badge.slope_f > 0 ? "+" : ""}{badge.slope_f.toFixed(2)}°F/decade
-            · {badge.verdict === "real" ? "Real, not luck" : "Possible trend"}
-          </span>
-          {onViewTrend && p.park.code && (
-            <button
-              onClick={() => onViewTrend(p.park.code!)}
-              style={{
-                background: "none",
-                border: `1px solid ${badgeColor.text}`,
-                borderRadius: 6,
-                padding: "2px 8px",
-                cursor: "pointer",
-                fontSize: 11,
-                color: badgeColor.text,
-                fontWeight: 600,
-              }}
-            >
-              See trend →
-            </button>
-          )}
-        </div>
-      )}
-      <p className="micro muted" style={{ margin: "10px 0 0" }}>Match score 0–100 for {MONTHS[plan.month - 1]}: how well this park fits your preferences. Higher is a better fit.</p>
       <div className="park-card-scores">
         {HORIZONS.map((hz) => (
           <BigScore key={hz.key} h={p[hz.key]} title={horizonTitle(hz.key, plan)} tag={hz.tag} tagClass={hz.tagClass} />

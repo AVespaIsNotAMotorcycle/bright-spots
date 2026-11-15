@@ -7,9 +7,11 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, HTTPException, Query
+import httpx
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel
 
+from app.parks.city import CityNormals, city_normals
 from app.parks.daily import curves
 from app.parks.scoring import Prefs, Scored, score_park
 
@@ -83,6 +85,9 @@ def plan(
     ],
     t_hi: Annotated[float, Query(ge=-40, le=50)],
     rh_max: Annotated[float | None, Query(ge=0, le=100)] = None,
+    dew_max: Annotated[
+        float | None, Query(ge=-40, le=40, description="max dew point, C")
+    ] = None,
     rain_max: Annotated[
         float | None, Query(ge=0, le=1000, description="mm/month")
     ] = None,
@@ -97,7 +102,17 @@ def plan(
         parks, climate = load()
     except FileNotFoundError as e:
         raise HTTPException(503, str(e)) from e
-    prefs = Prefs(month, t_lo, t_hi, rh_max, rain_max, avoid_bugs, stars, snowmelt)
+    prefs = Prefs(
+        month,
+        t_lo,
+        t_hi,
+        rh_max,
+        rain_max,
+        avoid_bugs,
+        stars,
+        snowmelt,
+        dew_max=dew_max,
+    )
     out = []
     for p in parks:
         s = score_park(climate[p.id], prefs, scenario)
@@ -150,3 +165,18 @@ def daily(
     return DailyCurves(
         park_id=park_id, year=d["year"], through=d["through"], scenario=scenario, **c
     )
+
+
+@router.get("/city-normals")
+async def city(
+    request: Request,
+    lat: Annotated[float, Query(ge=-90, le=90)],
+    lon: Annotated[float, Query(ge=-180, le=180)],
+) -> CityNormals:
+    """1991-2020 monthly normals at a place (NASA POWER), for "favourite city"."""
+    try:
+        return await city_normals(request.app.state.http, lat, lon)
+    except httpx.HTTPError as e:
+        raise HTTPException(
+            502, f"NASA POWER request failed: {type(e).__name__}"
+        ) from e

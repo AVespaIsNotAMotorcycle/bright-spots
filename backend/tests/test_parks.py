@@ -2,7 +2,9 @@
 
 import json
 
+import httpx
 import pytest
+import respx
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -13,11 +15,8 @@ from app.parks import scoring as sc
 
 def test_temp_score_band_and_falloff():
     assert sc.temp_score(25, 20, 28) == 1
-    assert sc.temp_score(20 - sc.TEMP_HALF_C, 20, 28) == pytest.approx(0.5)
-    assert sc.temp_score(28 + sc.TEMP_HALF_C, 20, 28) == pytest.approx(0.5)
-    # Far outside the range: close to 0 but still ordered (colder scores lower).
-    assert 0 < sc.temp_score(8, 20, 28) < sc.temp_score(12, 20, 28) < 0.5
-    assert sc.temp_score(40, 20, 28) < 0.05
+    assert sc.temp_score(20 - sc.TEMP_FALLOFF_C / 2, 20, 28) == pytest.approx(0.5)
+    assert sc.temp_score(40, 20, 28) == 0
 
 
 def test_humidity_and_rain_scores():
@@ -84,8 +83,8 @@ def test_score_park_horizons():
     assert nxt.low is not None and nxt.score is not None and nxt.high is not None
     assert nxt.low <= nxt.score <= nxt.high
     assert s["y2050"].values["tmax"] == 27.0 and s["y2050"].values["rh"] == 50.0
-    # 27 C is 1 C above the range: smooth falloff, factor just under 1.
-    assert s["y2050"].factors["temperature"] == pytest.approx(0.9726, abs=1e-3)  # exp(-ln2 * (1/5)^2)
+    # 27 C is 1 C above the range: temperature factor 1 - 1/8.
+    assert s["y2050"].factors["temperature"] == pytest.approx(1 - 1 / sc.TEMP_FALLOFF_C)
     y50, now = s["y2050"].score, s["this_year"].score
     assert y50 is not None and now is not None and y50 < now
 
@@ -191,3 +190,86 @@ def test_daily_endpoint(fake_parks, tmp_path):
     )
     assert other.json()["y2050"]["tmax"] is None  # fixture has no SSP5-8.5
     assert missing.status_code == 404
+
+
+def test_next_year_note_names_real_trends():
+    c = _climate()
+    c["months"][6]["tmax"]["next_year"]["basis"] = "trend"
+    s = sc.score_park(c, sc.Prefs(month=7, t_lo=20, t_hi=26), "ssp245")
+    assert "Real trend applied: daytime high." in s["next_year"].notes
+    plain = sc.score_park(_climate(), sc.Prefs(month=7, t_lo=20, t_hi=26), "ssp245")
+    assert not any("Real trend applied" in n for n in plain["next_year"].notes)
+
+
+@respx.mock
+def test_city_normals_endpoint():
+    import calendar
+
+    from app.parks import city
+
+    def monthly(value: float) -> dict[str, float]:
+        return {f"{y}{m:02d}": value for y in range(1990, 2022) for m in range(1, 14)}
+
+    body = {
+        "properties": {
+            "parameter": {"RH2M": monthly(50.0), "PRECTOTCORR": monthly(2.0)}
+        }
+    }
+    # Daily maxima: 20 C every day, except July 2019 at 30 C; July 1995 missing a day.
+    daily = {
+        f"{y}{m:02d}{d:02d}": (30.0 if (y, m) == (2019, 7) else 20.0)
+        for y in range(1991, 2021)
+        for m in range(1, 13)
+        for d in range(1, calendar.monthrange(y, m)[1] + 1)
+    }
+    daily["19950704"] = -999.0
+    respx.get(city.URL).mock(return_value=httpx.Response(200, json=body))
+    respx.get(city.DAILY_URL).mock(
+        return_value=httpx.Response(
+            200, json={"properties": {"parameter": {"T2M_MAX": daily}}}
+        )
+    )
+    with TestClient(app) as c:
+        r = c.get("/api/parks/city-normals", params={"lat": 39.74, "lon": -104.98})
+    assert r.status_code == 200
+    m = r.json()["months"]
+    assert len(m) == 12 and m[0] == {
+        "month": 1,
+        "tmax": 20.0,
+        "rh": 50.0,
+        "precip": 62.0,
+    }
+    # July: 28 complete Julys at 20 C plus 2019 at 30 C (1995 incomplete, dropped).
+    assert m[6]["tmax"] == pytest.approx(round((28 * 20 + 30) / 29, 2))
+
+
+def test_dewpoint_factor_and_missing_variable():
+    assert sc.dewpoint_score(15, 16) == 1
+    assert sc.dewpoint_score(16 + sc.DEW_FALLOFF_C / 2, 16) == pytest.approx(0.5)
+    prefs = sc.Prefs(month=7, t_lo=20, t_hi=26, dew_max=16)
+    c = _climate()
+    for m in c["months"]:
+        m["dewpoint"] = _var(18.5)
+    s = sc.score_park(c, prefs, "ssp245")
+    assert s["this_year"].factors["dewpoint"] == pytest.approx(
+        1 - 2.5 / sc.DEW_FALLOFF_C
+    )
+    assert s["y2050"].values["dewpoint"] == 18.5  # not projected: the normal
+    # Bundles without dew point still score; the factor is simply unknown.
+    old = sc.score_park(_climate(), prefs, "ssp245")
+    assert (
+        old["this_year"].factors["dewpoint"] is None
+        and old["this_year"].score is not None
+    )
+
+
+def test_plan_endpoint_accepts_dew_max(fake_parks):
+    with TestClient(app) as c:
+        r = c.get(
+            "/api/parks/plan",
+            params={"month": 7, "t_lo": 20, "t_hi": 26, "dew_max": 16},
+        )
+    assert (
+        r.status_code == 200
+        and "dewpoint" in r.json()["parks"][0]["this_year"]["factors"]
+    )
