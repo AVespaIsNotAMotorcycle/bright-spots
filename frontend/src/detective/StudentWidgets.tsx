@@ -218,7 +218,7 @@ const GUESSES: { id: Guess; emoji: string; text: string; bg: string; edge: strin
 ];
 
 /** Park of the day, drawn as a field-guide card with a quick guess. */
-export function ParkOfTheDay({ atlas, onExplore }: { atlas: Atlas; onExplore: (parkId: string) => void }) {
+export function ParkOfTheDay({ atlas, onExplore, science = false }: { atlas: Atlas; onExplore: (parkId: string) => void; science?: boolean }) {
   const cells = (atlas.atlas["tmax_c"]?.["annual"] ?? [])
     .filter((c) => c.sen != null)
     .sort((a, b) => a.park_id.localeCompare(b.park_id));
@@ -327,6 +327,7 @@ export function ParkOfTheDay({ atlas, onExplore }: { atlas: Atlas; onExplore: (p
             >
               <span aria-hidden style={{ width: 7, height: 7, borderRadius: "50%", background: verdictPill.c }} />
               {verdictPill.t}
+              {science && cell.q != null && <span style={{ fontFamily: "ui-monospace, Menlo, monospace", fontWeight: 600 }}>· q = {cell.q < 0.001 ? "<0.001" : cell.q.toFixed(3)}</span>}
             </span>
           </div>
           {series && trend ? (

@@ -104,6 +104,21 @@ describe("App", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
+  it("the science switch adds factor scores in the planner and the full atlas in Park Explorer", async () => {
+    localStorage.setItem("profile", JSON.stringify({ name: "", persona: "explorer" }));
+    history.replaceState(null, "", "#tab=planner&month=10");
+    render(<App />);
+    await screen.findByText(/Why #1\?/, undefined, { timeout: 3000 });
+    expect(screen.queryAllByText(/\/100 ×/)).toHaveLength(0);
+    fireEvent.click(screen.getByRole("switch"));
+    expect(screen.getAllByText(/\/100 ×/).length).toBeGreaterThan(0);
+    expect(screen.getByRole("status").textContent).toContain("Science on");
+    fireEvent.click(screen.getByText("🧭 Park Explorer"));
+    expect(await screen.findByText("National Trend Atlas", undefined, { timeout: 3000 })).toBeTruthy();
+    fireEvent.click(screen.getByRole("switch"));
+    expect(await screen.findByText("Pick a question", undefined, { timeout: 3000 })).toBeTruthy();
+  });
+
   it("a mood sets the chips", async () => {
     localStorage.setItem("profile", JSON.stringify({ name: "", persona: "explorer" }));
     history.replaceState(null, "", "#tab=planner");

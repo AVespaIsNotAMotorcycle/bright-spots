@@ -256,7 +256,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
             <div className="tp-why"><b>Why #1?</b> {whySentence(shown[0], unit)}</div>
             <div className="tp-top3">
               {shown.slice(0, TOP).map((p, i) => (
-                <TopCard key={p.park.id} p={p} i={i} unit={unit} picked={state.months} caseFor={caseOf(p)}
+                <TopCard key={p.park.id} p={p} i={i} unit={unit} picked={state.months} caseFor={caseOf(p)} science={science}
                   onOpen={() => setOpen(code(p))} actions={actions(p)} />
               ))}
             </div>

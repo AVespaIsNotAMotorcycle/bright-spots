@@ -147,6 +147,11 @@ def f_wildflowers(c: Ctx) -> Result:
     if c.melt is not None:  # blooms follow the melt by about a month
         prev = c.month - 1 or 12
         return melt_score(c.melt, prev) * (1.0 if t >= 10 else 0.3), t
+    # No snowpack: blooms follow late-winter and spring rain, so only Feb-May
+    # (Aug-Nov south of the equator). Warm autumn rain does not count.
+    spring = (8, 9, 10, 11) if c.park["lat"] < 0 else (2, 3, 4, 5)
+    if c.month not in spring:
+        return 0.0, t
     rain = (c.v.get("precip") or 0) + (c.prev_v.get("precip") or 0)
     return tri(t, 12, 30) * clamp01(rain / 60), t
 
@@ -305,7 +310,7 @@ def _evaluate(ctx: Ctx, tp: TripPrefs) -> dict:
     t = ctx.v.get("tmax")
     if t is not None:
         s = max(temp_score(t, lo, hi) for lo, hi in tp.bands)
-        reasons.append({"key": "temperature", "kind": "feel", "level": "nice", "score": round(s, 3), "value": t})
+        reasons.append({"key": "temperature", "kind": "feel", "level": "nice", "score": round(s, 3), "value": t, "weight": W_TEMP})
         total += W_TEMP * s
         weight += W_TEMP
     for kind, chosen, table in (("want", tp.wants, WANTS), ("avoid", tp.avoids, AVOIDS)):
@@ -320,7 +325,11 @@ def _evaluate(ctx: Ctx, tp: TripPrefs) -> dict:
             weight += w
             if level == "must" and s < MUST_MIN:
                 failed.append(key)
-            reasons.append({"key": key, "kind": kind, "level": level, "score": round(s, 3), "value": val})
+            row = {"key": key, "kind": kind, "level": level, "score": round(s, 3), "value": val, "weight": w}
+            if key == "witness":  # the test result behind it, for the science switch
+                cell = trends().get(str(ctx.month), {}).get(ctx.park.get("code") or "") or {}
+                row |= {"q": cell.get("q"), "verdict": cell.get("verdict")}
+            reasons.append(row)
     score = round(100 * total / weight, 1) if weight else None
     return {"score": score, "failed": failed, "reasons": reasons}
 

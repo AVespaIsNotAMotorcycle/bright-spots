@@ -66,6 +66,10 @@ def test_fall_colours_only_in_autumn_forests():
     fall = {p["park"]["id"]: next(r for r in p["reasons"] if r["key"] == "fall")["score"] for p in d["parks"]}
     assert fall["death-valley"] == 0
     assert fall["great-smoky-mountains"] > 0.3
+    # Rain-fed wildflowers are a spring thing, not a warm November.
+    nov = get(months="11", want="wildflowers")
+    sag = next(p for p in nov["parks"] if p["park"]["id"] == "saguaro")
+    assert next(r for r in sag["reasons"] if r["key"] == "wildflowers")["score"] == 0
     july = get(months="7", want="fall")
     assert all(next(r for r in p["reasons"] if r["key"] == "fall")["score"] in (0, None) for p in july["parks"])
 

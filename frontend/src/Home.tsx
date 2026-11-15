@@ -15,6 +15,7 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 interface Props {
   persona: Persona;
   name: string;
+  science?: boolean;
   atlas: Atlas | null;
   onGo: (tab: Tab, extra?: Partial<NavState>) => void;
 }
@@ -32,7 +33,7 @@ function Hero({ persona, name }: { persona: Persona; name: string }) {
   );
 }
 
-function ExplorerHome({ atlas, onGo }: Pick<Props, "atlas" | "onGo">) {
+function ExplorerHome({ atlas, onGo, science }: Pick<Props, "atlas" | "onGo" | "science">) {
   const play = (c: Case) => onGo("student", { caseId: c.id, step: 0 });
   return (
     <>
@@ -51,7 +52,7 @@ function ExplorerHome({ atlas, onGo }: Pick<Props, "atlas" | "onGo">) {
       </section>
       <Safe><NextCase onPlay={play} /></Safe>
       <Safe><PassportPreview onOpen={() => onGo("passport")} onCase={play} /></Safe>
-      <Safe>{atlas && <ParkOfTheDay atlas={atlas} onExplore={(park) => onGo("explore", { park })} />}</Safe>
+      <Safe>{atlas && <ParkOfTheDay atlas={atlas} science={science} onExplore={(park) => onGo("explore", { park })} />}</Safe>
       <Safe>{atlas && <GuessTheTwin atlas={atlas} onExplore={(park) => onGo("explore", { park })} />}</Safe>
       <div>
         <button className="btn-ghost" onClick={() => onGo("student")}>See all {CASES.length} cases →</button>
@@ -106,12 +107,12 @@ function ResearcherHome({ atlas, onGo, name }: Pick<Props, "atlas" | "onGo" | "n
   );
 }
 
-export default function Home({ persona, name, atlas, onGo }: Props) {
+export default function Home({ persona, name, atlas, onGo, science }: Props) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
       {persona !== "researcher" && <Hero persona={persona} name={name} />}
       {!atlas && <p className="muted">Loading trend data…</p>}
-      {persona === "explorer" && <ExplorerHome atlas={atlas} onGo={onGo} />}
+      {persona === "explorer" && <ExplorerHome atlas={atlas} onGo={onGo} science={science} />}
       {persona === "researcher" && <ResearcherHome atlas={atlas} onGo={onGo} name={name} />}
     </div>
   );

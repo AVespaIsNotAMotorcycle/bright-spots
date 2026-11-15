@@ -1,7 +1,7 @@
 // Result pieces: score ring, 12-month strip, badges, the top-3 cards and the compact rows.
 import { photoOf } from "../../detective/photos";
 import type { Case } from "../../detective/cases";
-import { EMOJI, MONTHS, reasonText, scoreColor, seasonOf, type TripPark, type Unit } from "./tripModel";
+import { EMOJI, MONTHS, reasonText, scoreColor, seasonOf, type Reason, type TripPark, type Unit } from "./tripModel";
 
 export function ScoreRing({ score, size = 62, light = true }: { score: number | null; size?: number; light?: boolean }) {
   const r = size / 2 - 5;
@@ -28,7 +28,7 @@ export function MonthStrip({ p, picked }: { p: TripPark; picked: number[] }) {
           <span key={i}
             className={`${p.best_now === i + 1 ? "best" : ""} ${picked.includes(i + 1) ? "pick" : ""}`}
             title={`${MONTHS[i]}: ${m.score == null ? "no data" : Math.round(m.score)}${m.ok ? "" : m.score != null ? " (fails a must)" : ""}`}
-            style={{ background: m.ok ? scoreColor(m.score) : `repeating-linear-gradient(45deg, ${scoreColor(m.score)} 0 3px, #eee6d6 3px 6px)`,
+            style={{ background: scoreColor(m.score), opacity: m.ok ? 1 : 0.28,
               borderBottom: `3px solid ${seasonOf(i + 1).color}` }} />
         ))}
       </div>
@@ -52,8 +52,18 @@ export function Badges({ p, caseFor }: { p: TripPark; caseFor?: Case }) {
 
 const medal = ["🥇", "🥈", "🥉"];
 
-export function TopCard({ p, i, unit, picked, caseFor, onOpen, actions }: {
-  p: TripPark; i: number; unit: Unit; picked: number[]; caseFor?: Case; onOpen: () => void; actions: React.ReactNode;
+/** Science switch: the factor's own score and weight, and q for trends. */
+export function Sci({ r }: { r: Reason }) {
+  return (
+    <span className="tp-sci" title="Factor score out of 100, times its weight in the park's score">
+      {r.score == null ? "no data" : `${Math.round(r.score * 100)}/100 ×${r.weight ?? 1}`}
+      {r.q != null && ` · q = ${r.q < 0.001 ? "<0.001" : r.q.toFixed(3)}`}
+    </span>
+  );
+}
+
+export function TopCard({ p, i, unit, picked, caseFor, onOpen, actions, science = false }: {
+  p: TripPark; i: number; unit: Unit; picked: number[]; caseFor?: Case; onOpen: () => void; actions: React.ReactNode; science?: boolean;
 }) {
   const photo = photoOf(p.park.code);
   const top = p.reasons.filter((r) => r.score != null).sort((a, b) => (b.level === "must" ? 1 : 0) - (a.level === "must" ? 1 : 0) || Math.abs(b.score! - 0.5) - Math.abs(a.score! - 0.5)).slice(0, 4);
@@ -73,6 +83,7 @@ export function TopCard({ p, i, unit, picked, caseFor, onOpen, actions }: {
               <span className={r.score! >= 0.5 ? "tp-ok" : "tp-no"} aria-label={r.score! >= 0.5 ? "good" : "not great"}>{r.score! >= 0.5 ? "✓" : "✗"}</span>
               <span aria-hidden>{EMOJI(r.key)}</span>
               <span>{reasonText(r, unit)}</span>
+              {science && <Sci r={r} />}
             </li>
           ))}
         </ul>

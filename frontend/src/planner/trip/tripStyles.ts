@@ -128,6 +128,7 @@ export const TRIP_CSS = `
 .tp .favourite-city .row{display:flex;gap:8px}
 .tp .text-input{flex:1;min-width:0;padding:8px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);font:inherit;color:var(--text)}
 .tp .place-results{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:2px}
+.tp-sci{margin-left:auto;font-size:11px;font-family:ui-monospace,Menlo,monospace;color:var(--sky);background:var(--sky-tint);border-radius:6px;padding:0 6px;white-space:nowrap}
 .tp-edit{display:none}
 @media (max-width:900px){
   .tp{grid-template-columns:1fr}

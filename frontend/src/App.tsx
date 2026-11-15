@@ -91,6 +91,12 @@ export default function App() {
   const [unit, setUnit] = useState<Unit>(loadUnit);
   // Explorer "science" switch: off shows plain words, on adds the statistics.
   const [science, setScience] = useState<boolean>(loadScience);
+  const [sciNote, setSciNote] = useState(false);
+  useEffect(() => {
+    if (!sciNote) return;
+    const t = setTimeout(() => setSciNote(false), 4500);
+    return () => clearTimeout(t);
+  }, [sciNote, science]);
   useEffect(() => {
     try {
       localStorage.setItem("explorer.science", String(science));
@@ -200,7 +206,10 @@ export default function App() {
             <button
               role="switch"
               aria-checked={science}
-              onClick={() => setScience((x) => !x)}
+              onClick={() => {
+                setScience((x) => !x);
+                setSciNote(true);
+              }}
               className={`nav-tab${science ? " active" : ""}`}
               title="Show the statistics behind each trend (p, q, every season)"
             >
@@ -225,6 +234,13 @@ export default function App() {
           </button>
         </nav>
       </header>
+      {sciNote && profile.persona === "explorer" && (
+        <div role="status" className="sci-toast">
+          {science
+            ? "🔬 Science on: factor scores and weights in the Trip Planner, q-values on Home, and the full atlas in Park Explorer."
+            : "🔬 Science off: plain words everywhere."}
+        </div>
+      )}
       <main>
         <ErrorBoundary key={tab} what="This page">
         <Suspense fallback={<p className="muted">Loading…</p>}>
@@ -239,7 +255,7 @@ export default function App() {
           />
         )}
         {tab === "home" && (
-          <Home persona={profile.persona} name={profile.name} atlas={atlas} onGo={go} />
+          <Home persona={profile.persona} name={profile.name} atlas={atlas} onGo={go} science={science} />
         )}
         {tab === "analogs" && (
           <Analogs

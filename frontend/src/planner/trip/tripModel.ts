@@ -12,6 +12,11 @@ export interface Reason {
   level: Level;
   score: number | null;
   value: number | null;
+  /** Weight in the score: daytime high 2, must 1.5, nice 1. */
+  weight?: number;
+  /** "See change happen": the FDR q-value and verdict behind it. */
+  q?: number | null;
+  verdict?: string | null;
 }
 
 export interface TripPark {

@@ -11,9 +11,10 @@ export default function CompareTray({ parks, unit, onRemove, onClear }: {
   const [open, setOpen] = useState(false);
   if (!parks.length) return null;
   const keys = [...new Set(parks.flatMap((p) => p.reasons.map((r) => r.key)))];
-  const best = (vals: (number | null)[]) => {
-    const xs = vals.filter((v): v is number => v != null);
-    return xs.length > 1 ? Math.max(...xs) : null;
+  // A trophy only for a clear winner: no trophy on a tie or a near-tie.
+  const best = (vals: (number | null)[], margin: number) => {
+    const xs = vals.filter((v): v is number => v != null).sort((a, b) => b - a);
+    return xs.length > 1 && xs[0] - xs[1] >= margin ? xs[0] : null;
   };
   const rows: { label: string; cells: { text: string; score: number | null }[] }[] = [
     { label: "⭐ Score", cells: parks.map((p) => ({ text: String(Math.round(p.score ?? 0)), score: p.score })) },
@@ -25,7 +26,7 @@ export default function CompareTray({ parks, unit, onRemove, onClear }: {
         return { text: r ? reasonText(r, unit) : "–", score: r?.score ?? null };
       }),
     })),
-    { label: "⏳ 2050 change", cells: parks.map((p) => ({ text: p.change_2050 == null ? "–" : `${p.change_2050 > 0 ? "+" : ""}${Math.round(p.change_2050)}`, score: p.change_2050 })) },
+    { label: "⏳ Score change by 2050", cells: parks.map((p) => ({ text: p.change_2050 == null ? "–" : `${p.change_2050 > 0 ? "+" : ""}${Math.round(p.change_2050)}`, score: p.change_2050 })) },
   ];
   return (
     <>
@@ -49,7 +50,7 @@ export default function CompareTray({ parks, unit, onRemove, onClear }: {
             </thead>
             <tbody>
               {rows.map((r) => {
-                const top = best(r.cells.map((c) => c.score));
+                const top = best(r.cells.map((c) => c.score), r.label.startsWith("⭐") || r.label.startsWith("⏳") ? 2 : 0.05);
                 return (
                   <tr key={r.label}>
                     <th scope="row">{r.label}</th>

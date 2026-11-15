@@ -6,7 +6,7 @@ import { useTrends } from "../../detective/games";
 import { PhotoCredit, photoOf } from "../../detective/photos";
 import { fetchBestDays, type BestDays } from "../model";
 import { whatChanged } from "../whatChanged";
-import { Badges, MonthStrip, ScoreRing } from "./TripCards";
+import { Badges, MonthStrip, ScoreRing, Sci } from "./TripCards";
 import {
   CHIP,
   EMOJI,
@@ -141,12 +141,19 @@ export default function ParkDrawer({ p, trip, state, unit, science = false, case
         </div>
         <div className="tp-sec">
           <div className="tp-h">Every check, scored for {HORIZON_LABEL(trip.horizon, trip)}</div>
+          {science && (
+            <p className="tp-note" style={{ marginTop: 0 }}>
+              🔬 Score = sum of (factor × weight) ÷ sum of weights × 100 ={" "}
+              <b>{Math.round(p.score ?? 0)}</b>. Weights: daytime high 2, must 1.5, nice 1. A must below 50 hides the park.
+            </p>
+          )}
           <div className="tp-bars">
             {rows.map((r) => (
               <div key={r.key} className="tp-barrow" title={r.key === "temperature" ? "NASA POWER" : SOURCE_LABEL[CHIP[r.key]?.source ?? "nasa"]}>
                 <span>
                   {EMOJI(r.key)} <b>{LABEL(r.key)}</b>{r.level === "must" ? " (must)" : ""}{CHIP[r.key]?.source === "estimate" ? " · est." : ""}
                   <span className="muted"> · {reasonText(r, unit)}</span>
+                  {science && <> <Sci r={r} /></>}
                 </span>
                 <span className="tp-meter" aria-label={r.score == null ? "no data" : `${Math.round(r.score * 100)} of 100`}>
                   <i style={{ width: `${(r.score ?? 0) * 100}%`, background: r.score == null ? "transparent" : r.score >= 0.5 ? "var(--pine)" : "var(--rust)" }} />
