@@ -24,7 +24,7 @@ const SavedPage = lazy(() => import("./detective/SavedPage"));
 import { PARK_NAMES } from "./detective/parkNames";
 import Logo from "./brand/Logo";
 import { EXPLORER_TABS, RESEARCH_TABS, TAB_LABEL, allowedTabs, loadProfile, saveProfile, type Profile, type Tab } from "./profile";
-import { useNav, type NavState } from "./useNav";
+import { here, safeNext, useNav, type NavState } from "./useNav";
 
 /** A small dropdown: closes on outside click, Escape and Tab; arrows move between items. */
 function Menu({
@@ -106,7 +106,6 @@ function loadUnit(): Unit {
 export default function App() {
   const { nav, navigate, replace } = useNav();
   const [profile, setProfile] = useState<Profile | null>(loadProfile);
-  const [editing, setEditing] = useState(false);
   const [atlas, setAtlas] = useState<Atlas | null>(null);
   const [unit, setUnit] = useState<Unit>(loadUnit);
   useEffect(() => {
@@ -121,11 +120,23 @@ export default function App() {
   const research = profile?.research ?? false;
   const allowed = useMemo(() => (profile ? allowedTabs(research) : ["home" as Tab]), [profile, research]);
   const tab: Tab = nav.tab && allowed.includes(nav.tab) ? nav.tab : "home";
+  const editing = !!profile && nav.page === "profile";
   const hiddenResearchTab = !!nav.tab && !allowed.includes(nav.tab) && RESEARCH_TABS.includes(nav.tab);
 
+  // Account pages. Logged out on an app page: /signup, keeping the page to come back to.
+  // Logged in on /signup or /login: go on to that page. /logout logs out, then shows /login.
   useEffect(() => {
-    if (!nav.tab) replace({ tab: "home" });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    const p = nav.page;
+    if (p === "logout") {
+      if (profile) logOut();
+      else replace({ page: "login", next: nav.next });
+    } else if (!profile && p !== "signup" && p !== "login") {
+      const back = here();
+      replace({ page: "signup", next: p === "profile" ? null : back });
+    } else if (profile && (p === "signup" || p === "login")) {
+      goNext(nav.next, true);
+    } else if (!p && !nav.tab) replace({ tab: "home" });
+  }, [nav.page, nav.tab, profile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // An unknown path (/foo) or tab (#tab=foo) shows Home, so fix the URL to match.
   useEffect(() => {
@@ -148,10 +159,14 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [research, editing, tab, navigate]);
 
-  // Back/forward while the profile form is open closes the form and shows that page.
-  useEffect(() => {
-    setEditing(false);
-  }, [nav]);
+  /** Go to a "next" path after logging in (or Home), as a new page or in place. */
+  function goNext(next: string | null | undefined, inPlace = false) {
+    const to = safeNext(next) ?? "/";
+    if (inPlace) history.replaceState(null, "", to);
+    else history.pushState(null, "", to);
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    window.scrollTo(0, 0);
+  }
 
   useEffect(() => {
     if (atlas) return;
@@ -167,9 +182,9 @@ export default function App() {
     updateAccount(p);
     // Logging in swaps in that user's saved data; read their unit back into state.
     if (!editing) setUnit(loadUnit());
-    setEditing(false);
-    // Keep a deep link (e.g. a shared trip) and an edit in place; otherwise go Home.
-    if (!editing && !nav.tab) navigate({ tab: "home" });
+    // After an edit, go back to the page it was opened from. After logging in,
+    // the account-page effect above goes on to ?next= (or Home).
+    if (editing) goNext(nav.next);
   }
 
   function setResearch(on: boolean) {
@@ -185,20 +200,24 @@ export default function App() {
   function logOut() {
     logOutAccount(profile);
     setUnit(loadUnit()); // the stored unit was just put away with the account
+    const guest = !profile?.email;
     setProfile(null);
     saveProfile(null);
-    navigate({ tab: "home" });
+    // A guest asked to sign up or log in; an account holder just logged out.
+    navigate({ page: guest ? "signup" : "login" });
   }
 
   const go = (t: Tab, extra: Partial<NavState> = {}) => navigate({ tab: t, ...extra });
 
-  if (!profile || editing) {
+  if (!profile || editing || nav.page) {
     return (
       <div className="app">
         <Landing
-          initial={profile}
+          initial={editing ? profile : null}
+          mode={nav.page === "login" ? "login" : "signup"}
+          onMode={(m) => replace({ page: m, next: nav.next })}
           onSubmit={submitProfile}
-          onCancel={profile ? () => setEditing(false) : undefined}
+          onCancel={editing ? () => goNext(nav.next) : undefined}
         />
       </div>
     );
@@ -238,7 +257,7 @@ export default function App() {
                 <button type="button" role="menuitemcheckbox" aria-checked={research} onClick={() => setResearch(!research)}>
                   Research tools: {research ? "on" : "off"}
                 </button>
-                <button type="button" role="menuitem" onClick={() => { close(); setEditing(true); }}>
+                <button type="button" role="menuitem" onClick={() => { close(); navigate({ page: "profile", next: here() }); }}>
                   Edit profile
                 </button>
                 <button type="button" role="menuitem" onClick={() => { close(); logOut(); }}>

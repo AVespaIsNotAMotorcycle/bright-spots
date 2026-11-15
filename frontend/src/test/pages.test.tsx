@@ -63,6 +63,42 @@ describe("App", () => {
     expect(JSON.parse(localStorage.getItem("wishlist")!)).toEqual(["zion"]);
   });
 
+  it("account pages have their own paths, and logging in returns to the page you wanted", async () => {
+    history.replaceState(null, "", "/saved");
+    const { unmount } = render(<App />);
+    await screen.findByRole("tab", { name: "Sign up" });
+    expect(location.pathname + location.search).toBe("/signup?next=%2Fsaved");
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Cy" } });
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "cy@example.com" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "parks-2026" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+    await screen.findByRole("navigation", { name: "Main" }, { timeout: 3000 });
+    expect(location.pathname).toBe("/saved");
+    // Edit profile is /profile, and Cancel goes back.
+    fireEvent.click(screen.getByRole("button", { name: "C" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Edit profile" }));
+    expect(location.pathname).toBe("/profile");
+    fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+    expect(location.pathname).toBe("/saved");
+    unmount();
+    // /logout logs out and shows /login; the tabs switch the path.
+    history.replaceState(null, "", "/logout");
+    render(<App />);
+    await screen.findByRole("tab", { name: "Log in" });
+    expect(location.pathname).toBe("/login");
+    expect(localStorage.getItem("profile")).toBeNull();
+    fireEvent.click(screen.getByRole("tab", { name: "Sign up" }));
+    expect(location.pathname).toBe("/signup");
+  });
+
+  it("a login link cannot send you to another site", async () => {
+    localStorage.setItem("profile", JSON.stringify({ name: "", research: false }));
+    history.replaceState(null, "", "/login?next=//evil.example");
+    render(<App />);
+    await screen.findByRole("navigation", { name: "Main" });
+    expect(location.pathname).toBe("/");
+  });
+
   it("a guest can open the sign-in page from the profile menu and keeps their data", async () => {
     localStorage.setItem("profile", JSON.stringify({ name: "", research: false }));
     localStorage.setItem("wishlist", JSON.stringify(["acadia"]));

@@ -4,6 +4,7 @@
  * URL shape:  /mysteries?case=crater-lake-warming&step=2
  *             /research/trend-atlas?park=crla
  *             /plan?month=6&park=zion
+ *             /login?next=/saved     (account pages: /signup, /login, /logout, /profile)
  *
  * Rules:
  *  - navigate()  pushes a new history entry  (back button returns here)
@@ -28,7 +29,18 @@ export interface NavState {
   per: string | null;
   /** Trip planner settings, encoded (see planner/trip/tripModel.ts). */
   q: string | null;
+  /** An account page instead of a tab. */
+  page?: AuthPage | null;
+  /** Where to go after logging in, e.g. "/saved". */
+  next?: string | null;
 }
+
+export type AuthPage = "signup" | "login" | "logout" | "profile";
+const AUTH_PAGES: AuthPage[] = ["signup", "login", "logout", "profile"];
+
+/** A same-site path to go back to after logging in; anything else is dropped. */
+export const safeNext = (v: string | null | undefined): string | null =>
+  v && v.startsWith("/") && !v.startsWith("//") && !v.startsWith("/\\") ? v : null;
 
 /** Each tab's path. Research tools live under /research/, named as in the menu. */
 export const PATHS: Record<Tab, string> = {
@@ -82,12 +94,21 @@ export function parseUrl(): NavState {
   const old = legacyHash();
   if (old) return fromParams(old.get("tab") as Tab, old);
   const path = location.pathname.replace(/\/+$/, "") || "/";
-  return fromParams(BY_PATH.get(path) ?? ("unknown" as Tab), new URLSearchParams(location.search));
+  const q = new URLSearchParams(location.search);
+  const page = AUTH_PAGES.find((a) => path === "/" + a);
+  if (page) return { ...fromParams(null, q), page, next: safeNext(q.get("next")) };
+  return fromParams(BY_PATH.get(path) ?? ("unknown" as Tab), q);
 }
 
 /** Path plus query for a place in the app, e.g. "/plan?month=6". */
 export function toUrl(s: Partial<NavState>): string {
   const p = new URLSearchParams();
+  if (s.page) {
+    const next = safeNext(s.next);
+    if (next && next !== "/") p.set("next", next);
+    const str = p.toString();
+    return "/" + s.page + (str ? "?" + str : "");
+  }
   if (s.caseId) p.set("case", s.caseId);
   if (s.step != null) p.set("step", String(s.step));
   if (s.park)   p.set("park", s.park);
@@ -100,7 +121,7 @@ export function toUrl(s: Partial<NavState>): string {
   return (s.tab ? PATHS[s.tab] ?? "/" : "/") + (str ? "?" + str : "");
 }
 
-const here = () => location.pathname + location.search;
+export const here = () => location.pathname + location.search;
 
 export function useNav() {
   const [nav, setNav] = useState<NavState>(parseUrl);
