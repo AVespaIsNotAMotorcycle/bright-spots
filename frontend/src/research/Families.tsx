@@ -220,23 +220,86 @@ export default function Families({
       )}
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>Fingerprint space</h3>
-        <p className="small muted">A flat picture of the fingerprints (first two principal components). Close dots change alike.</p>
-        <svg viewBox="0 0 600 300" style={{ width: "100%", height: "auto" }} role="img" aria-label="Park families scatter">
-          <rect width={600} height={300} fill="var(--surface-2)" rx={8} />
-          {data.parks.map((p) => {
-            const f = fam.parks[p.id];
-            if (!f) return null;
-            const cx = 20 + ((f.x - x0) / (x1 - x0 || 1)) * 560;
-            const cy = 280 - ((f.y - y0) / (y1 - y0 || 1)) * 260;
-            return (
-              <circle key={p.id} cx={cx} cy={cy} r={6} fill={colorFor(f.family)} stroke="var(--surface)" onClick={() => onOpenPark(p.id)}
-                style={{ cursor: "pointer" }}>
-                <title>{p.name}</title>
-              </circle>
-            );
-          })}
-        </svg>
+        <h3 style={{ marginTop: 0 }}>Fingerprint map</h3>
+        <p className="small">
+          Every park has 10 trend numbers. This picture squeezes them into two, keeping as much of the difference between
+          parks as possible. Parks that sit close together change in similar ways. The two axes are described under and
+          beside the plot.
+        </p>
+        <div className="row small" style={{ gap: 14, flexWrap: "wrap", margin: "6px 0" }}>
+          {fam.families.map((f) => (
+            <span key={f.id} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <span style={{ width: 12, height: 12, borderRadius: 6, background: colorFor(f.id) }} />
+              {f.title} ({f.size}){f.size <= 3 ? ", outlier" : ""}
+            </span>
+          ))}
+        </div>
+        {(() => {
+          const L = 64, R = 740, T = 14, B = 340;
+          const px = (v: number) => L + 16 + ((v - x0) / (x1 - x0 || 1)) * (R - L - 32);
+          const py = (v: number) => B - 16 - ((v - y0) / (y1 - y0 || 1)) * (B - T - 32);
+          const [ax, ay] = fam.axes ?? [];
+          const centroids = fam.families.filter((f) => f.size > 3).map((f) => {
+            const m = f.parks.map((id) => fam.parks[id]).filter(Boolean);
+            return { f, x: px(m.reduce((a, p) => a + p.x, 0) / m.length), y: py(m.reduce((a, p) => a + p.y, 0) / m.length) };
+          });
+          const halo: React.CSSProperties = { paintOrder: "stroke", stroke: "#fff", strokeWidth: 3, strokeLinejoin: "round" };
+          return (
+            <svg viewBox="0 0 760 420" style={{ width: "100%", height: "auto" }} role="img" aria-label="Park fingerprint map">
+              <rect x={L} y={T} width={R - L} height={B - T} fill="var(--surface-2)" rx={8} />
+              {[0.25, 0.5, 0.75].map((t) => (
+                <g key={t} stroke="var(--grid)" strokeDasharray="3 4">
+                  <line x1={L + t * (R - L)} x2={L + t * (R - L)} y1={T} y2={B} />
+                  <line x1={L} x2={R} y1={T + t * (B - T)} y2={T + t * (B - T)} />
+                </g>
+              ))}
+              {data.parks.map((p) => {
+                const f = fam.parks[p.id];
+                if (!f) return null;
+                const cx = px(f.x), cy = py(f.y);
+                const size = fam.families.find((x) => x.id === f.family)?.size ?? 99;
+                return (
+                  <g key={p.id} style={{ cursor: "pointer" }} onClick={() => onOpenPark(p.id)}>
+                    <circle cx={cx} cy={cy} r={size <= 3 ? 8 : 6} fill={colorFor(f.family)} stroke="#fff" strokeWidth={1.5}>
+                      <title>{p.name}</title>
+                    </circle>
+                    {size <= 3 && (
+                      <text x={cx > 560 ? cx - 12 : cx + 12} y={cy + 4} fontSize={12} fontWeight={700} fill="var(--text)"
+                        textAnchor={cx > 560 ? "end" : "start"} style={halo}>{p.name}</text>
+                    )}
+                  </g>
+                );
+              })}
+              {centroids.map(({ f, x, y }) => (
+                <text key={f.id} x={x} y={y - 16} fontSize={13} fontWeight={800} textAnchor="middle" fill={colorFor(f.id)} style={halo}>
+                  {f.title}
+                </text>
+              ))}
+              {ax && (
+                <>
+                  <text x={L} y={B + 22} fontSize={12} fill="var(--text)" textAnchor="start">← {ax.low}</text>
+                  <text x={R} y={B + 22} fontSize={12} fill="var(--text)" textAnchor="end">{ax.high} →</text>
+                  <text x={(L + R) / 2} y={B + 42} fontSize={11} fill="var(--text-muted)" textAnchor="middle">
+                    Left to right: {Math.round(ax.variance * 100)}% of the differences between parks
+                  </text>
+                </>
+              )}
+              {ay && (
+                <>
+                  <text transform={`rotate(-90 20 ${B})`} x={20} y={B} fontSize={12} fill="var(--text)" textAnchor="start">← {ay.low}</text>
+                  <text transform={`rotate(-90 20 ${T})`} x={20} y={T} fontSize={12} fill="var(--text)" textAnchor="end">{ay.high} →</text>
+                  <text transform={`rotate(-90 40 ${(T + B) / 2})`} x={40} y={(T + B) / 2} fontSize={11} fill="var(--text-muted)" textAnchor="middle">
+                    Bottom to top: {Math.round(ay.variance * 100)}%
+                  </text>
+                </>
+              )}
+            </svg>
+          );
+        })()}
+        <p className="micro muted" style={{ margin: "6px 0 0" }}>
+          Click a dot to open that park. Overlap between colours means those parks are borderline between families. Distances
+          are approximate, because 10 numbers cannot be shown faithfully in 2.
+        </p>
       </div>
     </div>
   );

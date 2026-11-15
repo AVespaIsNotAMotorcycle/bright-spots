@@ -100,8 +100,27 @@ def families(parks):
     co /= BOOTSTRAPS
 
     # PCA for a 2-D picture of the families.
-    u, s, _ = np.linalg.svd(Z - Z.mean(axis=0), full_matrices=False)
+    u, s, vt = np.linalg.svd(Z - Z.mean(axis=0), full_matrices=False)
     xy = (u[:, :2] * s[:2])
+    # Orient the x axis so that "right" means faster warming (the SVD sign is arbitrary).
+    if vt[0, :6].mean() < 0:
+        xy[:, 0] *= -1
+        vt[0] *= -1
+    var_expl = (s ** 2 / np.sum(s ** 2))[:2]
+
+    def end_words(load, high):
+        groups = {"temp": (load[0:6].mean(), "faster warming", "slower warming"),
+                  "rain": (load[6:9].mean(), "wetter", "drier"),
+                  "hot": (load[9], "more hot days", "fewer hot days")}
+        words = []
+        for mean, up, down in groups.values():
+            if abs(mean) < 0.2:
+                continue
+            words.append(up if (mean > 0) == high else down)
+        return ", ".join(words) if words else "no single theme"
+
+    axes = [{"variance": round(float(var_expl[k]), 2),
+             "low": end_words(vt[k], False), "high": end_words(vt[k], True)} for k in range(2)]
 
     fams = []
     for fam in sorted(set(labels)):
@@ -149,7 +168,7 @@ def families(parks):
         }
     return {"k": K, "bootstraps": BOOTSTRAPS, "stable_at": STABLE_AT,
             "features": [{"variable": v, "period": p} for v, p, _, _ in FEATURES],
-            "families": fams, "parks": per_park}
+            "families": fams, "parks": per_park, "axes": axes}
 
 
 def opposites(parks):

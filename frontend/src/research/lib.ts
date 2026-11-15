@@ -59,6 +59,7 @@ export interface Insights {
     features: { variable: string; period: string }[];
     families: FamilyInfo[];
     parks: Record<string, { family: number; agreement: number; x: number; y: number }>;
+    axes: { variance: number; low: string; high: string }[];
     ecoregions: {
       parks: Record<string, { l1: string | null; l2: string | null; l3: string | null }>;
       n_with_ecoregion: number;
