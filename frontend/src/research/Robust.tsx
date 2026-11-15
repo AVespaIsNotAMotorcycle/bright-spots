@@ -4,7 +4,8 @@ import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Too
 import type { Atlas, ParkTrends, TrendRow } from "../detective/model";
 import { PERIOD_LABEL, VERDICT_LABEL } from "../detective/model";
 import { ParkSelect, Pickers } from "./Compare";
-import { findRow, robustness, slopeText, startYearScan, useInsights, usePark } from "./lib";
+import { findRow, pettitt, robustness, slopeText, startYearScan, useInsights, usePark } from "./lib";
+import Validation from "./Validation";
 
 const BIB = `@article{gonzalez2018,
   author  = {Gonzalez, Patrick and Wang, Fushan and Notaro, Michael and Vimont, Daniel J. and Williams, John W.},
@@ -84,6 +85,16 @@ export default function Robust({
   const scan = useMemo(() => (series ? startYearScan(series.years, series.values) : []), [series]);
   const rob = useMemo(() => (scan.length && row?.sen_per_decade != null ? robustness(scan, row.sen_per_decade) : null), [scan, row]);
 
+  const cp = useMemo(() => (series ? pettitt(series.years, series.values) : null), [series]);
+  const cpData = useMemo(() => {
+    if (!series || !cp) return [];
+    return series.years.map((y, i) => ({
+      year: y,
+      value: series.values[i],
+      level: i <= cp.index ? cp.before : cp.after,
+    }));
+  }, [series, cp]);
+
   if (!ins) return <p className="muted">Loading…</p>;
   const temp = (atlas?.variables[v]?.unit ?? "").includes("°");
   const f = temp ? 1.8 : 1;
@@ -142,6 +153,38 @@ export default function Robust({
         )}
       </div>
 
+      {cp && series && (
+        <div className="card">
+          <h3 style={{ marginTop: 0 }}>Is it a steady trend or a step?</h3>
+          <p className="small" style={{ margin: "0 0 6px" }}>
+            {cp.p < 0.05 ? (
+              <>
+                <b>Likely step change near {cp.year}</b> (Pettitt test, p = {cp.p.toFixed(3)}). The average moved from{" "}
+                {cp.before.toFixed(2)} to {cp.after.toFixed(2)} {atlas?.variables[v]?.unit}. A straight trend line may
+                describe this poorly. Check for a sensor or method change.
+              </>
+            ) : (
+              <>No clear step change (Pettitt p = {cp.p.toFixed(2)}). The most likely break would be near {cp.year}.</>
+            )}
+          </p>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={cpData} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
+              <CartesianGrid stroke="var(--grid)" strokeDasharray="3 3" />
+              <XAxis dataKey="year" tick={{ fill: "var(--text-muted)", fontSize: 11 }} tickLine={false} />
+              <YAxis domain={["auto", "auto"]} tick={{ fill: "var(--text-muted)", fontSize: 11 }} tickLine={false} width={44} />
+              <Tooltip contentStyle={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
+              <ReferenceLine x={cp.year} stroke="var(--rust)" strokeDasharray="4 3" />
+              <Line type="monotone" dataKey="value" name="Yearly value" stroke="var(--accent)" strokeWidth={1.5} dot={{ r: 2 }} />
+              <Line type="stepAfter" dataKey="level" name="Average before / after" stroke="var(--rust)" strokeWidth={2} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+          <p className="micro muted">
+            Values in {atlas?.variables[v]?.unit}. The test finds the single most likely break point and gives an
+            approximate p-value.
+          </p>
+        </div>
+      )}
+
       {row && (
         <div className="card">
           <h3 style={{ marginTop: 0 }}>Quality of this result</h3>
@@ -158,6 +201,8 @@ export default function Robust({
           </div>
         </div>
       )}
+
+      <Validation />
 
       {data && (
         <div className="card">
@@ -187,7 +232,7 @@ export default function Robust({
           <li><b>Trend:</b> Sen's slope per decade with the Mann-Kendall test. If the residuals are autocorrelated, the Hamed-Rao modified test supplies the p-value (Yue-Wang as a fallback).</li>
           <li><b>Multiple testing:</b> Benjamini-Hochberg false discovery rate across parks, separately for each variable and period. "Real" means q &lt; 0.05. "Possible" means p &lt; 0.05 but q ≥ 0.05.</li>
           <li><b>Minimum record:</b> fewer than 15 years gives "Too little data" and no verdict.</li>
-          <li><b>Known limits:</b> POWER cells are coarse, so mountain parks read warm. This is not yet validated against NOAA stations. Rain is MERRA-2-based, which is weaker than satellite rain. Sequoia and Kings Canyon share one boundary and one result.</li>
+          <li><b>Known limits:</b> POWER cells are coarse, so mountain parks read warm. Checked against NOAA stations for 12 parks only (see the station check above); results are mixed. Rain is MERRA-2-based, which is weaker than satellite rain. Sequoia and Kings Canyon share one boundary and one result.</li>
         </ul>
         <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
           <h4 style={{ margin: "8px 0" }}>Citations (BibTeX)</h4>

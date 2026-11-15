@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { Atlas, AtlasCell } from "./model";
 import { PERIOD_LABEL, VERDICT_LABEL } from "./model";
 import ParkDetective from "./ParkDetective";
+import { useInsights } from "../research/lib";
 
 // Park name lookup (we get it from atlas cells' park metadata via per-park fetch,
 // but the atlas itself only has park_id). We'll keep a minimal static map for labels.
@@ -49,6 +50,12 @@ export default function Detective({
   const [selPark, setSelPark] = useState<string | null>(initialParkId ?? null);
   const [useFahrenheit, setUseFahrenheit] = useState(true);
   const [sortBy, setSortBy] = useState<"name" | "slope" | "verdict">("verdict");
+  const [q, setQ] = useState("");
+  const [fVerdict, setFVerdict] = useState("all");
+  const [fDir, setFDir] = useState("all");
+  const [fFamily, setFFamily] = useState("all");
+  const [fState, setFState] = useState("all");
+  const { data: insights } = useInsights();
 
   // The URL is the source of truth: back/forward changes initialParkId.
   useEffect(() => {
@@ -84,8 +91,27 @@ export default function Detective({
 
   const isTemp = atlas?.variables[selVar]?.unit.includes("°");
 
+  const stateOf = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const p of insights?.parks ?? []) m.set(p.id, p.state ?? "");
+    return m;
+  }, [insights]);
+  const states = useMemo(
+    () => Array.from(new Set((insights?.parks ?? []).flatMap((p) => (p.state ?? "").split(/,\s*/)).filter(Boolean))).sort(),
+    [insights],
+  );
+
   const sorted = useMemo(() => {
-    const c = [...cells];
+    const needle = q.trim().toLowerCase();
+    const c = cells.filter((x) => {
+      if (needle && !(PARK_NAMES[x.park_id] ?? x.park_id).toLowerCase().includes(needle)) return false;
+      if (fVerdict === "sig" ? !(x.verdict === "real" || x.verdict === "possible") : fVerdict !== "all" && x.verdict !== fVerdict) return false;
+      if (fDir === "up" && !(x.sen != null && x.sen > 0)) return false;
+      if (fDir === "down" && !(x.sen != null && x.sen < 0)) return false;
+      if (fFamily !== "all" && String(insights?.families.parks[x.park_id]?.family) !== fFamily) return false;
+      if (fState !== "all" && !(stateOf.get(x.park_id) ?? "").includes(fState)) return false;
+      return true;
+    });
     if (sortBy === "name")
       return c.sort((a, b) =>
         (PARK_NAMES[a.park_id] ?? a.park_id).localeCompare(
@@ -103,7 +129,7 @@ export default function Detective({
         (order[a.verdict] ?? 9) - (order[b.verdict] ?? 9) ||
         Math.abs(b.sen ?? 0) - Math.abs(a.sen ?? 0),
     );
-  }, [cells, sortBy]);
+  }, [cells, sortBy, q, fVerdict, fDir, fFamily, fState, insights, stateOf]);
 
   if (loading)
     return (
@@ -301,6 +327,34 @@ export default function Detective({
           {cells.length} parks
         </div>
       </div>
+
+      {!simple && (
+        <div className="row gap-8" style={{ flexWrap: "wrap", alignItems: "flex-end" }}>
+          <label className="field"><span className="small muted">Search</span>
+            <input className="text-input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Park name" /></label>
+          <label className="field"><span className="small muted">Verdict</span>
+            <select className="text-input" value={fVerdict} onChange={(e) => setFVerdict(e.target.value)}>
+              <option value="all">All</option><option value="sig">Real or possible</option>
+              <option value="real">Real</option><option value="possible">Possible</option>
+              <option value="none">No trend</option></select></label>
+          <label className="field"><span className="small muted">Direction</span>
+            <select className="text-input" value={fDir} onChange={(e) => setFDir(e.target.value)}>
+              <option value="all">Any</option><option value="up">Rising</option><option value="down">Falling</option></select></label>
+          <label className="field"><span className="small muted">Family</span>
+            <select className="text-input" value={fFamily} onChange={(e) => setFFamily(e.target.value)}>
+              <option value="all">Any</option>
+              {(insights?.families.families ?? []).map((f) => <option key={f.id} value={String(f.id)}>Family {f.id} ({f.size})</option>)}</select></label>
+          <label className="field"><span className="small muted">State</span>
+            <select className="text-input" value={fState} onChange={(e) => setFState(e.target.value)}>
+              <option value="all">Any</option>
+              {states.map((s) => <option key={s} value={s}>{s}</option>)}</select></label>
+          <a className="btn-ghost" style={{ textDecoration: "none" }}
+            href={`/api/trends/export.csv?variable=${selVar}&period=${periodShown}&parks=${sorted.map((c) => c.park_id).join(",")}`}
+            download="park-trends.csv">
+            ⬇ CSV ({sorted.length} parks, full statistics)
+          </a>
+        </div>
+      )}
 
       {/* Notable highlights */}
       {(() => {

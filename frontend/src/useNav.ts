@@ -14,7 +14,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 export interface NavState {
-  tab: "home" | "student" | "explore" | "atlas" | "planner" | "map" | "families" | "opposites" | "compare" | "robust" | null;
+  tab: "home" | "student" | "explore" | "atlas" | "planner" | "map" | "families" | "opposites" | "compare" | "robust" | "seasons" | null;
   caseId: string | null;
   step: number | null;
   park: string | null;

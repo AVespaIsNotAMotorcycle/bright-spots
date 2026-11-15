@@ -211,3 +211,32 @@ export function findRow(d: ParkTrends | null, v: string, p: string): TrendRow | 
 
 /** Park colours for the family map. */
 export const FAMILY_COLORS = ["#2d5a27", "#8b3a1a", "#1a3a5c", "#b7791f", "#7a4e8a", "#4a8a8a"];
+
+// ---------- change-point (Pettitt test) ----------
+
+export interface ChangePoint {
+  index: number; // last index of the "before" segment
+  year: number; // first year of the "after" segment
+  p: number;
+  before: number;
+  after: number;
+}
+
+/** Pettitt (1979): one most-likely step change in a series, with an approximate p-value. */
+export function pettitt(years: number[], y: number[]): ChangePoint | null {
+  const n = y.length;
+  if (n < 15) return null;
+  let best = 0;
+  let bestT = 0;
+  for (let t = 0; t < n - 1; t++) {
+    let u = 0;
+    for (let i = 0; i <= t; i++) for (let j = t + 1; j < n; j++) u += Math.sign(y[i] - y[j]);
+    if (Math.abs(u) > best) {
+      best = Math.abs(u);
+      bestT = t;
+    }
+  }
+  const p = Math.min(1, 2 * Math.exp((-6 * best * best) / (n ** 3 + n ** 2)));
+  const mean = (a: number[]) => a.reduce((s, x) => s + x, 0) / a.length;
+  return { index: bestT, year: years[bestT + 1], p, before: mean(y.slice(0, bestT + 1)), after: mean(y.slice(bestT + 1)) };
+}

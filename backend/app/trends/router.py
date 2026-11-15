@@ -4,11 +4,14 @@ GET /api/trends/atlas          -> atlas.json (all parks × variables × periods,
 GET /api/trends/parks/{park_id} -> per-park trends + yearly series
 """
 
+import csv
+import io
 import json
 from functools import lru_cache
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import Response
 
 DATA = Path(__file__).resolve().parents[2] / "data" / "trends"
 
@@ -64,3 +67,50 @@ def get_insights() -> dict:
         return _insights()
     except FileNotFoundError as e:
         raise HTTPException(503, detail=str(e)) from e
+
+
+EXPORT_COLUMNS = [
+    "park_id", "park_name", "state", "variable", "period", "n_years", "first_year", "last_year",
+    "mean", "sen_per_decade", "sen_per_decade_f", "ols_per_decade", "ols_ci_low", "ols_ci_high",
+    "mk_p", "p", "p_method", "q", "signal_to_noise", "lag1_autocorr", "verdict",
+]
+
+
+@router.get("/export.csv")
+def export_csv(
+    variable: str | None = None,
+    period: str | None = None,
+    verdict: str | None = None,
+    parks: str | None = Query(None, description="comma-separated park ids"),
+) -> Response:
+    """Full statistics for the chosen slice of the atlas as CSV (all filters optional)."""
+    wanted = set(parks.split(",")) if parks else None
+    buf = io.StringIO()
+    w = csv.DictWriter(buf, fieldnames=EXPORT_COLUMNS, extrasaction="ignore")
+    w.writeheader()
+    for f in sorted((DATA / "parks").glob("*.json")):
+        if wanted and f.stem not in wanted:
+            continue
+        d = _park(f.stem)
+        for t in d["trends"]:
+            if variable and t["variable"] != variable:
+                continue
+            if period and t["period"] != period:
+                continue
+            if verdict and t["verdict"] != verdict:
+                continue
+            w.writerow({**t, "park_id": f.stem, "park_name": d["park"]["name"], "state": d["park"].get("state")})
+    return Response(
+        buf.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="park-trends.csv"'},
+    )
+
+
+@router.get("/validation")
+def get_validation() -> dict:
+    """Our temperature trends compared with NOAA GHCN-Daily stations (see scripts/step5_noaa_validation.py)."""
+    p = DATA / "validation.json"
+    if not p.exists():
+        raise HTTPException(503, detail="validation.json not found — run scripts/step5_noaa_validation.py")
+    return json.loads(p.read_text())

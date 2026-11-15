@@ -30,6 +30,7 @@ export const TAB_LABEL: Record<Tab, string> = {
   opposites: "↔ Opposite Trends",
   compare: "⚖ Compare Parks",
   robust: "🧪 Robustness",
+  seasons: "🌗 Season Shifts",
 };
 
 export const PERSONAS: Record<Persona, PersonaInfo> = {
@@ -55,7 +56,7 @@ export const PERSONAS: Record<Persona, PersonaInfo> = {
     tagline: "Full trend atlas with statistics",
     blurb: "You want every test, every period, and the raw results.",
     bullets: ["Sen's slope, Mann-Kendall, FDR q-values", "Park families and opposite-trend finder", "Start-year test, map, compare, Python/R export"],
-    tabs: ["home", "atlas", "map", "families", "opposites", "compare", "robust"],
+    tabs: ["home", "atlas", "map", "families", "opposites", "seasons", "compare", "robust"],
   },
 };
 

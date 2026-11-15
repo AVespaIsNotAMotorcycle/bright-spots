@@ -10,6 +10,7 @@ import Families from "./research/Families";
 import MapView from "./research/MapView";
 import Opposites from "./research/Opposites";
 import Robust from "./research/Robust";
+import Seasons from "./research/Seasons";
 import { PERSONAS, TAB_LABEL, loadProfile, saveProfile, type Profile, type Tab } from "./profile";
 import { useNav, type NavState } from "./useNav";
 
@@ -137,6 +138,7 @@ export default function App() {
             onCompare={(a, b, v, per) => go("compare", { park: a, park2: b, v, per })}
           />
         )}
+        {tab === "seasons" && <Seasons atlas={atlas} onOpenPark={(id) => go("atlas", { park: id })} />}
         {tab === "compare" && (
           <Compare
             atlas={atlas}

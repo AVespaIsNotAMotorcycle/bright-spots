@@ -177,6 +177,7 @@ function ResearcherHome({ atlas, onGo }: Pick<Props, "atlas" | "onGo">) {
             ["map", "🗺 National map", "Every park coloured by its trend for any variable and period."],
             ["families", "🧬 Park families", "Parks grouped by how they change, with bootstrap stability."],
             ["opposites", "↔ Opposite trends", "Where the same variable rises in one park and falls in another, with driver data."],
+            ["seasons", "🌗 Season shifts", "Which months change fastest in each park, as a heat table."],
             ["compare", "⚖ Compare parks", "Two parks on one chart, with their statistics side by side."],
             ["robust", "🧪 Robustness", "Start-year test, signal-to-noise, methods, BibTeX, Python and R code."],
           ] as const).map(([t, title, text]) => (
