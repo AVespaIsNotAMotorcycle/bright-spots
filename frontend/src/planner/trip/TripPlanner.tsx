@@ -16,6 +16,7 @@ import { TRIP_CSS } from "./tripStyles";
 import {
   DEFAULT_STATE,
   HORIZON_LABEL,
+  clearCount,
   clearFilters,
   filterCount,
   searchParks,
@@ -135,6 +136,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
   const found = useMemo(() => searchParks(trip?.parks ?? [], find), [trip, find]);
   const rankOf = useMemo(() => new Map((trip?.parks ?? []).map((p, i) => [p.park.id, i + 1])), [trip]);
   const nFilters = filterCount(state);
+  const nClear = clearCount(state);
   // No filters: nothing to rank by, so list every park A to Z with no rank or score.
   const browse = !!trip && nFilters === 0;
   const az = useMemo(() => [...(trip?.parks ?? [])].sort((a, b) => a.park.short.localeCompare(b.park.short)), [trip]);
@@ -146,7 +148,9 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
   useEffect(() => {
     if (!trip || !topIds || browse) return;
     const ctl = new AbortController();
-    fetchDates(state, state.months, topIds.split(","), ctl.signal).then(setDates).catch(() => undefined);
+    // Any time: the top parks' own best months.
+    const ms = state.months.length ? state.months : [...new Set(shown.slice(0, TOP).map((p) => p.best_month))];
+    fetchDates(state, ms, topIds.split(","), ctl.signal).then(setDates).catch(() => undefined);
     return () => ctl.abort();
   }, [trip, topIds]); // eslint-disable-line react-hooks/exhaustive-deps
   const datesOf = (p: TripPark) => {
@@ -209,7 +213,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
   const goBefore = matches.filter((p) => p.change_2050 != null && p.change_2050 <= -10).sort((a, b) => a.change_2050! - b.change_2050!).slice(0, 3);
   const heroPhoto = shown[0] ? photoOf(shown[0].park.code) : undefined;
   const drawerPark = open ? byId.get(open) : undefined;
-  const monthsText = state.months.length > 3 ? `${state.months.length} months` : state.months.map((m) => MONTHS[m - 1]).join(", ");
+  const monthsText = state.months.length === 0 ? "Any time" : state.months.length > 3 ? `${state.months.length} months` : state.months.map((m) => MONTHS[m - 1]).join(", ");
 
   return (
     <div className="tp">
@@ -218,7 +222,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h2 style={{ margin: 0, fontFamily: "var(--font-display)", color: "var(--pine)", fontSize: 22 }}>Your trip</h2>
           <span style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            {nFilters > 0 && <button className="tp-clear" onClick={() => set(clearFilters(state))}>Clear all</button>}
+            {nClear > 0 && <button className="tp-clear" onClick={() => set(clearFilters(state))}>Clear all</button>}
             <button className="tp-act tp-edit" onClick={() => setSheet(false)}>Done</button>
           </span>
         </div>
@@ -270,9 +274,9 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
         <div className="tp-find">
           <input type="search" className="tp-search" placeholder="Search a park or state" aria-label="Search a park or state"
             value={find} onChange={(e) => setFind(e.target.value)} />
-          {nFilters > 0 && (
+          {nClear > 0 && (
             <button className="tp-clear" onClick={() => { set(clearFilters(state)); play("tick"); }}>
-              Clear all filters ({nFilters})
+              Clear all filters ({nClear})
             </button>
           )}
         </div>

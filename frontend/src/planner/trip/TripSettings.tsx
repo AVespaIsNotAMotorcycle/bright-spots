@@ -40,17 +40,17 @@ function Months({ state, set }: Pick<Props, "state" | "set">) {
       }
     } else next = on ? state.months.filter((x) => x !== m) : [...state.months, m];
     last.current = m;
-    if (next.length) set({ months: next.sort((a, b) => a - b) });
+    set({ months: next.sort((a, b) => a - b) });
   };
   const exactly = (ms: number[]) => ms.length === state.months.length && ms.every((m) => state.months.includes(m));
   return (
     <section aria-labelledby="tp-when">
       <h3 className="tp-h" id="tp-when">
-        When are you going? <small>{state.months.length > 1 ? "best month wins" : "tap more to compare"}</small>
+        When are you going? <small>{state.months.length === 0 ? "any time" : state.months.length > 1 ? "best month wins" : "tap more to compare"}</small>
       </h3>
       <div className="tp-seasons">
         {SEASONS.map((s) => (
-          <button key={s.id} className="tp-season" aria-pressed={exactly(s.months)} onClick={() => set({ months: [...s.months].sort((a, b) => a - b) })}
+          <button key={s.id} className="tp-season" aria-pressed={exactly(s.months)} onClick={() => set({ months: exactly(s.months) ? [] : [...s.months].sort((a, b) => a - b) })}
             title={`Pick all of ${s.label.toLowerCase()}`}
             style={{ background: exactly(s.months) ? s.color : s.tint, color: exactly(s.months) ? "#fff" : s.ink }}>
             {s.emoji} {s.label}
@@ -69,7 +69,11 @@ function Months({ state, set }: Pick<Props, "state" | "set">) {
           );
         })}
       </div>
-      <p className="tp-note">Tap a season for all 3 months. Shift-click picks a range. Seasons are for the north; American Samoa's are flipped.</p>
+      <p className="tp-note">
+        {state.months.length === 0
+          ? "Any time: each park uses its best month of the year."
+          : "Tap a season for all 3 months, tap again to clear. Shift-click picks a range. Seasons are for the north; American Samoa's are flipped."}
+      </p>
     </section>
   );
 }
@@ -172,7 +176,7 @@ export default function TripSettings({ state, set, unit, setUnit }: Props) {
           <div>
             <div className="tp-h">Match a city you like</div>
             <FavouriteCity onPick={(v) => {
-              const r = rangeFromCity(v.normals, state.months[0]);
+              const r = rangeFromCity(v.normals, state.months[0] ?? new Date().getMonth() + 1);
               if (r) set({ custom: [Math.round(r[0] * 2) / 2, Math.round(r[1] * 2) / 2] });
             }} />
           </div>

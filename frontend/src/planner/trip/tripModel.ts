@@ -169,9 +169,13 @@ export function bandsOf(s: TripState): [number, number][] {
 const chipStr = (c: Record<string, Level>) =>
   Object.entries(c).map(([k, l]) => (l === "must" ? `${k}!` : k)).join(",");
 
+/** The picked months, or all 12 for "Any time". */
+export const ALL_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+export const monthsOrAll = (s: TripState): number[] => (s.months.length ? s.months : ALL_MONTHS);
+
 export function tripQuery(s: TripState, mystery: string[] = []): URLSearchParams {
   const q = new URLSearchParams({
-    months: s.months.join(","),
+    months: monthsOrAll(s).join(","),
     bands: bandsOf(s).map(([a, b]) => `${a}:${b}`).join(","),
     horizon: s.horizon,
     scenario: s.scenario,
@@ -213,8 +217,11 @@ export function encodeState(s: TripState): string {
 export function decodeState(str: string | null | undefined): TripState | null {
   if (!str) return null;
   const p = new URLSearchParams(str);
-  const months = (p.get("m") ?? "").split(".").map(Number).filter((m) => m >= 1 && m <= 12);
-  if (!months.length) return null;
+  if (!p.has("m")) return null;
+  // Empty "m" = Any time.
+  const raw = (p.get("m") ?? "").split(".").filter(Boolean);
+  const months = raw.map(Number).filter((m) => m >= 1 && m <= 12);
+  if (raw.length && !months.length) return null; // garbage like m=13
   const t = (p.get("t") ?? "").split("_").map(Number);
   const h = p.get("h");
   return {
@@ -302,12 +309,15 @@ export function filterCount(s: TripState): number {
   return Object.keys(s.want).length + Object.keys(s.avoid).length + temp;
 }
 
+/** Filters plus picked months: the number shown on Clear all. */
+export const clearCount = (s: TripState): number => filterCount(s) + (s.months.length ? 1 : 0);
+
 /**
- * Drop every chip and the warmth choice. Keeps months, year and scenario.
+ * Drop every chip, the warmth choice and the months. Keeps year and scenario.
  * With nothing to rank by, the planner lists every park A to Z instead of ranking.
  */
 export function clearFilters(s: TripState): TripState {
-  return { ...s, feels: [], custom: null, want: {}, avoid: {} };
+  return { ...s, months: [], feels: [], custom: null, want: {}, avoid: {} };
 }
 
 const fold = (x: string) => x.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();

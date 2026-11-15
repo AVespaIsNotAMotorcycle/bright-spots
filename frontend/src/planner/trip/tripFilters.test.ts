@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import fixture from "../../test/tripFixture.json";
-import { ALL_FEELS, DEFAULT_STATE, clearFilters, decodeState, encodeState, filterCount, goldMonth, searchParks, type Trip } from "./tripModel";
+import { ALL_FEELS, DEFAULT_STATE, clearCount, clearFilters, decodeState, tripQuery, encodeState, filterCount, goldMonth, searchParks, type Trip } from "./tripModel";
 
 const parks = (fixture as unknown as Trip).parks;
 
@@ -12,18 +12,29 @@ describe("trip filters", () => {
     expect(filterCount({ ...DEFAULT_STATE, feels: [], avoid: {} })).toBe(0);
   });
 
-  it("clear drops every filter but keeps months and year", () => {
+  it("clear drops every filter and the months, keeps the year", () => {
     const s = clearFilters({ ...DEFAULT_STATE, months: [3, 4], horizon: "y2050", want: { stars: "must" }, custom: [10, 20] });
     expect(filterCount(s)).toBe(0);
-    expect(s.months).toEqual([3, 4]);
+    expect(clearCount(s)).toBe(0);
+    expect(s.months).toEqual([]);
     expect(s.horizon).toBe("y2050");
     expect(s.feels).toEqual([]);
     expect(s.custom).toBeNull();
   });
 
-  it("an empty warmth survives the URL round trip", () => {
+  it("months count toward Clear all but not toward ranking", () => {
+    const s = { ...clearFilters(DEFAULT_STATE), months: [7] };
+    expect(filterCount(s)).toBe(0);
+    expect(clearCount(s)).toBe(1);
+  });
+
+  it("Any time asks the API for all 12 months", () => {
+    expect(tripQuery(clearFilters(DEFAULT_STATE)).get("months")).toBe("1,2,3,4,5,6,7,8,9,10,11,12");
+  });
+
+  it("an empty warmth and Any time survive the URL round trip", () => {
     const s = clearFilters(DEFAULT_STATE);
-    expect(decodeState(encodeState(s))).toMatchObject({ feels: [], want: {}, avoid: {} });
+    expect(decodeState(encodeState(s))).toMatchObject({ months: [], feels: [], want: {}, avoid: {} });
   });
 });
 
