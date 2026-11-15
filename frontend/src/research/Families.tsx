@@ -223,8 +223,8 @@ export default function Families({
         <h3 style={{ marginTop: 0 }}>Fingerprint map</h3>
         <p className="small">
           Every park has 10 trend numbers. This picture squeezes them into two, keeping as much of the difference between
-          parks as possible. Parks that sit close together change in similar ways. The two axes are described under and
-          beside the plot.
+          parks as possible. Parks that sit close together change in similar ways. The shaded areas group each family. The two axes
+          are explained under the plot.
         </p>
         <div className="row small" style={{ gap: 14, flexWrap: "wrap", margin: "6px 0" }}>
           {fam.families.map((f) => (
@@ -243,7 +243,7 @@ export default function Families({
           const sizeOf = (id: number) => fam.families.find((x) => x.id === id)?.size ?? 99;
           // Labels only for outlier parks. Push each one down until it no longer touches another label.
           const dots = data.parks.map((p) => ({ p, f: fam.parks[p.id] })).filter((d) => d.f);
-          const labels: { id: string; name: string; x: number; y: number; right: boolean }[] = [];
+          const labels: { id: string; name: string; x: number; y: number; dotY: number; right: boolean }[] = [];
           dots
             .filter((d) => sizeOf(d.f.family) <= 3)
             .sort((u, v) => py(u.f.y) - py(v.f.y))
@@ -252,8 +252,29 @@ export default function Families({
               let y = py(d.f.y) + 4;
               const right = cx < 560;
               while (labels.some((l) => Math.abs(l.y - y) < 14 && Math.abs(l.x - cx) < 150)) y += 14;
-              labels.push({ id: d.p.id, name: d.p.name, x: cx, y, right });
+              labels.push({ id: d.p.id, name: d.p.name, x: cx, y, dotY: py(d.f.y), right });
             });
+          const hull = (pts: [number, number][]): [number, number][] => {
+            const p = [...pts].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+            if (p.length < 3) return p;
+            const cross = (o: number[], a: number[], b: number[]) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+            const half = (arr: [number, number][]) => {
+              const h: [number, number][] = [];
+              for (const q of arr) {
+                while (h.length >= 2 && cross(h[h.length - 2], h[h.length - 1], q) <= 0) h.pop();
+                h.push(q);
+              }
+              h.pop();
+              return h;
+            };
+            return [...half(p), ...half([...p].reverse())];
+          };
+          const hulls = fam.families.filter((f) => f.size > 3).map((f) => {
+            const pts = f.parks.map((id) => fam.parks[id]).filter(Boolean).map((q) => [px(q.x), py(q.y)] as [number, number]);
+            const h = hull(pts);
+            return { f, d: h.map((q, i) => `${i ? "L" : "M"}${q[0].toFixed(1)} ${q[1].toFixed(1)}`).join("") + "Z",
+              top: Math.min(...pts.map((q) => q[1])), cx: pts.reduce((a, q) => a + q[0], 0) / pts.length };
+          });
           return (
             <svg viewBox="0 0 760 344" style={{ width: "100%", height: "auto" }} role="img" aria-label="Park fingerprint map">
               <rect x={L} y={T} width={R - L} height={B - T} fill="var(--surface-2)" rx={8} />
@@ -262,6 +283,18 @@ export default function Families({
                   <line x1={L + t * (R - L)} x2={L + t * (R - L)} y1={T} y2={B} />
                   <line x1={L} x2={R} y1={T + t * (B - T)} y2={T + t * (B - T)} />
                 </g>
+              ))}
+              {hulls.map(({ f, d }) => (
+                <path key={f.id} d={d} fill={colorFor(f.id)} fillOpacity={0.12} stroke={colorFor(f.id)} strokeOpacity={0.12}
+                  strokeWidth={26} strokeLinejoin="round" />
+              ))}
+              {hulls.map(({ f, top, cx }) => (
+                <text key={"t" + f.id} x={cx} y={Math.max(T + 14, top - 20)} fontSize={13} fontWeight={800} textAnchor="middle"
+                  fill={colorFor(f.id)} style={{ ...halo, pointerEvents: "none" }}>{f.title}</text>
+              ))}
+              {labels.map((l) => (
+                <line key={"l" + l.id} x1={l.x} y1={l.dotY} x2={l.right ? l.x + 10 : l.x - 10} y2={l.y - 4}
+                  stroke="var(--text-muted)" strokeWidth={0.8} />
               ))}
               {dots.map(({ p, f }) => {
                 const big = sizeOf(f.family) <= 3;
@@ -273,24 +306,23 @@ export default function Families({
                 );
               })}
               {labels.map((l) => (
-                <text key={l.id} x={l.right ? l.x + 12 : l.x - 12} y={l.y} fontSize={11} fontWeight={700} fill="var(--text)"
+                <text key={l.id} x={l.right ? l.x + 14 : l.x - 14} y={l.y} fontSize={11} fontWeight={700} fill="var(--text)"
                   textAnchor={l.right ? "start" : "end"} style={{ ...halo, pointerEvents: "none" }}>{l.name}</text>
               ))}
             </svg>
           );
         })()}
         {fam.axes && fam.axes.length === 2 && (
-          <div className="small" style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "4px 10px", margin: "8px 0 0" }}>
-            <b>Left to right</b>
-            <span>
-              <span className="muted">{fam.axes[0].low}</span> ← → <span>{fam.axes[0].high}</span>
-              <span className="muted"> ({Math.round(fam.axes[0].variance * 100)}% of the differences)</span>
-            </span>
-            <b>Bottom to top</b>
-            <span>
-              <span className="muted">{fam.axes[1].low}</span> ↓ ↑ <span>{fam.axes[1].high}</span>
-              <span className="muted"> ({Math.round(fam.axes[1].variance * 100)}%)</span>
-            </span>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 10, marginTop: 10 }}>
+            {([["Left to right", "←", "→", fam.axes[0]], ["Bottom to top", "↓", "↑", fam.axes[1]]] as const).map(([name, lo, hi, ax]) => (
+              <div key={name} style={{ background: "var(--surface-2)", borderRadius: 10, padding: "8px 12px" }}>
+                <div className="small" style={{ fontWeight: 700, marginBottom: 4 }}>
+                  {name} <span className="muted" style={{ fontWeight: 400 }}>· {Math.round(ax.variance * 100)}% of the differences</span>
+                </div>
+                <div className="small"><b>{lo}</b> {ax.low}</div>
+                <div className="small"><b>{hi}</b> {ax.high}</div>
+              </div>
+            ))}
           </div>
         )}
         <p className="micro muted" style={{ margin: "6px 0 0" }}>
