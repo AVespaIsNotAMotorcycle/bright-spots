@@ -111,8 +111,10 @@ function Days({ list, picked, unit, loading }: { list: BestDays[]; picked: numbe
   );
 }
 
-export default function ParkDrawer({ p, trip, state, unit, science = false, caseFor, onClose, onCase, actions }: {
+export default function ParkDrawer({ p, trip, state, unit, science = false, plain = false, caseFor, onClose, onCase, actions }: {
   p: TripPark; trip: Trip; state: TripState; unit: Unit; science?: boolean; caseFor?: Case;
+  /** No filters: show the park only, no scores, dates or months (they would rank by nothing). */
+  plain?: boolean;
   onClose: () => void; onCase?: (c: Case) => void; actions: React.ReactNode;
 }) {
   const atlas = useAtlas();
@@ -123,6 +125,7 @@ export default function ParkDrawer({ p, trip, state, unit, science = false, case
   const moons = trip.new_moons[String(p.best_month)] ?? [];
 
   useEffect(() => {
+    if (plain) return;
     const ctl = new AbortController();
     setBd(undefined);
     // Only months that pass every must; if none do, the month the card names.
@@ -131,7 +134,7 @@ export default function ParkDrawer({ p, trip, state, unit, science = false, case
       .then((r) => setBd(Object.values(r).map((x) => x[p.park.id]).filter((b): b is BestDays => !!b)))
       .catch(() => !ctl.signal.aborted && setBd([]));
     return () => ctl.abort();
-  }, [p.park.id, p.best_month, p.month_scores, state]);
+  }, [p.park.id, p.best_month, p.month_scores, state, plain]);
 
   useEffect(() => {
     ref.current?.focus();
@@ -147,16 +150,17 @@ export default function ParkDrawer({ p, trip, state, unit, science = false, case
       <aside className="tp-drawer" role="dialog" aria-modal="true" aria-label={`${p.park.short} details`} tabIndex={-1} ref={ref}>
         <div className="tp-photo" style={{ backgroundImage: photo ? `url("${photo.file}")` : undefined }}>
           <button className="tp-close" onClick={onClose} aria-label="Close">✕</button>
-          <div className="tp-name">{p.park.name}<small>{p.park.states.join(", ")} · {MONTHS_LONG[p.best_month - 1]}</small></div>
-          <div className="tp-ring"><ScoreRing score={p.score} size={74} /></div>
+          <div className="tp-name">{p.park.name}<small>{p.park.states.join(", ")}{plain ? "" : ` · ${MONTHS_LONG[p.best_month - 1]}`}</small></div>
+          {!plain && <div className="tp-ring"><ScoreRing score={p.score} size={74} /></div>}
         </div>
         {photo && <div style={{ padding: "4px 20px 0" }}><PhotoCredit photo={photo} style={{ color: "var(--text-muted)" }} /></div>}
         <div className="tp-sec">
-          <div className="tp-why">{whySentence(p, unit)}</div>
+          <div className="tp-why">{plain ? "Pick a mood or a filter to see scores and best dates for this park." : whySentence(p, unit)}</div>
           {!p.ok && p.failed.length > 0 && <p className="tp-note" style={{ color: "var(--rust)" }}>Fails a must: {p.failed.map(LABEL).join(", ")}.</p>}
-          <div style={{ marginTop: 10 }}><Badges p={p} caseFor={caseFor} /></div>
+          {!plain && <div style={{ marginTop: 10 }}><Badges p={p} caseFor={caseFor} /></div>}
           <div className="tp-actions" style={{ marginTop: 10 }}>{actions}</div>
         </div>
+        {!plain && <>
         <div className="tp-sec"><Days list={bd ?? []} loading={!bd} picked={state.months} unit={unit} /></div>
         <div className="tp-sec">
           <div className="tp-h">Every check, scored for {HORIZON_LABEL(trip.horizon, trip)}</div>
@@ -192,6 +196,7 @@ export default function ParkDrawer({ p, trip, state, unit, science = false, case
             <p className="small" style={{ margin: 0 }}>{changed} <span className="muted">NASA POWER daytime high, Sen's slope.</span></p>
           </div>
         )}
+        </>}
 
         {state.want.stars && (
           <div className="tp-sec">

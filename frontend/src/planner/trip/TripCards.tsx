@@ -99,9 +99,26 @@ export function TopCard({ p, i, unit, picked, caseFor, onOpen, actions, science 
   );
 }
 
-export function Row({ p, rank, unit, onOpen, actions }: { p: TripPark; rank: number; unit: Unit; onOpen: () => void; actions: React.ReactNode }) {
+export function Row({ p, rank, unit, onOpen, actions, plain = false }: {
+  p: TripPark; rank: number; unit: Unit; onOpen: () => void; actions: React.ReactNode;
+  /** No filters: just the park, no rank, score or best month. */
+  plain?: boolean;
+}) {
   const photo = photoOf(p.park.code);
   const best = p.reasons.filter((r) => r.score != null && r.score >= 0.75).slice(0, 2);
+  if (plain) {
+    return (
+      <div className="tp-row plain" role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => e.key === "Enter" && onOpen()}
+        aria-label={`${p.park.short}. Open details`}>
+        {photo ? <img src={photo.file} alt="" loading="lazy" /> : <span style={{ fontSize: 32 }}>🏞️</span>}
+        <span style={{ minWidth: 0 }}>
+          <b>{p.park.short}</b>
+          <div className="small muted">{p.park.states.join(", ")}</div>
+        </span>
+        <span className="hide-sm" onClick={(e) => e.stopPropagation()} style={{ display: "flex", gap: 6 }}>{actions}</span>
+      </div>
+    );
+  }
   return (
     <div className={`tp-row${p.ok ? "" : " off"}`} role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => e.key === "Enter" && onOpen()}
       aria-label={`${rank}. ${p.park.short}, ${p.ok ? `score ${Math.round(p.score ?? 0)}` : "misses one of your musts"}`}>

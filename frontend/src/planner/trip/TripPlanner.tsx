@@ -135,13 +135,16 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
   const found = useMemo(() => searchParks(trip?.parks ?? [], find), [trip, find]);
   const rankOf = useMemo(() => new Map((trip?.parks ?? []).map((p, i) => [p.park.id, i + 1])), [trip]);
   const nFilters = filterCount(state);
+  // No filters: nothing to rank by, so list every park A to Z with no rank or score.
+  const browse = !!trip && nFilters === 0;
+  const az = useMemo(() => [...(trip?.parks ?? [])].sort((a, b) => a.park.short.localeCompare(b.park.short)), [trip]);
   const rest = (trip?.parks ?? []).filter((p) => !shown.includes(p));
 
   // Best dates for the top 3, across every picked month.
   const [dates, setDates] = useState<DatesByMonth>({});
   const topIds = shown.slice(0, TOP).map((p) => p.park.id).join(",");
   useEffect(() => {
-    if (!trip || !topIds) return;
+    if (!trip || !topIds || browse) return;
     const ctl = new AbortController();
     fetchDates(state, state.months, topIds.split(","), ctl.signal).then(setDates).catch(() => undefined);
     return () => ctl.abort();
@@ -240,10 +243,10 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
         <div className="tp-bar">
           <div>
             <p className="tp-count" aria-live="polite">
-              {trip ? (matches.length ? `${matches.length} park${matches.length === 1 ? "" : "s"} fit your trip` : "No park fits every must") : "Finding parks…"}
+              {trip ? browse ? `All ${trip.parks.length} parks` : (matches.length ? `${matches.length} park${matches.length === 1 ? "" : "s"} fit your trip` : "No park fits every must") : "Finding parks…"}
               {loading && trip ? " · updating…" : ""}
             </p>
-            <span className="small muted">{monthsText} · ranked for {HORIZON_LABEL(state.horizon, trip)}</span>
+            <span className="small muted">{browse ? "No filters, so no ranking. Pick a mood or a filter to rank them." : `${monthsText} · ranked for ${HORIZON_LABEL(state.horizon, trip)}`}</span>
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             <div className="tp-seg" role="group" aria-label="Year">
@@ -279,13 +282,13 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
             </div>
             <div className="tp-rows">
               {found.map((p) => (
-                <Row key={p.park.id} p={p} rank={rankOf.get(p.park.id) ?? 0} unit={unit} onOpen={() => setOpen(code(p))} actions={actions(p)} />
+                <Row key={p.park.id} p={p} rank={rankOf.get(p.park.id) ?? 0} plain={browse} unit={unit} onOpen={() => setOpen(code(p))} actions={actions(p)} />
               ))}
             </div>
           </section>
         )}
 
-        {trip && trip.relax.length > 0 && matches.length < TOP && (
+        {trip && !browse && trip.relax.length > 0 && matches.length < TOP && (
           <section className="tp-relax">
             <b>Too strict? Relax one thing:</b>
             <div className="tp-chips" style={{ marginTop: 8 }}>
@@ -302,7 +305,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
           <div className="tp-top3">{[0, 1, 2].map((i) => <div key={i} className="tp-skel" aria-hidden />)}</div>
         )}
 
-        {trip && shown[0] && view === "list" && !find.trim() && (
+        {trip && !browse && shown[0] && view === "list" && !find.trim() && (
           <>
             <div className="tp-why"><b>Why #1?</b> {whySentence(shown[0], unit)}</div>
             <div className="tp-top3">
@@ -324,7 +327,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
           </>
         )}
 
-        {trip && view === "list" && !find.trim() && rest.length > 0 && (
+        {trip && !browse && view === "list" && !find.trim() && rest.length > 0 && (
           showAll ? (
             <section>
               <div className="tp-h">
@@ -333,7 +336,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
               </div>
               <div className="tp-rows">
                 {rest.map((p) => (
-                  <Row key={p.park.id} p={p} rank={rankOf.get(p.park.id) ?? 0} unit={unit} onOpen={() => setOpen(code(p))} actions={actions(p)} />
+                  <Row key={p.park.id} p={p} rank={rankOf.get(p.park.id) ?? 0} plain={browse} unit={unit} onOpen={() => setOpen(code(p))} actions={actions(p)} />
                 ))}
               </div>
             </section>
@@ -344,6 +347,14 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
           )
         )}
 
+        {trip && browse && view === "list" && !find.trim() && (
+          <div className="tp-browse">
+            {az.map((p) => (
+              <Row key={p.park.id} p={p} rank={0} plain unit={unit} onOpen={() => setOpen(code(p))} actions={actions(p)} />
+            ))}
+          </div>
+        )}
+
         {trip && view === "map" && (
           <section className="card">
             <ParkMap
@@ -352,23 +363,26 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
               }))}
               colorOf={(c) => {
                 const p = byMapId(c);
-                return !p || !p.ok ? "#b9ae97" : scoreColor(p.score);
+                return browse ? "#3d6b3a" : !p || !p.ok ? "#b9ae97" : scoreColor(p.score);
               }}
-              radius={(c) => (shown.some((p) => (p.park.code ?? p.park.id) === c) ? 8 : 4)}
+              radius={(c) => (browse ? 6 : shown.some((p) => (p.park.code ?? p.park.id) === c) ? 8 : 4)}
               tip={(c) => {
                 const p = byMapId(c);
-                return p ? `${p.ok ? `score ${Math.round(p.score ?? 0)}, best in ${MONTHS[p.best_month - 1]}` : "fails a must"}` : "";
+                if (!p || browse) return "";
+                return p.ok ? `score ${Math.round(p.score ?? 0)}, best in ${MONTHS[p.best_month - 1]}` : "fails a must";
               }}
               onPick={(c) => {
                 const p = byMapId(c);
                 if (p) setOpen(p.park.id);
               }}
             />
-            <p className="tp-note">Big dots: your top {shown.length}. Darker green = better fit. Grey = fails a must.</p>
+            <p className="tp-note">
+              {browse ? "Every park. Pick a filter to colour them by fit." : `Big dots: your top ${shown.length}. Darker green = better fit. Grey = fails a must.`}
+            </p>
           </section>
         )}
 
-        {trip && goBefore.length > 0 && (
+        {trip && !browse && goBefore.length > 0 && (
           <section className="card" style={{ background: "#fbf1e8" }}>
             <div className="tp-h">⏳ Go before it changes</div>
             <p className="small" style={{ margin: "0 0 8px" }}>These good fits score lower for the same month in the 2050 climate model.</p>
@@ -393,7 +407,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
       </div>
 
       {drawerPark && trip && (
-        <ParkDrawer p={drawerPark} trip={trip} state={state} unit={unit} science={science} caseFor={caseOf(drawerPark)}
+        <ParkDrawer p={drawerPark} trip={trip} state={state} unit={unit} science={science} plain={browse} caseFor={caseOf(drawerPark)}
           onClose={() => setOpen(null)} onCase={onCase ? (c) => onCase(c.id) : undefined} actions={actions(drawerPark)} />
       )}
     </div>

@@ -296,20 +296,18 @@ export const HORIZON_LABEL = (h: HorizonKey, t: Pick<Trip, "this_year" | "next_y
 /** Every feel band, so temperature hides no park. */
 export const ALL_FEELS = FEELS.map((f) => f.id);
 
-const sameFeels = (a: string[], b: string[]) => a.length === b.length && a.every((x) => b.includes(x));
-
-/** How many filters are set: each chip, plus warmth changed from Mild + Warm. Months and year are not filters. */
+/** How many filters are set: each chip, plus a warmth choice. Months and year are not filters. */
 export function filterCount(s: TripState): number {
-  const temp = s.custom != null || !sameFeels(s.feels, DEFAULT_STATE.feels) ? 1 : 0;
+  const temp = s.custom != null || s.feels.length > 0 ? 1 : 0;
   return Object.keys(s.want).length + Object.keys(s.avoid).length + temp;
 }
 
 /**
- * Drop every chip and reset warmth to Mild + Warm. Keeps months, year and scenario.
- * Warmth stays on so parks still rank: with every band on, every park would score 100.
+ * Drop every chip and the warmth choice. Keeps months, year and scenario.
+ * With nothing to rank by, the planner lists every park A to Z instead of ranking.
  */
 export function clearFilters(s: TripState): TripState {
-  return { ...s, feels: [...DEFAULT_STATE.feels], custom: null, want: {}, avoid: {} };
+  return { ...s, feels: [], custom: null, want: {}, avoid: {} };
 }
 
 const fold = (x: string) => x.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();

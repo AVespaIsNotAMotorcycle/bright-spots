@@ -86,7 +86,7 @@ function Feel({ state, set, unit }: Pick<Props, "state" | "set" | "unit">) {
               onClick={() => {
                 const has = state.feels.includes(f.id) && !state.custom;
                 const feels = state.custom ? [f.id] : has ? state.feels.filter((x) => x !== f.id) : [...state.feels, f.id];
-                set({ custom: null, feels: feels.length ? feels : [f.id] });
+                set({ custom: null, feels });
               }}>
               <b>{f.emoji}</b>
               {f.label}
@@ -95,6 +95,7 @@ function Feel({ state, set, unit }: Pick<Props, "state" | "set" | "unit">) {
           );
         })}
       </div>
+      {!state.custom && state.feels.length === 0 && <p className="tp-note">Any warmth. Pick one to rank parks by it.</p>}
       {state.custom && (
         <p className="tp-note">
           Custom: {temp(state.custom[0], unit)} to {temp(state.custom[1], unit)}.{" "}

@@ -87,6 +87,8 @@ export const TRIP_CSS = `
   border-radius:14px;padding:8px 12px 8px 8px;cursor:pointer;font:inherit;color:var(--text);text-align:left}
 .tp-row:hover{border-color:var(--pine)}
 .tp-row.off{opacity:.62}
+.tp-row.plain{grid-template-columns:54px 1fr auto}
+.tp-browse{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:8px}
 .tp-row.off img{filter:grayscale(.7)}
 .tp-find{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .tp-search{flex:1;min-width:200px;font:inherit;font-size:15px;padding:9px 14px 9px 36px;border-radius:999px;border:1.5px solid var(--border);

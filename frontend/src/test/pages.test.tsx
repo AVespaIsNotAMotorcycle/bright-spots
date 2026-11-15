@@ -110,6 +110,20 @@ describe("App", () => {
     expect(await screen.findByText("Pick a question", undefined, { timeout: 3000 })).toBeTruthy();
   });
 
+  it("Clear all lists every park A to Z with no ranks or scores", async () => {
+    localStorage.setItem("profile", JSON.stringify({ name: "", persona: "explorer" }));
+    history.replaceState(null, "", "#tab=planner&month=10");
+    render(<App />);
+    await screen.findByText(/Why #1\?/, undefined, { timeout: 3000 });
+    fireEvent.click(screen.getByRole("button", { name: /Clear all filters/ }));
+    expect(await screen.findByText(/^All \d+ parks$/, undefined, { timeout: 3000 })).toBeTruthy();
+    expect(screen.queryByText(/Why #1\?/)).toBeNull();
+    expect(screen.queryByRole("button", { name: /Clear all filters/ })).toBeNull();
+    const names = screen.getAllByRole("button", { name: /\. Open details$/ }).map((b) => b.getAttribute("aria-label")!);
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
+    expect(names.some((n) => /score/.test(n))).toBe(false);
+  });
+
   it("a mood sets the chips", async () => {
     localStorage.setItem("profile", JSON.stringify({ name: "", persona: "explorer" }));
     history.replaceState(null, "", "#tab=planner");
