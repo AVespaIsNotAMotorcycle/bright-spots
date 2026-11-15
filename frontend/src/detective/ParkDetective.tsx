@@ -32,10 +32,12 @@ function StudentTrendCard({
   const toF = isTemp && fahrenheit;
   const slope = toF ? t.sen_per_decade_f ?? (t.sen_per_decade != null ? t.sen_per_decade * 1.8 : null) : t.sen_per_decade;
   const unit = isTemp ? (toF ? "°F" : "°C") : meta.unit === "days" ? " days" : ` ${meta.unit}`;
-  const pill = VERDICT_PILL[t.verdict] ?? VERDICT_PILL.none;
+  // A confirmed trend can still be tiny (e.g. most years have zero 100°F days). Say so.
+  const tiny = slope != null && Math.abs(slope) < (isTemp ? 0.005 : 0.05);
+  const pill = tiny ? { t: "Barely changing", bg: "#e7e0d0", c: "#5b4a36" } : VERDICT_PILL[t.verdict] ?? VERDICT_PILL.none;
   const up = (slope ?? 0) > 0;
-  const color = t.verdict === "none" ? "var(--text-muted)" : up ? "var(--rust)" : "var(--sky)";
-  const shown = slope == null ? "–" : `${up ? "+" : slope < 0 ? "−" : ""}${Math.abs(slope) >= 10 ? Math.abs(slope).toFixed(0) : Math.abs(slope).toFixed(2)}${unit}`;
+  const color = t.verdict === "none" || tiny ? "var(--text-muted)" : up ? "var(--rust)" : "var(--sky)";
+  const shown = slope == null ? "–" : tiny ? `≈ 0${unit}` : `${up ? "+" : slope < 0 ? "−" : ""}${Math.abs(slope) >= 10 ? Math.abs(slope).toFixed(0) : Math.abs(slope).toFixed(2)}${unit}`;
   return (
     <div
       className="card"

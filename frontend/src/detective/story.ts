@@ -85,7 +85,8 @@ export function buildStory(inp: StoryInput): Story {
         ];
     lead = pickOf(leads, seed);
     const span = y1 - y0;
-    if (span >= 10) facts.push(`Over ${span} years, that adds up to about ${amt((s * span) / 10)}.`);
+    const total = (s * span) / 10;
+    if (span >= 10 && Math.abs(total) >= (isTemp ? 0.1 : 0.5)) facts.push(`Over ${span} years, that adds up to about ${amt(total)}.`);
   }
 
   // ── Last 10 years vs first 10 years ──

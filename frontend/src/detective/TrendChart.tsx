@@ -61,7 +61,8 @@ export default function TrendChart({ series: raw, trend: rawTrend, unit, label, 
   const lo = Math.min(...vals);
   const hi = Math.max(...vals);
   const pad = (hi - lo) * 0.15 || 1;
-  const domainLo = Math.floor(lo - pad);
+  // Counts and rain can never go below zero, so the axis should not either.
+  const domainLo = lo >= 0 ? Math.max(0, Math.floor(lo - pad)) : Math.floor(lo - pad);
   const domainHi = Math.ceil(hi + pad);
 
   const isTemp = unit.includes("°");
