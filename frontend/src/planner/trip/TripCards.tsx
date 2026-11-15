@@ -1,6 +1,7 @@
 // Result pieces: score ring, 12-month strip, badges, the top-3 cards and the compact rows.
 import { photoOf } from "../../detective/photos";
 import type { Case } from "../../detective/cases";
+import type { TrendTag } from "../whatChanged";
 import { EMOJI, LABEL, MONTHS, goldMonth, reasonText, scoreColor, seasonOf, type Reason, type TripPark, type Unit } from "./tripModel";
 
 export function ScoreRing({ score, size = 62, light = true }: { score: number | null; size?: number; light?: boolean }) {
@@ -63,8 +64,20 @@ export function Sci({ r }: { r: Reason }) {
   );
 }
 
-export function TopCard({ p, i, onOpen, heart, dates, why }: {
+/** "Jul days +2.1 °F since 1981": the travel month's NASA trend, tested for significance. */
+export function Trend({ t, small = false }: { t?: TrendTag | null; small?: boolean }) {
+  if (!t) return null;
+  return (
+    <span className={`tp-trend tp-trend-${t.kind}${small ? " sm" : ""}`} title={t.title}>
+      <span aria-hidden>{t.arrow}</span> {t.text}
+    </span>
+  );
+}
+
+export function TopCard({ p, i, onOpen, heart, dates, why, trend }: {
   p: TripPark; i: number; onOpen: () => void; heart: React.ReactNode;
+  /** The best month's daytime-high trend. */
+  trend?: TrendTag | null;
   /** Best 5 days in the park's best month, e.g. "Dec 3–7". */
   dates?: string;
   /** One short reason, e.g. "20°C highs, 2 rainy days". */
@@ -84,6 +97,7 @@ export function TopCard({ p, i, onOpen, heart, dates, why }: {
         <span>
           {dates && <p className="tp-card-dates">📅 <b>{dates}</b></p>}
           {why && <p className="small muted" style={{ margin: "2px 0 0" }}>{why}</p>}
+          {trend && <p style={{ margin: "6px 0 0" }}><Trend t={trend} /></p>}
         </span>
         {heart}
       </div>
@@ -115,8 +129,10 @@ export function Tile({ p, onOpen, heart }: { p: TripPark; onOpen: () => void; he
   );
 }
 
-export function Row({ p, rank, unit, onOpen, actions, plain = false }: {
+export function Row({ p, rank, unit, onOpen, actions, plain = false, trend }: {
   p: TripPark; rank: number; unit: Unit; onOpen: () => void; actions: React.ReactNode;
+  /** The best month's daytime-high trend. */
+  trend?: TrendTag | null;
   /** No filters: just the park, no rank, score or best month. */
   plain?: boolean;
 }) {
@@ -147,6 +163,7 @@ export function Row({ p, rank, unit, onOpen, actions, plain = false }: {
             ? best.map((r) => `${EMOJI(r.key)} ${reasonText(r, unit)}`).join(" · ")
             : `Misses: ${p.failed.map((k) => `${EMOJI(k)} ${LABEL(k)}`).join(", ")}`}
         </div>
+        <Trend t={trend} small />
       </span>
       <span className="hide-sm" onClick={(e) => e.stopPropagation()} style={{ display: "flex", gap: 6 }}>{actions}</span>
       <ScoreRing score={p.score} size={46} light={false} />

@@ -135,6 +135,11 @@ export const TRIP_CSS = `
 .tp-mlist li{display:grid;grid-template-columns:1fr auto 36px;gap:10px;padding:7px 4px;border-bottom:1px solid var(--border);font-size:14px}
 .tp-mlist li span:last-child{text-align:right}
 .tp-mlist li.top b{color:var(--pine)}
+.tp-trend{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:500;padding:2px 9px;border-radius:99px;
+  background:var(--sand);color:var(--bark-2);border:1px solid var(--stone);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.tp-trend.sm{font-size:11.5px;padding:1px 8px;margin-top:3px}
+.tp-trend-real{color:var(--clay);border-color:color-mix(in srgb,var(--clay) 35%,transparent)}
+.tp-trend-maybe{color:var(--bark)}
 .tp-card-dates{font-size:13px;margin:0;color:var(--text)}
 .tp-card-dates b{color:var(--pine)}
 /* Compare tray */

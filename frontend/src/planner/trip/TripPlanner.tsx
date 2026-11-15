@@ -36,7 +36,7 @@ import {
   type TripState,
   type Unit,
 } from "./tripModel";
-import { whatChanged } from "../whatChanged";
+import { trendTag, whatChanged } from "../whatChanged";
 import { fetchDates, fmtWindow, type DatesByMonth } from "./bestDates";
 import { loadAtlas, type Atlas } from "../../atlas/model";
 
@@ -174,6 +174,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
   // The map is keyed by NPS code (Sequoia and Kings Canyon share one); take the better-ranked park.
   const byMapId = (c: string) => trip?.parks.find((p) => (p.park.code ?? p.park.id) === c);
   const changed = (p: TripPark) => whatChanged(atlas, p.park.id, p.best_month, unit === "F");
+  const trendOf = (p: TripPark) => trendTag(atlas, p.park.id, p.best_month, unit === "F");
 
   const actions = (p: TripPark) => {
     const c = code(p);
@@ -293,7 +294,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
             </div>
             <div className="tp-rows">
               {found.map((p) => (
-                <Row key={p.park.id} p={p} rank={rankOf.get(p.park.id) ?? 0} plain={browse} unit={unit} onOpen={() => setOpen(code(p))} actions={heart(p)} />
+                <Row key={p.park.id} p={p} rank={rankOf.get(p.park.id) ?? 0} plain={browse} unit={unit} onOpen={() => setOpen(code(p))} actions={heart(p)} trend={browse ? null : trendOf(p)} />
               ))}
             </div>
           </section>
@@ -321,7 +322,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
             <div className="tp-why"><b>Why #1?</b> {whySentence(shown[0], unit)}</div>
             <div className="tp-top3">
               {shown.slice(0, TOP).map((p, i) => (
-                <TopCard key={p.park.id} p={p} i={i} dates={datesOf(p)} why={shortWhy(p, unit)} heart={heart(p)}
+                <TopCard key={p.park.id} p={p} i={i} dates={datesOf(p)} why={shortWhy(p, unit)} trend={trendOf(p)} heart={heart(p)}
                   onOpen={() => setOpen(code(p))} />
               ))}
             </div>
@@ -330,7 +331,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
                 <div className="tp-h">{shown.length - TOP} more good fits</div>
                 <div className="tp-rows">
                   {shown.slice(TOP).map((p, i) => (
-                    <Row key={p.park.id} p={p} rank={i + TOP + 1} unit={unit} onOpen={() => setOpen(code(p))} actions={heart(p)} />
+                    <Row key={p.park.id} p={p} rank={i + TOP + 1} unit={unit} onOpen={() => setOpen(code(p))} actions={heart(p)} trend={browse ? null : trendOf(p)} />
                   ))}
                 </div>
               </section>
@@ -347,7 +348,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
               </div>
               <div className="tp-rows">
                 {rest.map((p) => (
-                  <Row key={p.park.id} p={p} rank={rankOf.get(p.park.id) ?? 0} plain={browse} unit={unit} onOpen={() => setOpen(code(p))} actions={heart(p)} />
+                  <Row key={p.park.id} p={p} rank={rankOf.get(p.park.id) ?? 0} plain={browse} unit={unit} onOpen={() => setOpen(code(p))} actions={heart(p)} trend={browse ? null : trendOf(p)} />
                 ))}
               </div>
             </section>
