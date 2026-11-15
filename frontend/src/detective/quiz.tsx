@@ -9,7 +9,7 @@ import TrendChart from "./TrendChart";
 import type { Side, Step } from "./cases";
 import { ANIMS, CARD_CSS, themeFor } from "./cardTheme";
 import { play } from "./sound";
-import { SoundToggle } from "./StudentWidgets";
+import { SoundToggle, trailWord, trees } from "./StudentWidgets";
 import {
   QUESTION_SECONDS, cellOf, fmtRate, makeFact, parkName, shown, sideLabel, useTrends,
 } from "./games";
@@ -362,7 +362,7 @@ function TimerBar({ ms }: { ms: number }) {
   );
 }
 
-const BITS = ["🎉", "⭐", "✨", "🌟", "🍃", "🎊"];
+const BITS = ["🍃", "🌿", "🍂", "🌼", "🦋", "🍁"];
 function Confetti() {
   return (
     <div style={{ position: "absolute", left: "50%", top: 70, pointerEvents: "none" }} aria-hidden>
@@ -476,7 +476,7 @@ export default function QuizCard({
             <span aria-hidden style={{ position: "absolute", right: 16, top: 44, fontSize: 70, opacity: 0.18 }}>{t.emoji[0]}</span>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{ flex: 1 }}>{!answer ? <TimerBar ms={ms} /> : <div style={{ height: 10 }} />}</div>
-              {streak >= 1 && <span title="Right answers in a row" style={{ fontWeight: 900 }}>🔥 {streak}</span>}
+              {streak >= 1 && <span title="Right answers in a row" style={{ fontWeight: 900 }}>🌲 {streak}</span>}
               <SoundToggle />
             </div>
             <div style={{ position: "relative" }}>
@@ -507,7 +507,7 @@ export default function QuizCard({
             <div style={{ fontSize: 46, lineHeight: 1 }}>{back.emoji}</div>
             <h3 style={{ margin: 0, fontSize: 26, fontWeight: 900 }}>{back.head}</h3>
             {runStreak >= 2 && (
-              <div style={{ fontWeight: 800, fontSize: 15 }}>🔥 {runStreak} right in a row!</div>
+              <div style={{ fontWeight: 800, fontSize: 15 }}>{trees(runStreak)} {trailWord(runStreak)} {runStreak} in a row</div>
             )}
             {answer && (
               <div style={{ background: "rgba(255,255,255,.65)", borderRadius: 12, padding: "10px 14px", fontSize: 15 }}>
