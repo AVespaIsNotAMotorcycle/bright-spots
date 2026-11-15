@@ -212,7 +212,7 @@ export default function App() {
           />
         )}
         {tab === "home" && (
-          <Home persona={profile.persona} name={profile.name} atlas={atlas} onGo={go} />
+          <Home research={profile.persona === "researcher"} name={profile.name} atlas={atlas} onGo={go as never} />
         )}
         {tab === "analogs" && (
           <Analogs
