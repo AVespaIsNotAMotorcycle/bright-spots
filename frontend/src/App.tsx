@@ -47,6 +47,11 @@ export default function App() {
     if (!nav.tab) replace({ tab: "home" });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Back/forward while the profile form is open closes the form and shows that page.
+  useEffect(() => {
+    setEditing(false);
+  }, [nav]);
+
   useEffect(() => {
     if (atlas) return;
     fetch("/api/trends/atlas")
@@ -178,7 +183,7 @@ export default function App() {
         )}
         {tab === "planner" && (
           <PlannerShadow>
-            <Planner unit={unit} setUnit={setUnit} />
+            <Planner unit={unit} setUnit={setUnit} month={nav.month} />
           </PlannerShadow>
         )}
       </main>

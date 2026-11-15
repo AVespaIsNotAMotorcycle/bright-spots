@@ -57,15 +57,23 @@ export function useNav() {
 
   // Stay in sync when the user presses back/forward.
   useEffect(() => {
+    // hashchange also covers a hash typed in the address bar or an <a href="#...">.
     const handler = () => setNav(parseHash());
     window.addEventListener("popstate", handler);
-    return () => window.removeEventListener("popstate", handler);
+    window.addEventListener("hashchange", handler);
+    return () => {
+      window.removeEventListener("popstate", handler);
+      window.removeEventListener("hashchange", handler);
+    };
   }, []);
 
   const navigate = useCallback((next: Partial<NavState>) => {
     const hash = toHash(next);
+    // Same place again (e.g. clicking the active tab): no extra back stop.
+    if (hash === (location.hash || "#")) return;
     history.pushState(null, "", hash);
     setNav(parseHash());
+    window.scrollTo(0, 0);
   }, []);
 
   const replace = useCallback((next: Partial<NavState>) => {

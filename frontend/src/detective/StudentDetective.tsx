@@ -253,12 +253,23 @@ export default function StudentDetective({
   const [result, setResult] = useState<CaseResult | null>(null);
   const [streak, setStreak] = useState(0); // right answers in a row, this case
 
-  // Sync from URL (back/forward landed on student tab with a case in URL).
+  // Sync from URL (back/forward, refresh, shared link). step === steps.length means "case closed".
   useEffect(() => {
     const c = navCaseId ? (CASES.find((x) => x.id === navCaseId) ?? null) : null;
+    const s = navStep ?? 0;
     setActiveCase(c);
-    setStepIndex(navStep ?? 0);
-    if ((navStep ?? 0) === 0) { setScores({}); setResult(null); }
+    if (c && s >= c.steps.length) {
+      // Landed on the finished screen without a fresh result (forward or refresh): show the best saved one.
+      const saved = loadProgress()[c.id];
+      if (saved) {
+        setResult((r) => r ?? saved);
+        setStepIndex(c.steps.length - 1);
+        return;
+      }
+    }
+    setResult(null);
+    setStepIndex(c ? Math.min(s, c.steps.length - 1) : 0);
+    if (s === 0) { setScores({}); setStreak(0); }
   }, [navCaseId, navStep]);
 
   function startCase(c: Case) {
@@ -284,6 +295,7 @@ export default function StudentDetective({
       const max = vals.reduce((n, v) => n + v.max, 0);
       if (max > 0) {
         setResult(saveResult(activeCase.id, vals.reduce((n, v) => n + v.pts, 0), max));
+        onNavChange?.(activeCase.id, activeCase.steps.length);
       } else {
         backToCases();
       }

@@ -112,9 +112,12 @@ function Suggestion({
   );
 }
 
-export default function Planner({ unit, setUnit }: { unit: Unit; setUnit: (u: Unit) => void }) {
+export default function Planner({
+  unit, setUnit, month,
+}: { unit: Unit; setUnit: (u: Unit) => void; month?: number | null }) {
+  const validMonth = month != null && month >= 1 && month <= 12 ? month : null;
   const [prefs, setPrefs] = useState<Prefs>({
-    month: DEFAULT_MONTH,
+    month: validMonth ?? DEFAULT_MONTH,
     tLo: fToC(65),
     tHi: fToC(82),
     rhMax: null,
@@ -124,6 +127,10 @@ export default function Planner({ unit, setUnit }: { unit: Unit; setUnit: (u: Un
     snowmelt: false,
     scenario: "ssp245",
   });
+  // A month in the URL (Home month buttons, case links, back/forward) picks the month.
+  useEffect(() => {
+    if (validMonth != null) setPrefs((p) => (p.month === validMonth ? p : { ...p, month: validMonth }));
+  }, [validMonth]);
   const [place, setPlace] = useState<Place | null>(() => load<Place | null>("planner.place", null));
   const [selected, setSelected] = useState<string[]>(() => load<string[]>("planner.selected", []));
   const [rankBy, setRankBy] = useState<HorizonKey>("next_year");
