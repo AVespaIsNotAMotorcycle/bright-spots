@@ -1,7 +1,7 @@
 // Result pieces: score ring, 12-month strip, badges, the top-3 cards and the compact rows.
 import { photoOf } from "../../detective/photos";
 import type { Case } from "../../detective/cases";
-import { EMOJI, MONTHS, reasonText, scoreColor, seasonOf, type Reason, type TripPark, type Unit } from "./tripModel";
+import { EMOJI, LABEL, MONTHS, reasonText, scoreColor, seasonOf, type Reason, type TripPark, type Unit } from "./tripModel";
 
 export function ScoreRing({ score, size = 62, light = true }: { score: number | null; size?: number; light?: boolean }) {
   const r = size / 2 - 5;
@@ -99,14 +99,16 @@ export function Row({ p, rank, unit, onOpen, actions }: { p: TripPark; rank: num
   const photo = photoOf(p.park.code);
   const best = p.reasons.filter((r) => r.score != null && r.score >= 0.75).slice(0, 2);
   return (
-    <div className="tp-row" role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => e.key === "Enter" && onOpen()}
-      aria-label={`${rank}. ${p.park.short}, score ${Math.round(p.score ?? 0)}`}>
+    <div className={`tp-row${p.ok ? "" : " off"}`} role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => e.key === "Enter" && onOpen()}
+      aria-label={`${rank}. ${p.park.short}, ${p.ok ? `score ${Math.round(p.score ?? 0)}` : "misses one of your musts"}`}>
       <span className="muted small" style={{ textAlign: "right" }}>{rank}</span>
       {photo ? <img src={photo.file} alt="" loading="lazy" /> : <span style={{ fontSize: 32 }}>🏞️</span>}
       <span style={{ minWidth: 0 }}>
         <b>{p.park.short}</b> <span className="micro muted">{p.park.states.join(", ")} · {MONTHS[p.best_month - 1]}</span>
         <div className="small muted" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-          {best.map((r) => `${EMOJI(r.key)} ${reasonText(r, unit)}`).join(" · ")}
+          {p.ok
+            ? best.map((r) => `${EMOJI(r.key)} ${reasonText(r, unit)}`).join(" · ")
+            : `Misses: ${p.failed.map((k) => `${EMOJI(k)} ${LABEL(k)}`).join(", ")}`}
         </div>
       </span>
       <span className="hide-sm" onClick={(e) => e.stopPropagation()} style={{ display: "flex", gap: 6 }}>{actions}</span>

@@ -19,6 +19,7 @@ const Seasons = lazy(() => import("./research/Seasons"));
 const Community = lazy(() => import("./research/Community"));
 const Analogs = lazy(() => import("./research/Analogs"));
 const Passport = lazy(() => import("./detective/PassportPage"));
+const SavedPage = lazy(() => import("./detective/SavedPage"));
 import { PARK_NAMES } from "./detective/parkNames";
 import { PERSONAS, TAB_LABEL, loadProfile, saveProfile, type Profile, type Tab } from "./profile";
 import { useNav, type NavState } from "./useNav";
@@ -297,10 +298,17 @@ export default function App() {
             }
           />
         )}
+        {tab === "saved" && (
+          <SavedPage
+            onPlan={(park, month) => go("planner", { park, ...(month ? { month } : {}) })}
+            onExplore={(park) => go("explore", { park })}
+          />
+        )}
         {tab === "passport" && (
           <Passport
             onCase={(c) => go("student", { caseId: c.id, step: 0 })}
             onExplore={(park) => go("explore", { park })}
+            onSaved={() => go("saved")}
           />
         )}
         {tab === "map" && (

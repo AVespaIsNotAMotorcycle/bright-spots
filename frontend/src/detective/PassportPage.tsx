@@ -122,10 +122,10 @@ export function PassportPreview({ onOpen, onCase }: { onOpen: () => void; onCase
 }
 
 /** The full passport: every park, stamped or waiting. */
-export default function Passport({ onCase, onExplore }: Go) {
+export default function Passport({ onCase, onExplore, onSaved }: Go & { onSaved?: () => void }) {
   const { progress, got, byPark } = useStamps();
   const [pick, setPick] = useState<string | null>(null);
-  const [wish, toggleWish] = useWishlist();
+  const [wish] = useWishlist();
   const all = Object.keys(PARK_NAMES).sort((a, b) => PARK_NAMES[a].localeCompare(PARK_NAMES[b]));
   const casePark = all.filter((p) => byPark.has(p));
   const noCase = all.filter((p) => !byPark.has(p));
@@ -173,18 +173,10 @@ export default function Passport({ onCase, onExplore }: Go) {
         ))}
       </div>
 
-      {wish.length > 0 && (
-        <section>
-          <div className="section-title" style={{ marginBottom: 6 }}>♡ Want to go ({wish.length})</div>
-          <p className="small muted" style={{ margin: "0 0 10px" }}>Saved from the Trip Planner. Solve a case there to stamp it.</p>
-          <div className="pp-row">
-            {wish.map((p) => (
-              <Stamp key={p} park={p} solved={got.get(p) ?? []} onClick={() => (byPark.has(p) ? setPick(p) : onExplore(p))}
-                title={got.has(p) ? "Stamped and on your list" : "On your want-to-go list"} />
-            ))}
-          </div>
-          <button className="link-btn small" onClick={() => wish.forEach(toggleWish)}>Clear the list</button>
-        </section>
+      {wish.length > 0 && onSaved && (
+        <button className="link-btn small" style={{ alignSelf: "flex-start" }} onClick={onSaved}>
+          ♥ {wish.length} saved park{wish.length === 1 ? "" : "s"} →
+        </button>
       )}
 
       <section>

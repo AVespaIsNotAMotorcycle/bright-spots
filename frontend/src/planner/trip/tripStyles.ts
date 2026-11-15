@@ -86,6 +86,14 @@ export const TRIP_CSS = `
 .tp-row{display:grid;grid-template-columns:28px 54px 1fr auto auto;gap:12px;align-items:center;border:1px solid var(--border);background:var(--surface);
   border-radius:14px;padding:8px 12px 8px 8px;cursor:pointer;font:inherit;color:var(--text);text-align:left}
 .tp-row:hover{border-color:var(--pine)}
+.tp-row.off{opacity:.62}
+.tp-row.off img{filter:grayscale(.7)}
+.tp-find{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tp-search{flex:1;min-width:200px;font:inherit;font-size:15px;padding:9px 14px 9px 36px;border-radius:999px;border:1.5px solid var(--border);
+  background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23887' stroke-width='2'%3E%3Ccircle cx='7' cy='7' r='5'/%3E%3Cpath d='m11 11 4 4'/%3E%3C/svg%3E") 13px center no-repeat;color:var(--text)}
+.tp-search:focus{outline:none;border-color:var(--pine)}
+.tp-clear{border:0;background:none;color:var(--rust);font:inherit;font-size:13px;font-weight:700;cursor:pointer;text-decoration:underline;padding:4px}
+.tp-more{align-self:center;margin-top:4px}
 .tp-row img{width:54px;height:54px;border-radius:12px;object-fit:cover}
 .tp-relax{border:2px dashed var(--rust);border-radius:16px;padding:12px 16px;background:var(--rust-tint)}
 .tp-skel{border-radius:20px;height:300px;background:linear-gradient(90deg,var(--surface-2),var(--surface),var(--surface-2));background-size:200% 100%;animation:tpsk 1.3s infinite}

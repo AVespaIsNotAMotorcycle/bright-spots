@@ -16,6 +16,9 @@ import { TRIP_CSS } from "./tripStyles";
 import {
   DEFAULT_STATE,
   HORIZON_LABEL,
+  clearFilters,
+  filterCount,
+  searchParks,
   LABEL,
   MONTHS,
   MOODS,
@@ -75,6 +78,8 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
   const [mood, setMood] = useState<string | null>(null);
   const [wish, toggleWish] = useWishlist();
   const [atlas, setAtlas] = useState<Atlas | null>(null);
+  const [find, setFind] = useState("");
+  const [showAll, setShowAll] = useState(false);
   const opened = useRef<string | null>(null);
 
   useEffect(() => {
@@ -126,6 +131,10 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
   const byId = useMemo(() => new Map((trip?.parks ?? []).map((p) => [p.park.id, p])), [trip]);
   const matches = useMemo(() => (trip?.parks ?? []).filter((p) => p.ok), [trip]);
   const shown = matches.slice(0, TOP + MORE);
+  const found = useMemo(() => searchParks(trip?.parks ?? [], find), [trip, find]);
+  const rankOf = useMemo(() => new Map((trip?.parks ?? []).map((p, i) => [p.park.id, i + 1])), [trip]);
+  const nFilters = filterCount(state);
+  const rest = (trip?.parks ?? []).filter((p) => !shown.includes(p));
 
   // Open the park a case sent us to, once.
   useEffect(() => {
@@ -148,7 +157,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
     const inCmp = compare.includes(c);
     return (
       <>
-        <button className="tp-act" aria-pressed={wish.includes(w)} onClick={() => toggleWish(w)} title="Save to your passport's want-to-go list">
+        <button className="tp-act" aria-pressed={wish.includes(w)} onClick={() => toggleWish(w)} title="Save to your Saved tab">
           {wish.includes(w) ? "♥ Saved" : "♡ Want to go"}
         </button>
         <button className="tp-act" aria-pressed={inCmp} disabled={!inCmp && compare.length >= MAX_COMPARE}
@@ -185,7 +194,10 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
       <aside className={`tp-side${sheet ? " open" : ""}`} aria-label="Your trip">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h2 style={{ margin: 0, fontFamily: "var(--font-display)", color: "var(--pine)", fontSize: 22 }}>Your trip</h2>
-          <button className="tp-act tp-edit" onClick={() => setSheet(false)}>Done</button>
+          <span style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            {nFilters > 0 && <button className="tp-clear" onClick={() => set(clearFilters(state))}>Clear all</button>}
+            <button className="tp-act tp-edit" onClick={() => setSheet(false)}>Done</button>
+          </span>
         </div>
         <TripSettings state={state} set={set} unit={unit} setUnit={setUnit} />
       </aside>
@@ -232,7 +244,31 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
           </div>
         </div>
 
+        <div className="tp-find">
+          <input type="search" className="tp-search" placeholder="Search a park or state" aria-label="Search a park or state"
+            value={find} onChange={(e) => setFind(e.target.value)} />
+          {nFilters > 0 && (
+            <button className="tp-clear" onClick={() => { set(clearFilters(state)); play("tick"); }}>
+              Clear all filters ({nFilters})
+            </button>
+          )}
+        </div>
+
         {error && <p className="error">Could not load parks: {error}</p>}
+
+        {trip && find.trim() && (
+          <section aria-live="polite">
+            <div className="tp-h">
+              {found.length ? `${found.length} park${found.length === 1 ? "" : "s"} match “${find.trim()}”` : `No park matches “${find.trim()}”`}
+              <button className="tp-clear" onClick={() => setFind("")}>Clear search</button>
+            </div>
+            <div className="tp-rows">
+              {found.map((p) => (
+                <Row key={p.park.id} p={p} rank={rankOf.get(p.park.id) ?? 0} unit={unit} onOpen={() => setOpen(code(p))} actions={actions(p)} />
+              ))}
+            </div>
+          </section>
+        )}
 
         {trip && trip.relax.length > 0 && matches.length < TOP && (
           <section className="tp-relax">
@@ -251,7 +287,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
           <div className="tp-top3">{[0, 1, 2].map((i) => <div key={i} className="tp-skel" aria-hidden />)}</div>
         )}
 
-        {trip && shown[0] && view === "list" && (
+        {trip && shown[0] && view === "list" && !find.trim() && (
           <>
             <div className="tp-why"><b>Why #1?</b> {whySentence(shown[0], unit)}</div>
             <div className="tp-top3">
@@ -271,6 +307,26 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
               </section>
             )}
           </>
+        )}
+
+        {trip && view === "list" && !find.trim() && rest.length > 0 && (
+          showAll ? (
+            <section>
+              <div className="tp-h">
+                All other parks ({rest.length})
+                <button className="tp-clear" onClick={() => setShowAll(false)}>Hide</button>
+              </div>
+              <div className="tp-rows">
+                {rest.map((p) => (
+                  <Row key={p.park.id} p={p} rank={rankOf.get(p.park.id) ?? 0} unit={unit} onOpen={() => setOpen(code(p))} actions={actions(p)} />
+                ))}
+              </div>
+            </section>
+          ) : (
+            <button className="btn-ghost tp-more" onClick={() => setShowAll(true)}>
+              See all {trip.parks.length} parks
+            </button>
+          )
         )}
 
         {trip && view === "map" && (

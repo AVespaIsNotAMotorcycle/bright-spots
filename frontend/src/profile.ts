@@ -23,6 +23,7 @@ export const TAB_LABEL: Record<Tab, string> = {
   home: "🏠 Home",
   student: "🔍 Cases",
   passport: "🎫 Passport",
+  saved: "♥ Saved",
   explore: "🧭 Park Explorer",
   planner: "🗓 Trip Planner",
   atlas: "📊 Trend Atlas",
@@ -43,7 +44,7 @@ export const PERSONAS: Record<Persona, PersonaInfo> = {
     tagline: "Solve park mysteries, then plan the trip",
     blurb: "Crack cases with real NASA data. Each case stamps your park passport.",
     bullets: ["17 detective cases, plus daily games", "Collect a passport stamp for every park", "Pick a month, get a score for every park"],
-    tabs: ["home", "planner", "student", "explore", "passport"],
+    tabs: ["home", "planner", "saved", "student", "explore", "passport"],
   },
   researcher: {
     label: "Researcher",

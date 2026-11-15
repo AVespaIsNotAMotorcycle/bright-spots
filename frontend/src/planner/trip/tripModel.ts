@@ -292,3 +292,28 @@ export function scoreColor(s: number | null): string {
 
 export const HORIZON_LABEL = (h: HorizonKey, t: Pick<Trip, "this_year" | "next_year"> | null) =>
   h === "this_year" ? `${t?.this_year ?? ""} measured` : h === "next_year" ? `${t?.next_year ?? ""} forecast` : "2050 model";
+
+/** Every feel band, so temperature hides no park. */
+export const ALL_FEELS = FEELS.map((f) => f.id);
+
+/** How many filters are set: each chip, plus a narrowed temperature. Months and year are not filters. */
+export function filterCount(s: TripState): number {
+  const temp = s.custom != null || ALL_FEELS.some((f) => !s.feels.includes(f)) ? 1 : 0;
+  return Object.keys(s.want).length + Object.keys(s.avoid).length + temp;
+}
+
+/** Drop every chip and open the temperature to all feels. Keeps months, year and scenario. */
+export function clearFilters(s: TripState): TripState {
+  return { ...s, feels: [...ALL_FEELS], custom: null, want: {}, avoid: {} };
+}
+
+const fold = (x: string) => x.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+/** Parks whose name, short name, state or NPS code contains the text. Name starts first. */
+export function searchParks(parks: TripPark[], text: string): TripPark[] {
+  const t = fold(text.trim());
+  if (!t) return [];
+  const hay = (p: TripPark) => fold([p.park.name, p.park.short, p.park.code ?? "", ...p.park.states].join(" "));
+  const starts = (p: TripPark) => fold(p.park.short).startsWith(t);
+  return parks.filter((p) => hay(p).includes(t)).sort((a, b) => Number(starts(b)) - Number(starts(a)));
+}
