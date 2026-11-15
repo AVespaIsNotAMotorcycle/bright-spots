@@ -1,20 +1,24 @@
 /**
- * Hash-based navigation that makes the browser back/forward buttons work.
+ * Path-based navigation that makes the browser back/forward buttons work.
  *
- * URL shape:  #tab=student&case=crater-lake-warming&step=2
- *             #tab=atlas&park=crla
- *             #tab=planner&month=6
+ * URL shape:  /mysteries?case=crater-lake-warming&step=2
+ *             /research/trend-atlas?park=crla
+ *             /plan?month=6&park=zion
  *
  * Rules:
  *  - navigate()  pushes a new history entry  (back button returns here)
  *  - replace()   replaces the current entry   (no extra back stop)
  *  - Reading the URL on mount restores the right view after a refresh or share.
+ *  - Old links (#tab=planner&month=6) still open, and are rewritten to the new path.
+ * The server sends index.html for any unknown path (backend/app/main.py), so deep links load.
  */
 
 import { useCallback, useEffect, useState } from "react";
 
+export type Tab = "home" | "student" | "passport" | "saved" | "explore" | "atlas" | "planner" | "map" | "families" | "opposites" | "compare" | "robust" | "seasons" | "analogs" | "community";
+
 export interface NavState {
-  tab: "home" | "student" | "passport" | "saved" | "explore" | "atlas" | "planner" | "map" | "families" | "opposites" | "compare" | "robust" | "seasons" | "analogs" | "community" | null;
+  tab: Tab | null;
   caseId: string | null;
   step: number | null;
   park: string | null;
@@ -26,6 +30,26 @@ export interface NavState {
   q: string | null;
 }
 
+/** Each tab's path. Research tools live under /research/, named as in the menu. */
+export const PATHS: Record<Tab, string> = {
+  home: "/",
+  planner: "/plan",
+  student: "/mysteries",
+  saved: "/saved",
+  passport: "/passport",
+  explore: "/explore",
+  atlas: "/research/trend-atlas",
+  map: "/research/topo-map",
+  analogs: "/research/analog-sites",
+  families: "/research/park-families",
+  opposites: "/research/odd-one-out",
+  seasons: "/research/season-shifts",
+  compare: "/research/head-to-head",
+  robust: "/research/robustness",
+  community: "/research/campfire",
+};
+const BY_PATH = new Map(Object.entries(PATHS).map(([t, p]) => [p, t as Tab]));
+
 /** A whole number in [lo, hi], else null (guards bad links like step=abc). */
 function intIn(v: string | null, lo: number, hi: number): number | null {
   if (v == null || v === "") return null;
@@ -33,10 +57,9 @@ function intIn(v: string | null, lo: number, hi: number): number | null {
   return Number.isInteger(n) && n >= lo && n <= hi ? n : null;
 }
 
-export function parseHash(): NavState {
-  const p = new URLSearchParams(location.hash.slice(1));
+function fromParams(tab: Tab | null, p: URLSearchParams): NavState {
   return {
-    tab:    (p.get("tab") as NavState["tab"]) ?? null,
+    tab,
     caseId: p.get("case"),
     step:   intIn(p.get("step"), 0, 999),
     park:   p.get("park"),
@@ -48,9 +71,23 @@ export function parseHash(): NavState {
   };
 }
 
-export function toHash(s: Partial<NavState>): string {
+/** An old-style #tab=... link, if the URL has one. */
+const legacyHash = (): URLSearchParams | null => {
+  const p = new URLSearchParams(location.hash.slice(1));
+  return p.has("tab") ? p : null;
+};
+
+/** Where the URL points. "/" is Home; an unknown path gives tab "unknown", which App turns into Home. */
+export function parseUrl(): NavState {
+  const old = legacyHash();
+  if (old) return fromParams(old.get("tab") as Tab, old);
+  const path = location.pathname.replace(/\/+$/, "") || "/";
+  return fromParams(BY_PATH.get(path) ?? ("unknown" as Tab), new URLSearchParams(location.search));
+}
+
+/** Path plus query for a place in the app, e.g. "/plan?month=6". */
+export function toUrl(s: Partial<NavState>): string {
   const p = new URLSearchParams();
-  if (s.tab)    p.set("tab", s.tab);
   if (s.caseId) p.set("case", s.caseId);
   if (s.step != null) p.set("step", String(s.step));
   if (s.park)   p.set("park", s.park);
@@ -60,16 +97,27 @@ export function toHash(s: Partial<NavState>): string {
   if (s.per)    p.set("per", s.per);
   if (s.q)      p.set("trip", s.q);
   const str = p.toString();
-  return str ? "#" + str : "#";
+  return (s.tab ? PATHS[s.tab] ?? "/" : "/") + (str ? "?" + str : "");
 }
 
+const here = () => location.pathname + location.search;
+
 export function useNav() {
-  const [nav, setNav] = useState<NavState>(parseHash);
+  const [nav, setNav] = useState<NavState>(parseUrl);
+
+  // Rewrite an old #tab=... link to its path, keeping the same view.
+  useEffect(() => {
+    if (legacyHash()) history.replaceState(null, "", toUrl(parseUrl()));
+  }, []);
 
   // Stay in sync when the user presses back/forward.
   useEffect(() => {
-    // hashchange also covers a hash typed in the address bar or an <a href="#...">.
-    const handler = () => setNav(parseHash());
+    // hashchange covers an old-style link typed in the address bar.
+    const handler = () => {
+      const s = parseUrl();
+      if (legacyHash()) history.replaceState(null, "", toUrl(s));
+      setNav(s);
+    };
     window.addEventListener("popstate", handler);
     window.addEventListener("hashchange", handler);
     return () => {
@@ -79,18 +127,17 @@ export function useNav() {
   }, []);
 
   const navigate = useCallback((next: Partial<NavState>) => {
-    const hash = toHash(next);
+    const url = toUrl(next);
     // Same place again (e.g. clicking the active tab): no extra back stop.
-    if (hash === (location.hash || "#")) return;
-    history.pushState(null, "", hash);
-    setNav(parseHash());
+    if (url === here() && !location.hash) return;
+    history.pushState(null, "", url);
+    setNav(parseUrl());
     window.scrollTo(0, 0);
   }, []);
 
   const replace = useCallback((next: Partial<NavState>) => {
-    const hash = toHash(next);
-    history.replaceState(null, "", hash);
-    setNav(parseHash());
+    history.replaceState(null, "", toUrl(next));
+    setNav(parseUrl());
   }, []);
 
   return { nav, navigate, replace };

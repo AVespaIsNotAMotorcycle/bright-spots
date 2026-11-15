@@ -127,7 +127,7 @@ export default function App() {
     if (!nav.tab) replace({ tab: "home" });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // An unknown tab in the URL (#tab=foo) shows Home, so fix the URL to match.
+  // An unknown path (/foo) or tab (#tab=foo) shows Home, so fix the URL to match.
   useEffect(() => {
     if (nav.tab && !allowedTabs(true).includes(nav.tab)) replace({ tab: "home" });
   }, [nav.tab, replace]);
@@ -221,7 +221,7 @@ export default function App() {
         </nav>
         <div className="nav-right">
           {research && (
-            <Menu label={<>{RESEARCH_TABS.includes(tab) ? `Research: ${TAB_LABEL[tab]}` : "Research"} ▾</>} active={RESEARCH_TABS.includes(tab)}>
+            <Menu label={<>{RESEARCH_TABS.includes(tab) ? `Research: ${TAB_LABEL[tab]}` : "Research"} ▾</>} active={RESEARCH_TABS.includes(tab)} align="right">
               {(close) =>
                 RESEARCH_TABS.map((t) => (
                   <button key={t} type="button" role="menuitem" className={t === tab ? "on" : undefined} onClick={() => { close(); go(t); }}>

@@ -2,7 +2,7 @@
 // Navigation: hash round-trip and which tabs exist for each profile.
 import { beforeEach, describe, expect, it } from "vitest";
 import { EXPLORER_TABS, RESEARCH_TABS, TAB_LABEL, allowedTabs, migrate } from "../profile";
-import { parseHash, toHash, type NavState } from "../useNav";
+import { PATHS, parseUrl as parseHash, toUrl as toHash, type NavState } from "../useNav";
 
 beforeEach(() => history.replaceState(null, "", "/"));
 
@@ -31,7 +31,7 @@ describe("profile migration", () => {
   });
 });
 
-describe("hash round-trip", () => {
+describe("URL round-trip", () => {
   const full: NavState = { tab: "planner", caseId: "c1", step: 0, park: "crla", month: 6, park2: "zion", v: "tmax", per: "annual", q: "abc" };
   it("keeps every parameter, including step 0", () => {
     history.replaceState(null, "", toHash(full));
@@ -49,8 +49,19 @@ describe("hash round-trip", () => {
     history.replaceState(null, "", "#month=13");
     expect(parseHash().month).toBeNull();
   });
-  it("an empty hash is all null", () => {
-    expect(toHash({})).toBe("#");
-    expect(parseHash().tab).toBeNull();
+  it("an empty URL is Home", () => {
+    expect(toHash({})).toBe("/");
+    expect(parseHash().tab).toBe("home");
+  });
+  it("every tab has its own path, and paths read back", () => {
+    expect(toHash({ tab: "planner", month: 6, park: "zion" })).toBe("/plan?park=zion&month=6");
+    for (const [tab, path] of Object.entries(PATHS)) {
+      history.replaceState(null, "", path);
+      expect(parseHash().tab).toBe(tab);
+    }
+    history.replaceState(null, "", "/research/trend-atlas?park=crla");
+    expect(parseHash()).toMatchObject({ tab: "atlas", park: "crla" });
+    history.replaceState(null, "", "/nope");
+    expect(parseHash().tab).toBe("unknown");
   });
 });

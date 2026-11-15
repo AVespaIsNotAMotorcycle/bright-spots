@@ -103,7 +103,7 @@ describe("App", () => {
     expect(screen.queryByRole("menu")).toBeNull();
     fireEvent.click(researchMenu());
     fireEvent.click(screen.getByRole("menuitem", { name: "Topo Map" }));
-    expect(location.hash).toContain("tab=map");
+    expect(location.pathname).toBe("/research/topo-map");
   });
 
   it("with research off, there is no Research menu and a research URL falls back to Home with a hint", async () => {
@@ -142,7 +142,7 @@ describe("App", () => {
     render(<App />);
     await screen.findByRole("navigation", { name: "Main" });
     fireEvent.keyDown(window, { key: "ArrowRight" });
-    expect(location.hash).toContain("tab=map");
+    expect(location.pathname).toBe("/research/topo-map");
   });
 
   it("the Campfire has no Cite this, and shows example notes when empty", async () => {
@@ -205,7 +205,7 @@ describe("App", () => {
     expect(stars.getAttribute("aria-label")).toContain("nice to have");
     fireEvent.click(stars);
     expect(stars.getAttribute("aria-label")).toContain("must have");
-    expect(location.hash).toContain("trip=");
+    expect(location.search).toContain("trip=");
     // Open the top park, save it, and close.
     fireEvent.click(screen.getAllByRole("button", { name: /Open details/ })[0]);
     expect(await screen.findByRole("dialog")).toBeTruthy();
