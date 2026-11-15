@@ -51,11 +51,15 @@ def test_rejects_oversized_text():
 def test_uses_model_when_key_set(monkeypatch):
     monkeypatch.setattr(settings, "anthropic_api_key", "test-key")
     route = respx.post("https://api.anthropic.com/v1/messages").mock(
-        return_value=httpx.Response(200, json={"content": [{"type": "text", "text": "It is getting warmer."}]})
+        return_value=httpx.Response(
+            200, json={"stop_reason": "end_turn", "content": [{"type": "text", "text": "Crater Lake gets 0.69°F warmer every 10 years."}]}
+        )
     )
     j = client.post("/api/explain", json=BODY).json()
-    assert j == {"text": "It is getting warmer.", "source": "ai"}
-    assert route.calls.last.request.headers["x-api-key"] == "test-key"
+    assert j == {"text": "Crater Lake gets 0.69°F warmer every 10 years.", "source": "ai"}
+    sent = route.calls.last.request
+    assert sent.headers["x-api-key"] == "test-key"
+    assert b'"claude-haiku-5-5"' in sent.content and b"temperature" not in sent.content
 
 
 @respx.mock
@@ -63,3 +67,31 @@ def test_falls_back_when_model_fails(monkeypatch):
     monkeypatch.setattr(settings, "anthropic_api_key", "test-key")
     respx.post("https://api.anthropic.com/v1/messages").mock(return_value=httpx.Response(500))
     assert client.post("/api/explain", json=BODY).json()["source"] == "template"
+
+
+@respx.mock
+def test_rejects_made_up_number(monkeypatch):
+    monkeypatch.setattr(settings, "anthropic_api_key", "test-key")
+    respx.post("https://api.anthropic.com/v1/messages").mock(
+        return_value=httpx.Response(
+            200, json={"stop_reason": "end_turn", "content": [{"type": "text", "text": "It warmed 4.2°F since 1950."}]}
+        )
+    )
+    assert client.post("/api/explain", json=BODY).json()["source"] == "template"
+
+
+@respx.mock
+def test_rejects_refusal(monkeypatch):
+    monkeypatch.setattr(settings, "anthropic_api_key", "test-key")
+    respx.post("https://api.anthropic.com/v1/messages").mock(
+        return_value=httpx.Response(200, json={"stop_reason": "refusal", "content": []})
+    )
+    assert client.post("/api/explain", json=BODY).json()["source"] == "template"
+
+
+def test_grounded():
+    src = "change per 10 years: 0.853 °F\nfact: The warmest year was 2025 (67.5°F).\nfact: a few more years will tell."
+    assert explain.grounded("It rises 0.85°F a decade. 2025 was warmest at 67.5°F.", src)
+    assert not explain.grounded("2019 was the warmest.", src)
+    assert not explain.grounded("It warms because of climate change.", src)
+    assert not explain.grounded("It will keep rising.", src)

@@ -7,6 +7,7 @@ The model only receives the numbers in the request, so it cannot see anything el
 
 import hashlib
 import logging
+import re
 import time
 from typing import Annotated, Literal
 
@@ -80,12 +81,15 @@ def template_text(p: ExplainIn) -> str:
 
 
 SYSTEM = (
-    "You explain one small chart of NASA climate data to a curious 10-year-old. "
-    "Write 2 or 3 short sentences in plain words, no jargon, no markdown. "
-    "Pick the two most surprising facts and lead with the most interesting one. "
-    "Use ONLY the numbers given. Never invent a number, a cause or a prediction. "
-    "If the verdict is 'possible', say we are not sure yet. If it is 'none', say it is just normal wiggling. "
-    "Say what the dashed line means (the long-term direction) in a few words."
+    "You rewrite chart facts for a curious 10-year-old. "
+    "You will get a list of facts about one chart of NASA climate data. "
+    "Rewrite two or three of them as 2 or 3 short, friendly sentences, in plain words, no markdown. "
+    "Lead with the most surprising fact. "
+    "Strict rules: use only the facts given, and copy every number exactly as written. "
+    "Do not add any number, year, place, cause, reason or prediction that is not in the facts. "
+    "Do not mention climate change, people, or why it happens. "
+    "If the verdict is 'possible', say we are not sure yet. If it is 'none', say it is just normal ups and downs. "
+    "Reply with the sentences only."
 )
 
 
@@ -117,10 +121,35 @@ def _allow_ai_call() -> bool:
     return True
 
 
+_NUM = re.compile(r"\d+(?:\.\d+)?")
+# Words that signal a cause, a prediction or an outside topic: none of these are in our facts.
+_BANNED = re.compile(
+    r"\b(because|due to|caus\w*|climate change|global warming|greenhouse|carbon|humans?|people|pollution|"
+    r"predict\w*|forecast\w*|future|will (?:be|get|keep|continue|rise|fall|increase|decrease|grow|shrink))\b",
+    re.IGNORECASE,
+)
+
+
+def grounded(text: str, source: str) -> bool:
+    """True when every number in `text` appears in `source` (rounding allowed) and no banned claim is made."""
+    low = source.lower()
+    if any(m.group(0).lower() not in low for m in _BANNED.finditer(text)):
+        return False
+    allowed = [float(x) for x in _NUM.findall(source)]
+    for raw in _NUM.findall(text):
+        x = float(raw)
+        decimals = len(raw.split(".")[1]) if "." in raw else 0
+        tol = 0.5 * 10**-decimals + 1e-9
+        if not any(abs(a - x) <= tol for a in allowed):
+            return False
+    return True
+
+
 async def _ask_model(p: ExplainIn) -> str | None:
     key = settings.anthropic_api_key
     if not key or not _allow_ai_call():
         return None
+    prompt = _user_prompt(p)
     try:
         async with httpx.AsyncClient(timeout=settings.http_timeout_s) as client:
             r = await client.post(
@@ -128,15 +157,26 @@ async def _ask_model(p: ExplainIn) -> str | None:
                 headers={"x-api-key": key, "anthropic-version": "2023-06-01"},
                 json={
                     "model": settings.anthropic_model,
-                    "max_tokens": 220,
+                    # Room for a little thinking plus ~3 sentences. Low effort keeps it cheap and literal.
+                    "max_tokens": 700,
+                    "output_config": {"effort": "low"},
                     "system": SYSTEM,
-                    "messages": [{"role": "user", "content": _user_prompt(p)}],
+                    "messages": [{"role": "user", "content": prompt}],
                 },
             )
         r.raise_for_status()
-        parts = r.json().get("content", [])
-        text = "".join(b.get("text", "") for b in parts if b.get("type") == "text").strip()
-        return text[:700] or None
+        body = r.json()
+        if body.get("stop_reason") != "end_turn":  # refusal, max_tokens...: use the local story
+            return None
+        parts = body.get("content", [])
+        text = " ".join(b.get("text", "") for b in parts if b.get("type") == "text").strip()
+        if not text or len(text) > 700:
+            return None
+        # Hallucination guard: reject any reply with a number or claim not in the facts.
+        if not grounded(text, prompt):
+            log.info("explain: model reply not grounded in facts, using template")
+            return None
+        return text
     except Exception:  # any failure falls back to the template
         log.warning("explain: model call failed, using template", exc_info=True)
         return None

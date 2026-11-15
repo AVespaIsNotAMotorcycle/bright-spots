@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     # Optional: lets "Explain it to me" rewrite chart explanations with a small model.
     # Without a key, the app uses its built-in data-only sentences.
     anthropic_api_key: str = ""
-    anthropic_model: str = "claude-haiku-4-5"
+    anthropic_model: str = "claude-haiku-5-5"  # cheapest current Claude model
 
 
 settings = Settings()

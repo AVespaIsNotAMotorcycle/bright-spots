@@ -80,8 +80,21 @@ function subjectSide(step: Step, atlas: Atlas): Side | null {
 }
 
 const YEARS = 45;
+const MONTH_NAME = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const SEASON_NAME: Record<string, string> = { DJF: "winter", MAM: "spring", JJA: "summer", SON: "autumn" };
 
-/** Builds a "did you know" card from the atlas. `variant` alternates park facts and nationwide facts. */
+function seedOf(str: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619);
+  return h >>> 0;
+}
+
+/**
+ * Builds a "did you know" line from the atlas. Every number comes from the atlas.
+ * Each question gets a different kind of fact (fastest month, best season, how it compares
+ * with the national middle, a look-alike park, its rain story...), picked by a seed, so
+ * facts do not repeat from card to card.
+ */
 export function makeFact(step: Step, atlas: Atlas, variant: number): DataFact | null {
   const side = subjectSide(step, atlas);
   if (!side) return null;
@@ -89,36 +102,91 @@ export function makeFact(step: Step, atlas: Atlas, variant: number): DataFact | 
   const cells = (atlas.atlas[side.variable]?.[side.period] ?? []).filter((c) => c.sen != null);
   const cell = cellOf(atlas, side);
   if (!meta || !cell || cell.sen == null || !cells.length) return null;
-  const per = PERIOD_LABEL[side.period] ?? side.period;
-  const label = meta.label.toLowerCase();
+  const name = parkName(side.parkId);
   const temp = isTempVar(atlas, side.variable);
-  const v = shown(atlas, side.variable, cell.sen)!;
-  const total = v * (YEARS / 10);
   const unit = temp ? "°F" : meta.unit;
-  const amt = (x: number) => `${x > 0 ? "+" : ""}${Math.abs(x) >= 10 ? x.toFixed(0) : x.toFixed(1)} ${unit}`;
-
-  if (variant % 2 === 0) {
-    const sorted = [...cells].sort((a, b) => (b.sen ?? 0) - (a.sen ?? 0));
-    const rank = sorted.findIndex((c) => c.park_id === side.parkId) + 1;
-    const real = cell.verdict === "real" ? "a statistically real trend" : cell.verdict === "possible" ? "a possible trend" : "no confirmed trend";
-    return {
-      emoji: "💡",
-      title: `${parkName(side.parkId)}, in numbers`,
-      text:
-        `Since 1981, ${per.toLowerCase()} ${label} at ${parkName(side.parkId)} moved about ${amt(total)}. ` +
-        `That ranks #${rank} of ${cells.length} parks, and the test calls it ${real}.`,
-    };
-  }
-  const real = cells.filter((c) => c.verdict === "real").length;
-  const poss = cells.filter((c) => c.verdict === "possible").length;
-  const up = cells.filter((c) => (c.sen ?? 0) > 0).length;
-  return {
-    emoji: "🌎",
-    title: "Across all parks",
-    text:
-      `For ${per.toLowerCase()} ${label}, ${real} of ${cells.length} parks show a real trend and ${poss} more show a possible one. ` +
-      `${up} lean upward, ${cells.length - up} lean downward. Source: NASA satellite and climate records, 1981 to now.`,
+  const conv = (x: number) => (temp ? x * 1.8 : x);
+  const num = (x: number) => {
+    const a = Math.abs(x);
+    return a >= 10 ? a.toFixed(0) : a >= 1 ? a.toFixed(1) : a.toFixed(2);
   };
+  const amt = (x: number) => (temp ? `${num(x)}°F` : `${num(x)} ${unit}`);
+  const label = meta.label.toLowerCase();
+  const per = PERIOD_LABEL[side.period] ?? side.period;
+  const sen = (v: string, period: string, park = side.parkId) =>
+    atlas.atlas[v]?.[period]?.find((c) => c.park_id === park)?.sen ?? null;
+
+  const pool: (() => string | null)[] = [
+    // Which month changes fastest at this park, for this variable.
+    () => {
+      const months = Array.from({ length: 12 }, (_, i) => ({ m: i, s: sen(side.variable, String(i + 1)) }))
+        .filter((x): x is { m: number; s: number } => x.s != null);
+      if (months.length < 6) return null;
+      const top = months.reduce((a, b) => (Math.abs(b.s) > Math.abs(a.s) ? b : a));
+      return `At ${name}, ${MONTH_NAME[top.m]} changes the most: ${label} there moves about ${amt(conv(top.s))} per decade.`;
+    },
+    // Which season changes fastest.
+    () => {
+      const seasons = Object.keys(SEASON_NAME)
+        .map((k) => ({ k, s: sen(side.variable, k) }))
+        .filter((x): x is { k: string; s: number } => x.s != null);
+      if (seasons.length < 4) return null;
+      const top = seasons.reduce((a, b) => (Math.abs(b.s) > Math.abs(a.s) ? b : a));
+      const low = seasons.reduce((a, b) => (Math.abs(b.s) < Math.abs(a.s) ? b : a));
+      return `${name} changes fastest in ${SEASON_NAME[top.k]} and slowest in ${SEASON_NAME[low.k]}.`;
+    },
+    // Compared with the national middle.
+    () => {
+      const sorted = cells.map((c) => c.sen!).sort((a, b) => a - b);
+      const mid = sorted[Math.floor(sorted.length / 2)];
+      if (!mid) return null;
+      const ratio = cell.sen! / mid;
+      if (!Number.isFinite(ratio) || ratio <= 0) return null;
+      if (ratio >= 1.4) return `${name} is changing about ${ratio.toFixed(1)} times as fast as the middle park in the country.`;
+      if (ratio <= 0.7) return `${name} is changing at about ${Math.round(ratio * 100)}% of the speed of the middle park in the country.`;
+      return `${name} sits close to the national middle: about ${amt(conv(cell.sen!))} per decade, the middle park is ${amt(conv(mid))}.`;
+    },
+    // Total change since 1981.
+    () => `Since 1981, ${per.toLowerCase()} ${label} at ${name} moved about ${amt(conv(cell.sen!) * (YEARS / 10))} in total.`,
+    // A look-alike park.
+    () => {
+      const twin = cells
+        .filter((c) => c.park_id !== side.parkId)
+        .reduce((a, b) => (Math.abs(b.sen! - cell.sen!) < Math.abs(a.sen! - cell.sen!) ? b : a), cells.find((c) => c.park_id !== side.parkId)!);
+      if (!twin) return null;
+      return `Trend twin: ${parkName(twin.park_id)} changes almost exactly as fast as ${name} (${amt(conv(twin.sen!))} vs ${amt(conv(cell.sen!))} per decade).`;
+    },
+    // Its rain story, when the question was about heat (or its heat story, for rain questions).
+    () => {
+      const other = side.variable.startsWith("prcp") ? "tmax_c" : "prcp_mm";
+      const o = sen(other, "annual");
+      if (o == null) return null;
+      if (other === "prcp_mm") {
+        return `Rain check: ${name} gets about ${num(o)} mm ${o >= 0 ? "more" : "less"} rain each decade.`;
+      }
+      return `Heat check: the daytime high at ${name} moves about ${amt(o * 1.8)} per decade.`;
+    },
+    // National count for this question's variable.
+    () => {
+      const real = cells.filter((c) => c.verdict === "real").length;
+      const up = cells.filter((c) => (c.sen ?? 0) > 0).length;
+      return `Across ${cells.length} parks, ${up} lean upward for ${per.toLowerCase()} ${label}, and ${real} have a confirmed trend.`;
+    },
+    // Rank, with a word.
+    () => {
+      const sorted = [...cells].sort((a, b) => b.sen! - a.sen!);
+      const r = sorted.findIndex((c) => c.park_id === side.parkId) + 1;
+      const word = r <= 5 ? "top five" : r > cells.length - 5 ? "bottom five" : r <= cells.length / 2 ? "upper half" : "lower half";
+      return `${name} ranks #${r} of ${cells.length} for ${per.toLowerCase()} ${label}, in the ${word}.`;
+    },
+  ];
+
+  const seed = seedOf(`${step.heading}|${side.parkId}|${side.variable}|${side.period}`) + variant * 3;
+  for (let i = 0; i < pool.length; i++) {
+    const text = pool[(seed + i) % pool.length]();
+    if (text) return { emoji: "💡", title: name, text };
+  }
+  return null;
 }
 
 // ── Progress (stars, XP, rank title), kept in localStorage ────────────────
