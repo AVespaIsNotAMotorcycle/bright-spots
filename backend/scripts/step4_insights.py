@@ -165,6 +165,8 @@ def families(parks):
             "family": remap[int(labels[i])],
             "agreement": round(float(co[i, mem].mean()), 2) if mem else 1.0,
             "x": round(float(xy[i, 0]), 3), "y": round(float(xy[i, 1]), 3),
+            # Plain axes for the picture: warming speed and rain trend, both as trend / yearly scatter.
+            "warming": round(float(X[i, 0:6].mean()), 3), "rain": round(float(X[i, 6:9].mean()), 3),
         }
     return {"k": K, "bootstraps": BOOTSTRAPS, "stable_at": STABLE_AT,
             "features": [{"variable": v, "period": p} for v, p, _, _ in FEATURES],

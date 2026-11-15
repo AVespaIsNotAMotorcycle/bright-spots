@@ -220,11 +220,11 @@ export default function Families({
       )}
 
       <div className="card">
-        <h3 style={{ marginTop: 0 }}>Fingerprint map</h3>
+        <h3 style={{ marginTop: 0 }}>Where each park sits</h3>
         <p className="small">
-          Every park has 10 trend numbers. This picture squeezes them into two, keeping as much of the difference between
-          parks as possible. Parks that sit close together change in similar ways. The shaded areas group each family. The two axes
-          are explained under the plot.
+          Across: how fast the park is warming. Up and down: whether its rain is increasing or decreasing. Both are the trend
+          per decade divided by the park's year-to-year swing, so 0.5 means the change per decade is half a typical yearly
+          swing. Shaded areas group each family. Click a dot to open that park.
         </p>
         <div className="row small" style={{ gap: 14, flexWrap: "wrap", margin: "6px 0" }}>
           {fam.families.map((f) => (
@@ -235,34 +235,49 @@ export default function Families({
           ))}
         </div>
         {(() => {
-          const L = 14, R = 746, T = 14, B = 330;
-          const px = (v: number) => L + 18 + ((v - x0) / (x1 - x0 || 1)) * (R - L - 36);
-          const py = (v: number) => B - 18 - ((v - y0) / (y1 - y0 || 1)) * (B - T - 36);
-          const [ax, ay] = fam.axes ?? [];
+          const L = 62, R = 744, T = 12, B = 290;
+          const pts = data.parks.map((p) => ({ p, f: fam.parks[p.id] })).filter((d) => d.f);
+          const xv = pts.map((d) => d.f.warming), yv = pts.map((d) => d.f.rain);
+          const ext = (v: number[]) => {
+            const lo = Math.min(...v), hi = Math.max(...v), pad = (hi - lo) * 0.08 || 0.1;
+            return [lo - pad, hi + pad] as const;
+          };
+          const [xa, xb] = ext(xv), [ya, yb] = ext(yv);
+          const px = (v: number) => L + ((v - xa) / (xb - xa)) * (R - L);
+          const py = (v: number) => B - ((v - ya) / (yb - ya)) * (B - T);
+          const ticks = (lo: number, hi: number) => {
+            const raw = (hi - lo) / 5;
+            const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+            const step = [1, 2, 5, 10].map((m) => m * mag).find((x) => x >= raw) ?? raw;
+            const out: number[] = [];
+            for (let t = Math.ceil(lo / step) * step; t <= hi + 1e-9; t += step) out.push(Math.round(t / step) * step);
+            return out;
+          };
+          const fmt = (v: number) => (Math.abs(v) < 1e-9 ? "0" : (v > 0 ? "+" : "") + v.toFixed(1));
           const halo: React.CSSProperties = { paintOrder: "stroke", stroke: "#fff", strokeWidth: 3, strokeLinejoin: "round" };
           const sizeOf = (id: number) => fam.families.find((x) => x.id === id)?.size ?? 99;
-          // Labels only for outlier parks. Push each one down until it no longer touches another label.
-          const dots = data.parks.map((p) => ({ p, f: fam.parks[p.id] })).filter((d) => d.f);
+
           const labels: { id: string; name: string; x: number; y: number; dotY: number; right: boolean }[] = [];
-          dots
+          pts
             .filter((d) => sizeOf(d.f.family) <= 3)
-            .sort((u, v) => py(u.f.y) - py(v.f.y))
+            .sort((u, v) => py(u.f.rain) - py(v.f.rain))
             .forEach((d) => {
-              const cx = px(d.f.x);
-              let y = py(d.f.y) + 4;
+              const cx = px(d.f.warming);
+              let y = py(d.f.rain) + 4;
               const right = cx < 560;
-              while (labels.some((l) => Math.abs(l.y - y) < 14 && Math.abs(l.x - cx) < 150)) y += 14;
-              labels.push({ id: d.p.id, name: d.p.name, x: cx, y, dotY: py(d.f.y), right });
+              while (labels.some((q) => Math.abs(q.y - y) < 14 && Math.abs(q.x - cx) < 150)) y += 14;
+              labels.push({ id: d.p.id, name: d.p.name, x: cx, y, dotY: py(d.f.rain), right });
             });
-          const hull = (pts: [number, number][]): [number, number][] => {
-            const p = [...pts].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+
+          const hull = (arr: [number, number][]): [number, number][] => {
+            const p = [...arr].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
             if (p.length < 3) return p;
             const cross = (o: number[], a: number[], b: number[]) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
-            const half = (arr: [number, number][]) => {
+            const half = (q: [number, number][]) => {
               const h: [number, number][] = [];
-              for (const q of arr) {
-                while (h.length >= 2 && cross(h[h.length - 2], h[h.length - 1], q) <= 0) h.pop();
-                h.push(q);
+              for (const z of q) {
+                while (h.length >= 2 && cross(h[h.length - 2], h[h.length - 1], z) <= 0) h.pop();
+                h.push(z);
               }
               h.pop();
               return h;
@@ -270,20 +285,33 @@ export default function Families({
             return [...half(p), ...half([...p].reverse())];
           };
           const hulls = fam.families.filter((f) => f.size > 3).map((f) => {
-            const pts = f.parks.map((id) => fam.parks[id]).filter(Boolean).map((q) => [px(q.x), py(q.y)] as [number, number]);
-            const h = hull(pts);
-            return { f, d: h.map((q, i) => `${i ? "L" : "M"}${q[0].toFixed(1)} ${q[1].toFixed(1)}`).join("") + "Z",
-              top: Math.min(...pts.map((q) => q[1])), cx: pts.reduce((a, q) => a + q[0], 0) / pts.length };
+            const q = f.parks.map((id) => fam.parks[id]).filter(Boolean).map((z) => [px(z.warming), py(z.rain)] as [number, number]);
+            const h = hull(q);
+            return { f, d: h.map((z, i) => `${i ? "L" : "M"}${z[0].toFixed(1)} ${z[1].toFixed(1)}`).join("") + "Z",
+              top: Math.min(...q.map((z) => z[1])), cx: q.reduce((a, z) => a + z[0], 0) / q.length };
           });
+          const xt = ticks(xa, xb), yt = ticks(ya, yb);
+          const axisInk = "var(--text-muted)";
           return (
-            <svg viewBox="0 0 760 344" style={{ width: "100%", height: "auto" }} role="img" aria-label="Park fingerprint map">
-              <rect x={L} y={T} width={R - L} height={B - T} fill="var(--surface-2)" rx={8} />
-              {[0.25, 0.5, 0.75].map((t) => (
-                <g key={t} stroke="var(--grid)" strokeDasharray="3 4">
-                  <line x1={L + t * (R - L)} x2={L + t * (R - L)} y1={T} y2={B} />
-                  <line x1={L} x2={R} y1={T + t * (B - T)} y2={T + t * (B - T)} />
+            <svg viewBox="0 0 760 350" style={{ width: "100%", height: "auto" }} role="img" aria-label="Warming speed against rain trend for each park">
+              <rect x={L} y={T} width={R - L} height={B - T} fill="var(--surface-2)" rx={4} />
+              {xt.map((t) => (
+                <g key={"x" + t}>
+                  <line x1={px(t)} x2={px(t)} y1={T} y2={B} stroke={Math.abs(t) < 1e-9 ? axisInk : "var(--grid)"} strokeDasharray={Math.abs(t) < 1e-9 ? "" : "3 4"} />
+                  <line x1={px(t)} x2={px(t)} y1={B} y2={B + 5} stroke={axisInk} />
+                  <text x={px(t)} y={B + 18} fontSize={11} fill={axisInk} textAnchor="middle">{fmt(t)}</text>
                 </g>
               ))}
+              {yt.map((t) => (
+                <g key={"y" + t}>
+                  <line x1={L} x2={R} y1={py(t)} y2={py(t)} stroke={Math.abs(t) < 1e-9 ? axisInk : "var(--grid)"} strokeDasharray={Math.abs(t) < 1e-9 ? "" : "3 4"} />
+                  <line x1={L - 5} x2={L} y1={py(t)} y2={py(t)} stroke={axisInk} />
+                  <text x={L - 9} y={py(t) + 4} fontSize={11} fill={axisInk} textAnchor="end">{fmt(t)}</text>
+                </g>
+              ))}
+              <line x1={L} x2={R} y1={B} y2={B} stroke={axisInk} strokeWidth={1.5} />
+              <line x1={L} x2={L} y1={T} y2={B} stroke={axisInk} strokeWidth={1.5} />
+
               {hulls.map(({ f, d }) => (
                 <path key={f.id} d={d} fill={colorFor(f.id)} fillOpacity={0.12} stroke={colorFor(f.id)} strokeOpacity={0.12}
                   strokeWidth={26} strokeLinejoin="round" />
@@ -292,42 +320,39 @@ export default function Families({
                 <text key={"t" + f.id} x={cx} y={Math.max(T + 14, top - 20)} fontSize={13} fontWeight={800} textAnchor="middle"
                   fill={colorFor(f.id)} style={{ ...halo, pointerEvents: "none" }}>{f.title}</text>
               ))}
-              {labels.map((l) => (
-                <line key={"l" + l.id} x1={l.x} y1={l.dotY} x2={l.right ? l.x + 10 : l.x - 10} y2={l.y - 4}
-                  stroke="var(--text-muted)" strokeWidth={0.8} />
+              {labels.map((q) => (
+                <line key={"l" + q.id} x1={q.x} y1={q.dotY} x2={q.right ? q.x + 10 : q.x - 10} y2={q.y - 4} stroke={axisInk} strokeWidth={0.8} />
               ))}
-              {dots.map(({ p, f }) => {
+              {pts.map(({ p, f }) => {
                 const big = sizeOf(f.family) <= 3;
                 return (
-                  <circle key={p.id} cx={px(f.x)} cy={py(f.y)} r={big ? 7 : 5} fill={colorFor(f.family)} fillOpacity={0.92}
+                  <circle key={p.id} cx={px(f.warming)} cy={py(f.rain)} r={big ? 7 : 5} fill={colorFor(f.family)} fillOpacity={0.92}
                     stroke="#fff" strokeWidth={1.5} style={{ cursor: "pointer" }} onClick={() => onOpenPark(p.id)}>
-                    <title>{p.name}</title>
+                    <title>{`${p.name}: warming ${fmt(f.warming)}, rain ${fmt(f.rain)}`}</title>
                   </circle>
                 );
               })}
-              {labels.map((l) => (
-                <text key={l.id} x={l.right ? l.x + 14 : l.x - 14} y={l.y} fontSize={11} fontWeight={700} fill="var(--text)"
-                  textAnchor={l.right ? "start" : "end"} style={{ ...halo, pointerEvents: "none" }}>{l.name}</text>
+              {labels.map((q) => (
+                <text key={q.id} x={q.right ? q.x + 14 : q.x - 14} y={q.y} fontSize={11} fontWeight={700} fill="var(--text)"
+                  textAnchor={q.right ? "start" : "end"} style={{ ...halo, pointerEvents: "none" }}>{q.name}</text>
               ))}
+
+              <text x={(L + R) / 2} y={B + 40} fontSize={12} fontWeight={700} fill="var(--text)" textAnchor="middle">
+                Warming speed (average of 6 temperature trends)
+              </text>
+              <text x={L} y={B + 40} fontSize={11} fill={axisInk} textAnchor="start">← slower</text>
+              <text x={R} y={B + 40} fontSize={11} fill={axisInk} textAnchor="end">faster →</text>
+              <text transform={`rotate(-90 14 ${(T + B) / 2})`} x={14} y={(T + B) / 2} fontSize={12} fontWeight={700} fill="var(--text)" textAnchor="middle">
+                Rain trend (average of 3)
+              </text>
+              <text transform={`rotate(-90 14 ${B})`} x={14} y={B} fontSize={11} fill={axisInk} textAnchor="start">↓ drier</text>
+              <text transform={`rotate(-90 14 ${T})`} x={14} y={T} fontSize={11} fill={axisInk} textAnchor="end">wetter ↑</text>
             </svg>
           );
         })()}
-        {fam.axes && fam.axes.length === 2 && (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 10, marginTop: 10 }}>
-            {([["Left to right", "←", "→", fam.axes[0]], ["Bottom to top", "↓", "↑", fam.axes[1]]] as const).map(([name, lo, hi, ax]) => (
-              <div key={name} style={{ background: "var(--surface-2)", borderRadius: 10, padding: "8px 12px" }}>
-                <div className="small" style={{ fontWeight: 700, marginBottom: 4 }}>
-                  {name} <span className="muted" style={{ fontWeight: 400 }}>· {Math.round(ax.variance * 100)}% of the differences</span>
-                </div>
-                <div className="small"><b>{lo}</b> {ax.low}</div>
-                <div className="small"><b>{hi}</b> {ax.high}</div>
-              </div>
-            ))}
-          </div>
-        )}
         <p className="micro muted" style={{ margin: "6px 0 0" }}>
-          Click a dot to open that park. Overlap between colours means those parks are borderline between families. Distances
-          are approximate, because 10 numbers cannot be shown faithfully in 2.
+          The dark line on each axis marks zero, no change. Dots right of the vertical line are warming. Dots below the horizontal
+          line are getting drier.
         </p>
       </div>
     </div>
