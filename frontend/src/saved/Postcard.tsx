@@ -18,9 +18,9 @@ const rain = (mm: number | null | undefined, u: Unit) => (mm == null ? "–" : u
 
 /** Value rows, each rated by the factor fit that goes with it. */
 const ROWS: { label: string; fit: string; show: (v: Record<string, number | null>, u: Unit) => string }[] = [
-  { label: "Daytime high", fit: "temperature", show: (v, u) => (v.tmax == null ? "–" : temp(v.tmax, u)) },
+  { label: "Average high", fit: "temperature", show: (v, u) => (v.tmax == null ? "–" : temp(v.tmax, u)) },
   { label: "Humidity", fit: "muggy", show: (v) => pct(v.rh) },
-  { label: "Rain (month)", fit: "rain", show: (v, u) => rain(v.precip, u) },
+  { label: "Monthly rainfall", fit: "rain", show: (v, u) => rain(v.precip, u) },
   { label: "Cloud cover", fit: "gray", show: (v) => pct(v.cloud) },
 ];
 
@@ -94,6 +94,7 @@ export default function Postcard({ name, p, trip, unit, trend, npsCode, onPlan, 
             <>
               <p className="pc-best">
                 {p.ok ? <>Best for you: <b>{MONTHS[p.best_month - 1]}</b></> : <>Misses one of your musts all year. Closest: <b>{MONTHS[p.best_month - 1]}</b></>}
+                <span className="muted"> · numbers below are for {MONTHS[p.best_month - 1]}</span>
               </p>
               <table className="pc-table">
                 <colgroup><col className="pc-label-col" /><col /><col /><col /></colgroup>
