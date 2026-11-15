@@ -743,3 +743,9 @@ path.yc-series.tag-projected { stroke: var(--sky); stroke-dasharray: 2 2; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
+
+/* Postage-stamp label for a data source or horizon: flat, outlined, a little crooked. */
+.stamp { display: inline-block; font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; line-height: 1.2; padding: 3px 7px; border: 1.5px dashed currentColor; border-radius: 4px; white-space: nowrap; }
+.stamp-measured { color: var(--moss); transform: rotate(-1.5deg); }
+.stamp-forecast { color: var(--bark-2); transform: rotate(1deg); }
+.stamp-projected { color: var(--clay); transform: rotate(-0.5deg); }

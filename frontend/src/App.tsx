@@ -313,6 +313,7 @@ export default function App() {
         )}
         {tab === "saved" && (
           <SavedPage
+            unit={unit}
             onPlan={(park, month) => go("planner", { park, ...(month ? { month } : {}) })}
             onExplore={(park) => go("explore", { park })}
           />

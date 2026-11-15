@@ -224,6 +224,12 @@ describe("App", () => {
     expect(await screen.findByRole("heading", { name: "Sequoia" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Kings Canyon" })).toBeTruthy();
     expect(screen.getByText("2 parks you want to see")).toBeTruthy();
+    // Each is a postcard: stamped columns, a match score row, and a link to nps.gov.
+    expect(screen.getAllByText("2026 so far")).toHaveLength(2);
+    expect(screen.getAllByText("2027 trend")).toHaveLength(2);
+    expect(screen.getAllByText("2050 model")).toHaveLength(2);
+    expect(screen.getAllByText("Match score")).toHaveLength(2);
+    expect(screen.getAllByRole("link", { name: /nps\.gov/ })[0].getAttribute("href")).toBe("https://www.nps.gov/seki/");
     fireEvent.click(screen.getByRole("button", { name: "Remove Kings Canyon" }));
     expect(JSON.parse(localStorage.getItem("wishlist")!)).toEqual(["seki"]);
   });

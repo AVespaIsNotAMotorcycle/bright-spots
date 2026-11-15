@@ -165,3 +165,14 @@ def test_park_year_needs_no_settings():
     assert all(len(m["good"]) <= trip_mod.YEAR_TOP for m in ms)
     assert not any(k in trip_mod.YEAR_SKIP for m in ms for k in m["good"] + m["bad"])
     assert client.get("/api/parks/nope/year").status_code == 404
+
+
+def test_trip_rows_carry_factor_fits_per_horizon():
+    parks = get(months="7", feels="mild", avoid="bugs")["parks"]
+    top = parks[0]
+    assert set(top["fits"]) == set(trip_mod.HORIZONS)
+    now = top["fits"][trip_mod.HORIZONS[1]]
+    assert {"temperature", "bugs"} <= set(now)
+    assert all(0.0 <= s <= 1.0 for f in top["fits"].values() for s in f.values())
+    # Same numbers as the reasons for the horizon the trip was scored on.
+    assert {r["key"]: r["score"] for r in top["reasons"] if r["score"] is not None} == top["fits"]["next_year"]

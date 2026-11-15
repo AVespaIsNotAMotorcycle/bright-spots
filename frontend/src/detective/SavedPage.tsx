@@ -2,23 +2,16 @@
 import { useEffect, useMemo, useState } from "react";
 import PageHead from "../brand/PageHead";
 import { SAVED_NAMES, parkKey, trendCode } from "./parkKey";
-import { photoOf } from "./photos";
 import { useWishlist } from "./wishlist";
-import { DEFAULT_STATE, MONTHS, decodeState, fetchTrip, type Trip } from "../planner/trip/tripModel";
+import { DEFAULT_STATE, decodeState, fetchTrip, type Trip, type Unit } from "../planner/trip/tripModel";
+import { trendTag } from "../planner/whatChanged";
+import { loadAtlas, type Atlas } from "../atlas/model";
+import Postcard from "../saved/Postcard";
 
 const CSS = `
-.sv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
-.sv-card{border:1px solid var(--stone);border-radius:var(--radius);overflow:hidden;background:var(--surface);display:flex;flex-direction:column}
-.sv-card img{width:100%;height:130px;object-fit:cover;display:block}
-.sv-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
-.sv-name{font-family:var(--font-display);font-size:20px;font-weight:400;color:var(--bark);margin:0}
-.sv-best{font-size:14px}
-.sv-best{color:var(--bark-2)}
-.sv-best b{color:var(--bark);font-weight:600}
-.sv-acts{display:flex;gap:6px;margin-top:auto;padding-top:6px}
+.sv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,560px),1fr));gap:16px}
 .sv-btn{border:1px solid var(--stone);background:var(--paper);border-radius:999px;padding:5px 12px;font:inherit;font-size:12.5px;font-weight:500;cursor:pointer;color:var(--bark)}
 .sv-btn:hover{border-color:var(--moss);color:var(--moss)}
-.sv-x{margin-left:auto;color:var(--text-muted)}
 .sv-search{width:100%;max-width:380px;font:inherit;font-size:15px;padding:9px 14px;border-radius:999px;border:1px solid var(--stone);background:var(--paper);color:var(--bark)}
 .sv-hits{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 `;
@@ -40,10 +33,14 @@ function useYearTrip(): Trip | null {
   return trip;
 }
 
-export default function SavedPage({ onPlan, onExplore }: { onPlan: (code: string, month?: number) => void; onExplore: (code: string) => void }) {
+export default function SavedPage({ unit, onPlan, onExplore }: { unit: Unit; onPlan: (code: string, month?: number) => void; onExplore: (code: string) => void }) {
   const [wish, toggle] = useWishlist();
   const [find, setFind] = useState("");
   const trip = useYearTrip();
+  const [atlas, setAtlas] = useState<Atlas | null>(null);
+  useEffect(() => {
+    loadAtlas().then(setAtlas).catch(() => undefined);
+  }, []);
   const byCode = useMemo(() => new Map((trip?.parks ?? []).map((p) => [parkKey(p.park), p])), [trip]);
   const t = find.trim().toLowerCase();
   const hits = t
@@ -80,25 +77,19 @@ export default function SavedPage({ onPlan, onExplore }: { onPlan: (code: string
         <div className="sv-grid">
           {wish.map((c) => {
             const p = byCode.get(c);
-            const photo = photoOf(c);
             return (
-              <article key={c} className="sv-card">
-                {photo ? <img src={photo.file} alt="" loading="lazy" /> : <div style={{ height: 130, background: "var(--surface-2)" }} />}
-                <div className="sv-body">
-                  <h3 className="sv-name">{SAVED_NAMES[c] ?? c}</h3>
-                  {p && <span className="micro muted">{p.park.states.join(", ")}</span>}
-                  <span className="sv-best">
-                    {!trip ? "…" : !p ? "No trip data" : p.ok
-                      ? <>Best for you: <b>{MONTHS[p.best_month - 1]}</b> · {Math.round(p.score ?? 0)}/100</>
-                      : "Misses one of your musts all year"}
-                  </span>
-                  <div className="sv-acts">
-                    <button className="sv-btn" onClick={() => onPlan(c === "kica" ? "kings-canyon" : c, p?.ok ? p.best_month : undefined)}>Plan</button>
-                    <button className="sv-btn" onClick={() => onExplore(trendCode(c))}>Trends</button>
-                    <button className="sv-btn sv-x" onClick={() => toggle(c)} aria-label={`Remove ${SAVED_NAMES[c] ?? c}`}>✕</button>
-                  </div>
-                </div>
-              </article>
+              <Postcard
+                key={c}
+                name={SAVED_NAMES[c] ?? c}
+                p={p}
+                trip={trip}
+                unit={unit}
+                trend={p ? trendTag(atlas, p.park.id, p.best_month, unit === "F") : null}
+                npsCode={p?.park.code ?? null}
+                onPlan={() => onPlan(c === "kica" ? "kings-canyon" : c, p?.ok ? p.best_month : undefined)}
+                onTrends={() => onExplore(trendCode(c))}
+                onRemove={() => toggle(c)}
+              />
             );
           })}
         </div>

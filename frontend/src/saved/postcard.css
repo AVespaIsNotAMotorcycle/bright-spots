@@ -1,0 +1,70 @@
+/* Saved-tab postcard. Layout from the design-system sandbox; Canopy colours and fonts, flat (no shadow). */
+
+/* The wrapper is the size container, so the card follows its slot, not the screen. */
+.postcard-wrap { container-type: inline-size; width: 100%; }
+
+.postcard {
+  display: grid; grid-template-columns: 1fr 1.8fr; gap: 16px; padding: 14px;
+  background: var(--paper); color: var(--bark);
+  border: 1px solid var(--stone); border-radius: var(--radius);
+}
+.pc-photo { position: relative; overflow: hidden; border-radius: 8px; min-height: 180px; }
+.pc-photo img, .pc-nophoto { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.pc-nophoto { background: var(--surface-2); }
+
+.pc-info { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding-left: 16px; border-left: 1px solid var(--stone); /* the postcard's centre rule */ }
+
+.pc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.pc-title { margin: 0; font-family: var(--font-display); font-size: 22px; font-weight: 400; color: var(--bark); }
+.pc-meta { display: flex; flex-wrap: wrap; gap: 2px 12px; margin: 2px 0 0; }
+.pc-meta > span { display: inline-flex; align-items: center; gap: 4px; }
+.pc-pin { color: var(--clay); flex: none; }
+.pc-remove {
+  flex: none; width: 26px; height: 26px; display: grid; place-items: center;
+  border: 0; border-radius: 8px; background: none; cursor: pointer; font-size: 18px; line-height: 1; color: var(--text-muted);
+}
+.pc-remove:hover, .pc-remove:focus-visible { background: var(--surface-2); color: var(--bark); }
+
+.pc-trend { margin: 0; font-size: 12.5px; color: var(--bark-2); }
+.pc-trend-real { color: var(--clay); font-weight: 600; }
+.pc-best { margin: 0; font-size: 14px; color: var(--bark-2); }
+.pc-best b { color: var(--bark); font-weight: 600; }
+
+/* Table: the three horizons are the columns. Undo the app's global th/td rules. */
+.pc-table { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 13px; }
+.pc-table th, .pc-table td {
+  position: static; background: none; border-bottom: 0; color: inherit; font-weight: 400;
+  padding: 6px 0 6px 10px; text-align: right; vertical-align: middle;
+}
+.pc-table th:first-child, .pc-table td:first-child { padding-left: 0; }
+.pc-table col.pc-label-col { width: 28%; }
+.pc-table thead th { vertical-align: bottom; padding-top: 0; }
+.pc-table tbody th { text-align: left; color: var(--text-muted); }
+.pc-table tbody tr { border-top: 1px solid var(--stone); }
+.pc-big { display: block; font-family: var(--font-display); font-size: 24px; line-height: 1.1; }
+.pc-meter { position: relative; height: 4px; margin-top: 6px; border-radius: 4px; background: var(--stone); }
+.pc-meter > div { position: absolute; top: -2px; width: 8px; height: 8px; margin-left: -4px; border-radius: 50%; background: var(--moss); }
+
+/* Fit bar: short, under the value; width = how well it fits. */
+.pc-bar { display: block; width: 48px; height: 3px; margin: 3px 0 0 auto; border-radius: 3px; background: var(--stone); }
+.pc-bar > span { display: block; height: 100%; margin-left: auto; border-radius: inherit; background: var(--moss); }
+
+.pc-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: auto; padding-top: 6px; font-size: 12px; color: var(--text-muted); }
+.pc-key { display: inline-flex; align-items: center; gap: 6px; }
+.pc-key .pc-bar { width: 24px; margin: 0; }
+.pc-foot a { color: var(--moss); }
+.pc-acts { display: flex; gap: 6px; }
+
+/* Medium slot (two cards side by side). */
+@container (max-width: 760px) {
+  .postcard { grid-template-columns: 1fr 2.2fr; }
+  .pc-table th, .pc-table td { padding-left: 6px; }
+  .stamp { letter-spacing: 0.02em; padding-inline: 4px; }
+}
+
+/* Narrow slot: photo on top, rule turns horizontal. */
+@container (max-width: 560px) {
+  .postcard { grid-template-columns: 1fr; padding: 12px; }
+  .pc-photo { min-height: 0; aspect-ratio: 3 / 2; }
+  .pc-info { padding: 12px 0 0; border-left: 0; border-top: 1px solid var(--stone); }
+}

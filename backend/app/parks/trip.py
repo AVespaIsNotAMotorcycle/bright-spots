@@ -401,6 +401,11 @@ def ok(e: dict | None) -> bool:
     return bool(e) and e["score"] is not None and not e["failed"]
 
 
+def _fits(e: dict | None) -> dict[str, float]:
+    """Factor key -> 0-1 fit, skipping factors with no data."""
+    return {r["key"]: r["score"] for r in (e or {}).get("reasons", []) if r["score"] is not None}
+
+
 def _year_best(evs: list[dict | None]) -> int | None:
     """Best passing month of the whole year."""
     sc = [(ev["score"], i + 1) for i, ev in enumerate(evs) if ok(ev)]
@@ -501,6 +506,8 @@ def plan_trip(parks: list, climate: dict[str, dict], tp: TripPrefs) -> dict:
             "reasons": e["reasons"],
             "scores": {h: (evals[h][best - 1] or {}).get("score") for h in HORIZONS},
             "values": {h: base[best - 1][h].values for h in HORIZONS},
+            # Each factor's 0-1 fit in the best month, per horizon (the Saved postcard's bars).
+            "fits": {h: _fits(evals[h][best - 1]) for h in HORIZONS},
             "month_scores": [
                 {"score": ev["score"], "ok": ok(ev)} if ev else {"score": None, "ok": False} for ev in main
             ],

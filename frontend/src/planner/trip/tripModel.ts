@@ -36,6 +36,8 @@ export interface TripPark {
   day_length: number;
   night_glow?: { glow: number; level: "low" | "medium" | "high"; why: string } | null;
   fire_source: string | null;
+  /** 0-1 fit of each factor (temperature, rain, gray, muggy, and any picked chip) in the best month, per horizon. */
+  fits?: Record<HorizonKey, Record<string, number>>;
 }
 
 export interface Trip {
