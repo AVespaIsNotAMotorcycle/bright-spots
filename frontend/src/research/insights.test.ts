@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Atlas, AtlasCell, TrendRow } from "../detective/model";
-import { anomalyOfWeek, findTwins, headToHead, km, oddNeighbours, similarity } from "./insights";
+import { analogSites, anomalyOfWeek, featureRows, findTwins, headToHead, km, oddNeighbours, similarity } from "./insights";
 
 const cell = (park_id: string, sen: number, verdict: AtlasCell["verdict"] = "real"): AtlasCell => ({ park_id, sen, q: 0.01, verdict });
 
@@ -25,6 +25,22 @@ describe("twin finder", () => {
     expect(similarity([1, 2, 3], [1, 2, 3])).toBeCloseTo(1);
     expect(similarity([1, 2, 3], [-1, -2, -3])).toBeCloseTo(-1);
     expect(similarity([1, null, 3], [1, 2, null])).toBeNull();
+  });
+  it("analog sites can be limited to the same ecoregion", () => {
+    const eco = {
+      a: { l1: "DESERTS", l2: null, l3: null },
+      b: { l1: "FORESTS", l2: null, l3: null },
+      c: { l1: "DESERTS", l2: null, l3: null },
+      d: { l1: "DESERTS", l2: null, l3: null },
+    };
+    expect(analogSites(atlas, "a", eco, "any")[0].park).toBe("b");
+    expect(analogSites(atlas, "a", eco, "l1").map((t) => t.park)).not.toContain("b");
+    expect(analogSites(atlas, "a", eco, "l2")).toEqual([]); // no ecoregion at that level
+  });
+  it("feature rows put the closest match first", () => {
+    const rows = featureRows(atlas, "a", "b");
+    expect(rows.length).toBe(4);
+    expect(rows[0].gap!).toBeLessThanOrEqual(rows[3].gap!);
   });
   it("finds b as a's twin and c as its opposite", () => {
     const { twins, opposite } = findTwins(atlas, "a");

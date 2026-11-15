@@ -2,6 +2,7 @@
 import { useMemo } from "react";
 import { CASES } from "./detective/cases";
 import { NextCase, ParkOfTheDay, RankBanner } from "./detective/StudentWidgets";
+import { GuessTheTwin } from "./detective/TwinGame";
 import { PARK_NAMES } from "./detective/Detective";
 import type { Atlas, AtlasCell } from "./detective/model";
 import { PERSONAS, type Persona, type Tab } from "./profile";
@@ -90,6 +91,7 @@ function StudentHome({ atlas, onGo }: Pick<Props, "atlas" | "onGo">) {
       <RankBanner />
       <NextCase onPlay={(c) => onGo("student", { caseId: c.id, step: 0 })} />
       {atlas && <ParkOfTheDay atlas={atlas} onExplore={(park) => onGo("explore", { park })} />}
+      {atlas && <GuessTheTwin atlas={atlas} onExplore={(park) => onGo("explore", { park })} />}
       <div>
         <button className="btn-ghost" onClick={() => onGo("student")}>See all {CASES.length} cases →</button>
       </div>
@@ -99,7 +101,7 @@ function StudentHome({ atlas, onGo }: Pick<Props, "atlas" | "onGo">) {
 
 const TOOLS: ToolInfo[] = [
   { tab: "map", icon: "🗺️", title: "Topo trend map", text: "Every park on one map, with contour rings for confirmed trends.", color: "#6b7f3a" },
-  { tab: "twins", icon: "🪞", title: "Twin finder", text: "Parks whose whole pattern of change matches yours.", color: "#2d5a27" },
+  { tab: "analogs", icon: "🌐", title: "Analog sites", text: "Comparison sites: parks changing alike, filtered by ecoregion.", color: "#2d5a27" },
   { tab: "opposites", icon: "🧭", title: "Odd one out", text: "Neighbouring parks with confirmed trends going opposite ways.", color: "#c98a54" },
   { tab: "seasons", icon: "🌗", title: "Season wheel", text: "Which months change fastest, drawn as a wheel.", color: "#3d5a73" },
   { tab: "compare", icon: "🥊", title: "Head-to-head", text: "Two parks, one chart, scored round by round.", color: "#8b3a1a" },
@@ -125,7 +127,7 @@ function ResearcherHome({ atlas, onGo, name }: Pick<Props, "atlas" | "onGo" | "n
         <div className="section-title" style={{ marginBottom: 8 }}>Station tools</div>
         <ToolTiles tools={TOOLS} onGo={(t) => onGo(t as Tab)} />
       </section>
-      {atlas && <MiniMap atlas={atlas} onTwins={(park) => onGo("twins", { park })} />}
+      {atlas && <MiniMap atlas={atlas} onTwins={(park) => onGo("analogs", { park })} />}
       {atlas && <Leaderboard atlas={atlas} onOpen={(park) => onGo("atlas", { park })} />}
       <CampfirePreview atlas={atlas} onOpen={() => onGo("community")} />
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>

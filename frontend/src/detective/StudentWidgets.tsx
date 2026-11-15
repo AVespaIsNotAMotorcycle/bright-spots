@@ -48,7 +48,7 @@ export const TOPO = `url("data:image/svg+xml;utf8,${encodeURIComponent(
   </svg>`,
 )}")`;
 
-const WIDGET_CSS = `
+export const WIDGET_CSS = `
 @keyframes sw-sway { 0%,100% { transform: rotate(-3deg) translateY(0) } 50% { transform: rotate(3deg) translateY(-6px) } }
 @keyframes sw-glow { 0%,100% { box-shadow: 0 0 0 0 rgba(107,127,58,.45), 0 10px 24px rgba(74,55,38,.20) } 50% { box-shadow: 0 0 0 9px rgba(107,127,58,0), 0 14px 30px rgba(74,55,38,.26) } }
 @keyframes sw-sun { from { transform: translateX(-130%) skewX(-18deg) } to { transform: translateX(280%) skewX(-18deg) } }

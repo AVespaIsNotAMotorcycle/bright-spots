@@ -76,6 +76,37 @@ export function findTwins(atlas: Atlas, park: string, n = 6): { twins: Twin[]; o
   return { twins: all.slice(0, n), opposite: all.length ? all[all.length - 1] : null };
 }
 
+export interface FeatureRow extends Feature {
+  za: number | null;
+  zb: number | null;
+  /** |za - zb|: 0 = same place in the spread of parks. */
+  gap: number | null;
+}
+
+/** Side-by-side fingerprint of two parks, most alike features first. */
+export function featureRows(atlas: Atlas, a: string, b: string): FeatureRow[] {
+  const { features, parks } = fingerprints(atlas);
+  const fa = parks.get(a) ?? [], fb = parks.get(b) ?? [];
+  return features
+    .map((f, i) => {
+      const za = fa[i] ?? null, zb = fb[i] ?? null;
+      return { ...f, za, zb, gap: za != null && zb != null ? Math.abs(za - zb) : null };
+    })
+    .sort((x, y) => (x.gap ?? 99) - (y.gap ?? 99));
+}
+
+export type EcoLevel = "any" | "l1" | "l2" | "l3";
+export type Eco = Record<string, { l1: string | null; l2: string | null; l3: string | null }>;
+
+/** Analog sites: trend twins, optionally only those in the same EPA ecoregion as the park. */
+export function analogSites(atlas: Atlas, park: string, eco: Eco | null, level: EcoLevel, n = 6): Twin[] {
+  const { twins } = findTwins(atlas, park, 200);
+  if (level === "any" || !eco) return twins.slice(0, n);
+  const mine = eco[park]?.[level];
+  if (!mine) return [];
+  return twins.filter((t) => eco[t.park]?.[level] === mine).slice(0, n);
+}
+
 // ---------- neighbours that disagree ----------
 
 export function km(a: { lat: number; lon: number }, b: { lat: number; lon: number }): number {

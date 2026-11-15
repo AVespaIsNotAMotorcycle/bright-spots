@@ -250,10 +250,10 @@ export function MiniMap({ atlas, onTwins }: { atlas: Atlas; onTwins: (park: stri
   };
   return (
     <section className="st-card" style={{ padding: 18, overflow: "visible" }}>
-      <Tag>🗺️ Pick a park, find its twins</Tag>
+      <Tag>🗺️ Pick a park, find its analog sites</Tag>
       <p className="small" style={{ color: E.bark, margin: "8px 0 10px" }}>
         Yearly daily high. Rust = confirmed rise, blue = confirmed fall, sage = no confirmed trend. Rings = stronger trend.
-        Click a park, then "Open this park" to see its twins.
+        Click a park, then "Open this park" to see its analog sites.
       </p>
       <ParkMap parks={ins.parks} colorOf={color} rings={rings}
         tip={(id) => { const c = cells.get(id); return c ? `${slopeText(c.sen, "tmax_c", atlas)}, q ${fmtQ(c.q)}` : "no data"; }}
@@ -309,7 +309,7 @@ export function exampleNotes(atlas: Atlas): Example[] {
   const t = findTwins(atlas, "zion").twins[0];
   if (t) out.push({
     kind: "hypothesis",
-    text: `Zion's closest trend twin is ${pname(t.park)} (similarity ${t.score.toFixed(2)}). If they share drivers, their seasonal patterns should match too. Worth checking on the season wheel.`,
+    text: `Zion's closest analog site is ${pname(t.park)} (similarity ${t.score.toFixed(2)}). Do their plant and animal records show the same changes? A good pair for a comparison study.`,
   });
   const top = (atlas.atlas["tmax_c"]?.["annual"] ?? []).filter((c) => c.verdict === "real" && (c.sen ?? 0) > 0)
     .sort((x, y) => (y.sen ?? 0) - (x.sen ?? 0))[0];

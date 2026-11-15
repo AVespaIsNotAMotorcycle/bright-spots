@@ -14,7 +14,7 @@ import Opposites from "./research/Opposites";
 import Robust from "./research/Robust";
 import Seasons from "./research/Seasons";
 import Community from "./research/Community";
-import Twins from "./research/Twins";
+import Analogs from "./research/Analogs";
 import { StationStrip, StationStyle } from "./research/station";
 import { PARK_NAMES } from "./detective/Detective";
 import { PERSONAS, TAB_LABEL, loadProfile, saveProfile, type Profile, type Tab } from "./profile";
@@ -23,7 +23,7 @@ import { useNav, type NavState } from "./useNav";
 // Researcher nav: a few top buttons, with the many tools folded into two menus.
 const NAV_GROUPS: (Tab | { label: string; tabs: Tab[] })[] = [
   "home",
-  { label: "🧭 Explore", tabs: ["atlas", "map", "twins", "families", "seasons"] },
+  { label: "🧭 Explore", tabs: ["atlas", "map", "analogs", "families", "seasons"] },
   { label: "🥊 Compare", tabs: ["opposites", "compare", "robust"] },
   "community",
 ];
@@ -207,11 +207,11 @@ export default function App() {
         {tab === "home" && (
           <Home persona={profile.persona} name={profile.name} atlas={atlas} onGo={go} />
         )}
-        {tab === "twins" && (
-          <Twins
+        {tab === "analogs" && (
+          <Analogs
             atlas={atlas}
             park={nav.park}
-            onPark={(id) => navigate({ tab: "twins", park: id })}
+            onPark={(id) => navigate({ tab: "analogs", park: id })}
             onCompare={(a, b) => go("compare", { park: a, park2: b })}
             onOpenPark={(id) => go("atlas", { park: id })}
           />

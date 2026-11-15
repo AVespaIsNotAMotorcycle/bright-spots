@@ -31,7 +31,7 @@ export const TAB_LABEL: Record<Tab, string> = {
   compare: "🥊 Head-to-Head",
   robust: "🧪 Robustness",
   seasons: "🌗 Season Shifts",
-  twins: "🪞 Twin Finder",
+  analogs: "🌐 Analog Sites",
   community: "🔥 Campfire",
 };
 
@@ -49,7 +49,7 @@ export const PERSONAS: Record<Persona, PersonaInfo> = {
     emoji: "🧑‍🎓",
     tagline: "Learn to read real NASA data",
     blurb: "You want guided cases that teach how trends and significance work.",
-    bullets: ["Predict first, then see the data", "Three guided detective cases", "Explore any park and plan a trip"],
+    bullets: ["Predict first, then see the data", "17 detective cases, plus daily games", "Explore any park and plan a trip"],
     tabs: ["home", "student", "explore", "planner"],
   },
   researcher: {
@@ -57,8 +57,8 @@ export const PERSONAS: Record<Persona, PersonaInfo> = {
     emoji: "🔬",
     tagline: "Full trend atlas with statistics",
     blurb: "You want every test, every period, and the raw results.",
-    bullets: ["Sen's slope, Mann-Kendall, FDR q-values", "Twin finder, odd neighbours, season wheel", "Head-to-head, Cite this, and the Campfire board"],
-    tabs: ["home", "atlas", "map", "twins", "families", "opposites", "seasons", "compare", "robust", "community"],
+    bullets: ["Sen's slope, Mann-Kendall, FDR q-values", "Analog sites, odd neighbours, season wheel", "Head-to-head, Cite this, and the Campfire board"],
+    tabs: ["home", "atlas", "map", "analogs", "families", "opposites", "seasons", "compare", "robust", "community"],
   },
 };
 

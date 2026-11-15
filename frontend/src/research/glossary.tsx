@@ -14,7 +14,7 @@ export const GLOSSARY: Record<string, string> = {
   sn: "Signal-to-noise (S/N): change per 10 years divided by the year-to-year scatter around the trend line (standard deviation of the leftovers). Above 1 means the trend is large next to the wobble.",
   lag1: "Lag-1 autocorrelation: how much each year's value follows the year before. High values make plain tests too confident, so we switch to Hamed-Rao.",
   fdr: "False discovery rate (Benjamini-Hochberg): a correction for running many tests at once, so chance results are not counted as finds.",
-  twin: "Twin score: cosine similarity of two parks' trend fingerprints (every measure, year and seasons, scaled across parks). +1 identical, 0 unrelated, −1 opposite.",
+  twin: "Similarity score: cosine similarity of two parks' trend fingerprints (every measure, year and seasons, scaled across parks). +1 identical, 0 unrelated, −1 opposite.",
   tmax: "Average daily high: NASA POWER air temperature 2 m above the ground, daily maximum, averaged over the period.",
   tmin: "Average daily low: NASA POWER air temperature 2 m above the ground, daily minimum, averaged over the period.",
   tmean: "Average temperature: NASA POWER daily mean air temperature 2 m above the ground.",
