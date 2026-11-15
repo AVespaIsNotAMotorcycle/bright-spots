@@ -1,7 +1,7 @@
 // Result pieces: score ring, 12-month strip, badges, the top-3 cards and the compact rows.
 import { photoOf } from "../../detective/photos";
 import type { Case } from "../../detective/cases";
-import { EMOJI, LABEL, MONTHS, reasonText, scoreColor, seasonOf, type Reason, type TripPark, type Unit } from "./tripModel";
+import { EMOJI, LABEL, MONTHS, goldMonth, reasonText, scoreColor, seasonOf, type Reason, type TripPark, type Unit } from "./tripModel";
 
 export function ScoreRing({ score, size = 62, light = true }: { score: number | null; size?: number; light?: boolean }) {
   const r = size / 2 - 5;
@@ -21,12 +21,13 @@ export function ScoreRing({ score, size = 62, light = true }: { score: number | 
 
 /** 12 squares, one per month, shaded by score, in season colours underneath. */
 export function MonthStrip({ p, picked }: { p: TripPark; picked: number[] }) {
+  const gold = goldMonth(p, picked);
   return (
     <div>
-      <div className="tp-strip" role="img" aria-label={`Scores by month. Best month all year: ${p.best_now ? MONTHS[p.best_now - 1] : "none"}`}>
+      <div className="tp-strip" role="img" aria-label={`Scores by month. Best month all year: ${gold ? MONTHS[gold - 1] : "none"}`}>
         {p.month_scores.map((m, i) => (
           <span key={i}
-            className={`${p.best_now === i + 1 ? "best" : ""} ${picked.includes(i + 1) ? "pick" : ""}`}
+            className={`${gold === i + 1 ? "best" : ""} ${picked.includes(i + 1) ? "pick" : ""}`}
             title={`${MONTHS[i]}: ${m.score == null ? "no data" : Math.round(m.score)}${m.ok ? "" : m.score != null ? " (fails a must)" : ""}`}
             style={{ background: scoreColor(m.score), opacity: m.ok ? 1 : 0.28,
               borderBottom: `3px solid ${seasonOf(i + 1).color}` }} />

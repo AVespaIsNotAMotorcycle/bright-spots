@@ -39,23 +39,30 @@ function ThenNow({ p, trip, unit }: { p: TripPark; trip: Trip; unit: Unit }) {
   const early = s ? s.values.filter((_, i) => s.years[i] >= 1981 && s.years[i] <= 1990).filter((v): v is number => v != null) : [];
   const then = early.length ? early.reduce((a, b) => a + b, 0) / early.length : null;
   const cells = [
-    { t: "1980s", sub: "measured avg", tmax: then, score: null as number | null },
-    { t: String(trip.this_year), sub: "measured", tmax: p.values.this_year?.tmax ?? null, score: p.scores.this_year },
-    { t: String(trip.next_year), sub: "forecast", tmax: p.values.next_year?.tmax ?? null, score: p.scores.next_year },
-    { t: "2050", sub: "model avg", tmax: p.values.y2050?.tmax ?? null, score: p.scores.y2050 },
+    { t: "1980s", kind: "10-yr avg", tmax: then, score: null as number | null },
+    { t: String(trip.this_year), kind: "one year", tmax: p.values.this_year?.tmax ?? null, score: p.scores.this_year },
+    { t: String(trip.next_year), kind: "trend line", tmax: p.values.next_year?.tmax ?? null, score: p.scores.next_year },
+    { t: "2050", kind: "model", tmax: p.values.y2050?.tmax ?? null, score: p.scores.y2050 },
   ];
   return (
     <div>
       <div className="tp-h">Then, now and 2050 · {MONTHS_LONG[p.best_month - 1]} daytime high</div>
       <div className="tp-hz">
-        {cells.map((c) => (
-          <div key={c.t}>
-            <span className="micro muted">{c.t} {c.sub}</span>
-            <b>{c.tmax == null ? "–" : temp(c.tmax, unit)}</b>
-            <span className="micro">{c.score == null ? "\u00a0" : `score ${Math.round(c.score)}`}</span>
-          </div>
-        ))}
+        {cells.map((c) => {
+          const s = c.tmax == null ? null : temp(c.tmax, unit);
+          return (
+            <div key={c.t}>
+              <span className="tp-hz-t">{c.t}</span>
+              <span className="tp-hz-k">{c.kind}</span>
+              <b>{s == null ? "–" : <>{s.slice(0, -2)}<small>{s.slice(-2)}</small></>}</b>
+              <span className="micro">{c.score == null ? "\u00a0" : `score ${Math.round(c.score)}`}</span>
+            </div>
+          );
+        })}
       </div>
+      <p className="tp-note" style={{ marginTop: 6 }}>
+        Each box comes from a different source, so small ups and downs between them are not a trend.
+      </p>
       <p className="tp-note">
         1980s: NASA POWER mean of 1981–1990. Forecast: this month's real trend extended one year, not a weather forecast.
         2050: WorldClim CMIP6 average of 6 models, {trip.scenario === "ssp585" ? "high" : "middle"} emissions; only temperature and rain change.

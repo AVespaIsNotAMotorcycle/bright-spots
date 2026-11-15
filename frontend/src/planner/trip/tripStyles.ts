@@ -112,7 +112,11 @@ export const TRIP_CSS = `
 .tp-meter i{display:block;height:100%;border-radius:4px}
 .tp-hz{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .tp-hz div{border:1px solid var(--border);border-radius:12px;padding:8px;text-align:center;font-size:12px}
-.tp-hz b{display:block;font-size:20px;font-family:var(--font-display)}
+.tp-hz div{display:flex;flex-direction:column;align-items:center;gap:2px}
+.tp-hz-t{font-size:12px;font-weight:700;color:var(--text)}
+.tp-hz-k{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);white-space:nowrap}
+.tp-hz b{display:block;font-size:22px;font-family:var(--font-display);font-variant-numeric:tabular-nums;line-height:1.2;margin-top:2px}
+.tp-hz b small{font-family:var(--font-body);font-size:.55em;font-weight:700;margin-left:1px;vertical-align:.5em}
 .tp-days{display:grid;grid-template-columns:repeat(31,1fr);gap:2px}
 .tp-days span{height:22px;border-radius:3px}
 /* Compare tray */

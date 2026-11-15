@@ -296,15 +296,20 @@ export const HORIZON_LABEL = (h: HorizonKey, t: Pick<Trip, "this_year" | "next_y
 /** Every feel band, so temperature hides no park. */
 export const ALL_FEELS = FEELS.map((f) => f.id);
 
-/** How many filters are set: each chip, plus a narrowed temperature. Months and year are not filters. */
+const sameFeels = (a: string[], b: string[]) => a.length === b.length && a.every((x) => b.includes(x));
+
+/** How many filters are set: each chip, plus warmth changed from Mild + Warm. Months and year are not filters. */
 export function filterCount(s: TripState): number {
-  const temp = s.custom != null || ALL_FEELS.some((f) => !s.feels.includes(f)) ? 1 : 0;
+  const temp = s.custom != null || !sameFeels(s.feels, DEFAULT_STATE.feels) ? 1 : 0;
   return Object.keys(s.want).length + Object.keys(s.avoid).length + temp;
 }
 
-/** Drop every chip and open the temperature to all feels. Keeps months, year and scenario. */
+/**
+ * Drop every chip and reset warmth to Mild + Warm. Keeps months, year and scenario.
+ * Warmth stays on so parks still rank: with every band on, every park would score 100.
+ */
 export function clearFilters(s: TripState): TripState {
-  return { ...s, feels: [...ALL_FEELS], custom: null, want: {}, avoid: {} };
+  return { ...s, feels: [...DEFAULT_STATE.feels], custom: null, want: {}, avoid: {} };
 }
 
 const fold = (x: string) => x.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -316,4 +321,16 @@ export function searchParks(parks: TripPark[], text: string): TripPark[] {
   const hay = (p: TripPark) => fold([p.park.name, p.park.short, p.park.code ?? "", ...p.park.states].join(" "));
   const starts = (p: TripPark) => fold(p.park.short).startsWith(t);
   return parks.filter((p) => hay(p).includes(t)).sort((a, b) => Number(starts(b)) - Number(starts(a)));
+}
+
+/**
+ * Month to mark gold on the strip. The best month all year, but on a tie
+ * (same rounded score) prefer the month the card names, then any picked month.
+ */
+export function goldMonth(p: TripPark, picked: number[]): number | null {
+  const r = (m: number) => Math.round(p.month_scores[m - 1]?.score ?? -1);
+  if (!p.best_now) return null;
+  const top = r(p.best_now);
+  if (r(p.best_month) === top) return p.best_month;
+  return picked.find((m) => r(m) === top) ?? p.best_now;
 }

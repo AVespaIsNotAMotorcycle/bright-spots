@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
 import fixture from "../../test/tripFixture.json";
-import { ALL_FEELS, DEFAULT_STATE, clearFilters, filterCount, searchParks, type Trip } from "./tripModel";
+import { ALL_FEELS, DEFAULT_STATE, clearFilters, filterCount, goldMonth, searchParks, type Trip } from "./tripModel";
 
 const parks = (fixture as unknown as Trip).parks;
 
 describe("trip filters", () => {
   it("counts chips and a narrowed temperature", () => {
-    expect(filterCount(DEFAULT_STATE)).toBe(2); // bugs + mild/warm only
-    expect(filterCount({ ...DEFAULT_STATE, want: { stars: "must" } })).toBe(3);
+    expect(filterCount(DEFAULT_STATE)).toBe(1); // bugs
+    expect(filterCount({ ...DEFAULT_STATE, want: { stars: "must" } })).toBe(2);
+    expect(filterCount({ ...DEFAULT_STATE, feels: ALL_FEELS })).toBe(2);
   });
 
   it("clear drops every filter but keeps months and year", () => {
@@ -15,7 +16,8 @@ describe("trip filters", () => {
     expect(filterCount(s)).toBe(0);
     expect(s.months).toEqual([3, 4]);
     expect(s.horizon).toBe("y2050");
-    expect(s.feels).toEqual(ALL_FEELS);
+    expect(s.feels).toEqual(DEFAULT_STATE.feels);
+    expect(s.custom).toBeNull();
   });
 });
 
@@ -35,5 +37,20 @@ describe("park search", () => {
 
   it("returns nothing for empty text", () => {
     expect(searchParks(parks, "  ")).toEqual([]);
+  });
+});
+
+describe("gold month on the strip", () => {
+  const park = (scores: number[], best_now: number, best_month: number) =>
+    ({ best_now, best_month, month_scores: scores.map((score) => ({ score, ok: true })) }) as unknown as Trip["parks"][number];
+
+  it("on a tie, marks the month the card names", () => {
+    expect(goldMonth(park(Array(12).fill(100), 12, 2), [2])).toBe(2);
+  });
+
+  it("with a clear winner, marks the best month all year", () => {
+    const s = Array(12).fill(60);
+    s[6] = 90;
+    expect(goldMonth(park(s, 7, 2), [2])).toBe(7);
   });
 });
