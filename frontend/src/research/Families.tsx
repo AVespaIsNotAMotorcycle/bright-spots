@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { Atlas } from "../detective/model";
 import { PERIOD_LABEL } from "../detective/model";
 import { FAMILY_COLORS, useInsights, varLabel } from "./lib";
-import ParkMap from "./MapSwitch";
+import ParkMap from "./ParkMap";
 
 export default function Families({
   atlas,
