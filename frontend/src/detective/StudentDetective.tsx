@@ -8,6 +8,7 @@ import type { Case, Step } from "./cases";
 import { CASES } from "./cases";
 import { GameStep, GAME_KINDS, loadProgress, saveResult, rankTitle } from "./games";
 import type { CaseResult } from "./games";
+import FlashCard, { themeFor } from "./cardTheme";
 
 // ── Case list ──────────────────────────────────────────────────────────────
 
@@ -60,23 +61,24 @@ export function CaseList({ onSelect }: { onSelect: (c: Case) => void }) {
             key={c.id}
             onClick={() => onSelect(c)}
             style={{
-              background: "var(--surface)",
-              border: "1px solid var(--border)",
-              borderRadius: 14,
+              background: `linear-gradient(145deg, ${themeFor(c.steps[0], c.id).from}, ${themeFor(c.steps[0], c.id).to})`,
+              border: `2px solid ${themeFor(c.steps[0], c.id).edge}`,
+              color: "#1f2a24",
+              borderRadius: 18,
               padding: "20px 18px",
               cursor: "pointer",
               textAlign: "left",
               display: "flex",
               flexDirection: "column",
               gap: 12,
-              transition: "border-color 0.15s, box-shadow 0.15s",
+              transition: "transform 0.15s, box-shadow 0.15s",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "var(--accent)";
-              e.currentTarget.style.boxShadow = "0 0 0 3px var(--accent-tint)";
+              e.currentTarget.style.transform = "translateY(-4px) rotate(-.6deg)";
+              e.currentTarget.style.boxShadow = "0 12px 24px rgba(0,0,0,.18)";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "var(--border)";
+              e.currentTarget.style.transform = "none";
               e.currentTarget.style.boxShadow = "none";
             }}
           >
@@ -92,9 +94,6 @@ export function CaseList({ onSelect }: { onSelect: (c: Case) => void }) {
                   {"⭐".repeat(progress[c.id].stars)}
                 </span>
               )}
-              <span style={{ fontSize: 13, color: "var(--accent)", fontWeight: 600 }}>
-                Play →
-              </span>
             </div>
           </button>
         ))}
@@ -475,17 +474,7 @@ export default function StudentDetective({
       </div>
 
       {/* Step */}
-      <div
-        style={{
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
-          borderRadius: 14,
-          padding: "24px 20px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 16,
-        }}
-      >
+      <FlashCard key={`${activeCase.id}-${stepIndex}`} step={step} caseId={activeCase.id} index={stepIndex}>
         <div>
           <div
             style={{
@@ -504,7 +493,7 @@ export default function StudentDetective({
             {step.kind === "interpret" && "💡 What it means"}
             {(GAME_KINDS as readonly string[]).includes(step.kind) && "🎮 Your move"}
           </div>
-          <h3 style={{ margin: "0 0 4px", fontSize: 18, fontWeight: 700 }}>
+          <h3 style={{ margin: "0 0 4px", fontSize: 24, fontWeight: 800, lineHeight: 1.25 }}>
             {step.heading}
           </h3>
         </div>
@@ -555,7 +544,7 @@ export default function StudentDetective({
             isLast={isLast}
           />
         )}
-      </div>
+      </FlashCard>
     </div>
   );
 }
