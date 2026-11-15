@@ -17,6 +17,7 @@ function ramp(stops: RGB[], t: number): RGB {
   return lerp(stops[i], stops[i + 1], x - i);
 }
 
+const POSSIBLE: RGB = [155, 89, 182];                                // violet: possible, not proven
 const NONE: RGB = [150, 170, 140];                                   // sage: no clear change
 const UP: RGB[] = [[255, 214, 102], [250, 140, 40], [214, 60, 30], [140, 20, 40]];   // gold > orange > red > maroon
 const DOWN: RGB[] = [[150, 220, 220], [60, 160, 210], [30, 90, 190], [40, 40, 120]]; // aqua > blue > indigo
@@ -36,7 +37,6 @@ export default function MapView({
   const { data: insights, error } = useInsights();
   const [v, setV] = useState(initialVar ?? "tmax_c");
   const [per, setPer] = useState(initialPeriod ?? "annual");
-  const [onlyReal, setOnlyReal] = useState(false);
 
   const cells = useMemo(() => {
     const m = new Map<string, { sen: number | null; verdict: string }>();
@@ -65,11 +65,10 @@ export default function MapView({
   const colorOf = (id: string) => {
     const c = cells.get(id);
     if (!c || c.sen == null || c.verdict === "short" || c.verdict === "flat") return css(NONE);
-    if (onlyReal && c.verdict !== "real") return css(NONE);
     const t = Math.min(1, Math.abs(c.sen) / maxAbs);
     const stops = c.sen >= 0 ? UP : DOWN;
     if (c.verdict === "real") return css(ramp(stops, 0.25 + 0.75 * t));
-    if (c.verdict === "possible") return css(lerp(NONE, ramp(stops, 0.2 + 0.5 * t), 0.65));
+    if (c.verdict === "possible") return css(POSSIBLE);
     return css(NONE);
   };
   const tip = (id: string) => {
@@ -83,8 +82,8 @@ export default function MapView({
         <h2 className="section-title">National trend map</h2>
         <p className="panel-intro">
           Each park is drawn with its real boundary. Warm colours (gold to maroon) mean a real rise, cool colours
-          (aqua to indigo) a real fall. Washed-out colours are possible but unproven trends. Sage green means no clear
-          change. Big parks show as shapes, small ones as dots.
+          (aqua to indigo) a real fall. Violet means a possible but unproven trend (it passes p &lt; 0.05 but not the multiple-testing
+          test). Sage green means no clear change. Big parks show as shapes, small ones as dots.
         </p>
         <div className="row gap-12" style={{ flexWrap: "wrap", margin: "10px 0" }}>
           <label className="field">
@@ -103,9 +102,6 @@ export default function MapView({
               ))}
             </select>
           </label>
-          <label className="check" style={{ alignSelf: "end" }}>
-            <input type="checkbox" checked={onlyReal} onChange={(e) => setOnlyReal(e.target.checked)} /> Only real trends
-          </label>
         </div>
         <ParkMap
           parks={insights.parks}
@@ -118,6 +114,9 @@ export default function MapView({
           <span>falling</span>
           <span style={{ width: 130, height: 12, borderRadius: 6, background: rampCss([...DOWN].reverse()) }} />
           <span style={{ width: 14, height: 12, borderRadius: 6, background: css(NONE) }} title="no clear change" />
+          <span className="muted">no change</span>
+          <span style={{ width: 14, height: 12, borderRadius: 6, background: css(POSSIBLE) }} title="possible, not proven" />
+          <span className="muted">possible</span>
           <span style={{ width: 130, height: 12, borderRadius: 6, background: rampCss(UP) }} />
           <span>rising</span>
           <span className="muted">(bigger change = stronger colour; scale is per map)</span>
