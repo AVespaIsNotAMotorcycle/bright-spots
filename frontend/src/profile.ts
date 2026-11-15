@@ -1,7 +1,7 @@
 // User profile (kept in this browser's localStorage; there is no account server).
 import type { NavState } from "./useNav";
 
-export type Persona = "student" | "visitor" | "researcher";
+export type Persona = "explorer" | "researcher";
 export type Tab = NonNullable<NavState["tab"]>;
 
 export interface Profile {
@@ -21,7 +21,8 @@ export interface PersonaInfo {
 
 export const TAB_LABEL: Record<Tab, string> = {
   home: "🏠 Home",
-  student: "🔍 Detective Cases",
+  student: "🔍 Cases",
+  passport: "🎫 Passport",
   explore: "🧭 Park Explorer",
   planner: "🗓 Trip Planner",
   atlas: "📊 Trend Atlas",
@@ -36,21 +37,13 @@ export const TAB_LABEL: Record<Tab, string> = {
 };
 
 export const PERSONAS: Record<Persona, PersonaInfo> = {
-  visitor: {
-    label: "Visitor",
+  explorer: {
+    label: "Explorer",
     emoji: "🥾",
-    tagline: "Plan a trip around how parks are changing",
-    blurb: "You want to know when to go and what to expect.",
-    bullets: ["Pick a month, get a score for every park", "See which parks are warming", "Plain language, no statistics"],
-    tabs: ["home", "planner", "explore"],
-  },
-  student: {
-    label: "Student",
-    emoji: "🧑‍🎓",
-    tagline: "Learn to read real NASA data",
-    blurb: "You want guided cases that teach how trends and significance work.",
-    bullets: ["Predict first, then see the data", "17 detective cases, plus daily games", "Explore any park and plan a trip"],
-    tabs: ["home", "student", "explore", "planner"],
+    tagline: "Solve park mysteries, then plan the trip",
+    blurb: "Crack cases with real NASA data. Each case stamps your park passport.",
+    bullets: ["17 detective cases, plus daily games", "Collect a passport stamp for every park", "Pick a month, get a score for every park"],
+    tabs: ["home", "planner", "student", "explore", "passport"],
   },
   researcher: {
     label: "Researcher",
@@ -64,15 +57,20 @@ export const PERSONAS: Record<Persona, PersonaInfo> = {
 
 const KEY = "profile";
 
+/** Visitor and Student were merged into Explorer. */
+function migrate(p: { name?: string; persona?: string }): Profile {
+  return { name: p.name ?? "", persona: p.persona === "researcher" ? "researcher" : "explorer" };
+}
+
 export function loadProfile(): Profile | null {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return JSON.parse(raw) as Profile;
+    if (raw) return migrate(JSON.parse(raw) as { name?: string; persona?: string });
     // Older builds stored only a persona string.
     const old = localStorage.getItem("persona");
     if (old) {
       const p = JSON.parse(old) as string | null;
-      if (p === "student" || p === "researcher") return { name: "", persona: p };
+      if (p) return migrate({ name: "", persona: p });
     }
   } catch {
     /* storage unavailable */

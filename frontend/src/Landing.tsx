@@ -4,7 +4,7 @@ import { PERSONAS, type Persona, type Profile } from "./profile";
 
 export type { Persona };
 
-const ORDER: Persona[] = ["visitor", "student", "researcher"];
+const ORDER: Persona[] = ["explorer", "researcher"];
 
 export default function Landing({
   initial,
@@ -16,7 +16,7 @@ export default function Landing({
   onCancel?: () => void;
 }) {
   const [name, setName] = useState(initial?.name ?? "");
-  const [persona, setPersona] = useState<Persona>(initial?.persona ?? "visitor");
+  const [persona, setPersona] = useState<Persona>(initial?.persona ?? "explorer");
   const info = PERSONAS[persona];
 
   return (
@@ -52,7 +52,7 @@ export default function Landing({
 
         <div>
           <div className="section-title" style={{ marginBottom: 8 }}>I am a…</div>
-          <div role="radiogroup" aria-label="Persona" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, background: "var(--surface-2)", padding: 5, borderRadius: 14 }}>
+          <div role="radiogroup" aria-label="Persona" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 6, background: "var(--surface-2)", padding: 5, borderRadius: 14 }}>
             {ORDER.map((p) => {
               const on = persona === p;
               return (

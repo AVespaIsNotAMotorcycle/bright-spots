@@ -141,7 +141,7 @@ export default function Detective({
     );
   }
 
-  // Students and visitors get the question-led explorer; researchers keep the full atlas below.
+  // Explorers (science off) get the question-led explorer; researchers keep the full atlas below.
   if (simple) return <ExplorerHome atlas={atlas} onOpen={(id) => selectPark(id)} />;
 
   const unit = atlas.variables[selVar]?.unit;

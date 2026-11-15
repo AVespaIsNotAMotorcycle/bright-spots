@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import type { Atlas } from "../atlas/model";
+import { loadProgress } from "../detective/games";
+import { caseForPark } from "../detective/stamps";
 import TrendBadges from "./TrendBadges";
 import YearChart from "./YearChart";
+import { whatChanged } from "./whatChanged";
 import {
   FACTOR_LABEL,
   MONTHS,
@@ -273,6 +276,8 @@ export function ParkCard({
   place,
   onRemove,
   atlas,
+  science = false,
+  onCase,
 }: {
   p: ParkPlan;
   plan: Plan;
@@ -280,7 +285,11 @@ export function ParkCard({
   place: Place | null;
   onRemove: () => void;
   atlas: Atlas | null;
+  science?: boolean;
+  onCase?: (caseId: string) => void;
 }) {
+  const c = onCase && p.park.code ? caseForPark(p.park.code, loadProgress()) : undefined;
+  const changed = whatChanged(atlas, p.park.id, plan.month, unit === "F", science);
   return (
     <article className="card park-card" aria-labelledby={`card-${p.park.id}`}>
       <header className="park-card-head">
@@ -304,7 +313,17 @@ export function ParkCard({
           <BigScore key={hz.key} h={p[hz.key]} title={horizonTitle(hz.key, plan)} tag={hz.tag} tagClass={hz.tagClass} />
         ))}
       </div>
+      {changed && (
+        <p className="small" style={{ margin: "4px 0", background: "var(--pine-tint)", borderRadius: 8, padding: "8px 12px" }}>
+          <strong>What changed?</strong> {changed} <span className="micro muted">NASA POWER daytime high.</span>
+        </p>
+      )}
       <Details p={p} plan={plan} unit={unit} />
+      {c && onCase && (
+        <button className="btn-ghost small" onClick={() => onCase(c.id)} style={{ alignSelf: "flex-start" }}>
+          🔍 Solve a case here: {c.emoji} {c.title} →
+        </button>
+      )}
       {p.park.code && (
         <p className="micro">
           <a href={`https://www.nps.gov/${p.park.code}/`} target="_blank" rel="noreferrer">

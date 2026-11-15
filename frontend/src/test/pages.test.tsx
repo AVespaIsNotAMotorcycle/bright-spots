@@ -60,10 +60,33 @@ describe("App", () => {
     expect(screen.getByText(/Show all 63 parks/)).toBeTruthy();
   });
 
-  it("student home has the twin game", async () => {
+  it("an old student profile opens Explorer home with the twin game", async () => {
     localStorage.setItem("profile", JSON.stringify({ name: "", persona: "student" }));
     render(<App />);
     expect(await screen.findByText(/Who changes most like/, undefined, { timeout: 3000 })).toBeTruthy();
+    expect(screen.getByText(/Explorer mode/)).toBeTruthy();
+  });
+
+  it("an old visitor profile gets the merged Explorer tabs and passport", async () => {
+    localStorage.setItem("profile", JSON.stringify({ name: "Sam", persona: "visitor" }));
+    render(<App />);
+    expect(await screen.findByText(/0 of \d+ parks stamped/, undefined, { timeout: 3000 })).toBeTruthy();
+    for (const t of ["🗓 Trip Planner", "🔍 Cases", "🧭 Park Explorer", "🎫 Passport"]) expect(screen.getByText(t)).toBeTruthy();
+    const sw = screen.getByRole("switch");
+    expect(sw.textContent).toContain("Science off");
+    fireEvent.click(sw);
+    expect(sw.textContent).toContain("Science on");
+    expect(localStorage.getItem("explorer.science")).toBe("true");
+  });
+
+  it("a solved case stamps its parks in the passport", async () => {
+    localStorage.setItem("profile", JSON.stringify({ name: "", persona: "explorer" }));
+    localStorage.setItem("detective.progress", JSON.stringify({ "crater-lake-warming": { pts: 5, max: 5, stars: 3 } }));
+    history.replaceState(null, "", "#tab=passport");
+    render(<App />);
+    expect(await screen.findByText(/stamps$/, undefined, { timeout: 3000 })).toBeTruthy();
+    expect(screen.getAllByTitle(/case\(s\) solved here/).length).toBeGreaterThan(0);
+    expect(screen.getByText("No case yet")).toBeTruthy();
   });
 });
 

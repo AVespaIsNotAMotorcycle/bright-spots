@@ -19,6 +19,7 @@ const Robust = lazy(() => import("./research/Robust"));
 const Seasons = lazy(() => import("./research/Seasons"));
 const Community = lazy(() => import("./research/Community"));
 const Analogs = lazy(() => import("./research/Analogs"));
+const Passport = lazy(() => import("./detective/Passport"));
 import { PARK_NAMES } from "./detective/parkNames";
 import { PERSONAS, TAB_LABEL, loadProfile, saveProfile, type Profile, type Tab } from "./profile";
 import { useNav, type NavState } from "./useNav";
@@ -67,6 +68,14 @@ function NavMenu({ label, tabs, current, onGo }: { label: string; tabs: Tab[]; c
   );
 }
 
+function loadScience(): boolean {
+  try {
+    return localStorage.getItem("explorer.science") === "true";
+  } catch {
+    return false;
+  }
+}
+
 function loadUnit(): Unit {
   try {
     return localStorage.getItem("planner.unit") === '"C"' ? "C" : "F";
@@ -81,6 +90,15 @@ export default function App() {
   const [editing, setEditing] = useState(false);
   const [atlas, setAtlas] = useState<Atlas | null>(null);
   const [unit, setUnit] = useState<Unit>(loadUnit);
+  // Explorer "science" switch: off shows plain words, on adds the statistics.
+  const [science, setScience] = useState<boolean>(loadScience);
+  useEffect(() => {
+    try {
+      localStorage.setItem("explorer.science", String(science));
+    } catch {
+      /* storage unavailable */
+    }
+  }, [science]);
   useEffect(() => {
     try {
       localStorage.setItem("planner.unit", JSON.stringify(unit));
@@ -179,6 +197,17 @@ export default function App() {
                   {TAB_LABEL[t]}
                 </button>
               ))}
+          {profile.persona === "explorer" && (
+            <button
+              role="switch"
+              aria-checked={science}
+              onClick={() => setScience((x) => !x)}
+              className={`nav-tab${science ? " active" : ""}`}
+              title="Show the statistics behind each trend (p, q, every season)"
+            >
+              🔬 Science {science ? "on" : "off"}
+            </button>
+          )}
           <button
             onClick={() => setEditing(true)}
             style={{
@@ -235,7 +264,7 @@ export default function App() {
         {tab === "student" && (
           <StudentDetective
             atlas={atlas ?? { variables: {}, periods: [], atlas: {} }}
-            onGoPlanner={(month) => go("planner", { month })}
+            onGoPlanner={(month, park) => go("planner", { month: month ?? undefined, park })}
             navCaseId={nav.caseId}
             navStep={nav.step}
             onNavChange={(caseId, step) =>
@@ -246,11 +275,17 @@ export default function App() {
         {(tab === "atlas" || tab === "explore") && (
           <Detective
             key={tab}
-            simple={tab === "explore"}
+            simple={tab === "explore" && !science}
             initialParkId={nav.park ?? null}
             onParkChange={(parkId) =>
               parkId ? navigate({ tab, park: parkId }) : navigate({ tab })
             }
+          />
+        )}
+        {tab === "passport" && (
+          <Passport
+            onCase={(c) => go("student", { caseId: c.id, step: 0 })}
+            onExplore={(park) => go("explore", { park })}
           />
         )}
         {tab === "map" && (
@@ -290,7 +325,14 @@ export default function App() {
         )}
         {tab === "planner" && (
           <PlannerShadow>
-            <Planner unit={unit} setUnit={setUnit} month={nav.month} />
+            <Planner
+              unit={unit}
+              setUnit={setUnit}
+              month={nav.month}
+              park={nav.park}
+              science={science}
+              onCase={profile.persona === "explorer" ? (caseId) => go("student", { caseId, step: 0 }) : undefined}
+            />
           </PlannerShadow>
         )}
         </Suspense>

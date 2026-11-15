@@ -12,6 +12,8 @@ import { play } from "./sound";
 import QuizCard from "./quiz";
 import type { CaseResult } from "./games";
 import FlashCard, { themeFor } from "./cardTheme";
+import { PARK_NAMES } from "./parkNames";
+import { caseParks } from "./stamps";
 
 // ── Case list ──────────────────────────────────────────────────────────────
 
@@ -241,7 +243,7 @@ export default function StudentDetective({
   onNavChange,
 }: {
   atlas: Atlas;
-  onGoPlanner: (month: number) => void;
+  onGoPlanner: (month: number | null, park?: string) => void;
   navCaseId?: string | null;
   navStep?: number | null;
   onNavChange?: (caseId: string | null, step: number | null) => void;
@@ -322,6 +324,7 @@ export default function StudentDetective({
           const link = activeCase.steps.find((s) => s.plannerLink)?.plannerLink;
           return link ? { label: link.label, go: () => onGoPlanner(link.month) } : undefined;
         })()}
+        onTrip={(park) => onGoPlanner(activeCase.steps.find((s) => s.plannerLink)?.plannerLink?.month ?? null, park)}
       />
     );
   }
@@ -403,14 +406,17 @@ export default function StudentDetective({
 // ── End-of-case screen ────────────────────────────────────────────────────
 
 function CaseClosed({
-  c, result, onAgain, onBack, onPlanner,
+  c, result, onAgain, onBack, onPlanner, onTrip,
 }: {
   c: Case;
   result: CaseResult;
   onAgain: () => void;
   onBack: () => void;
   onPlanner?: { label: string; go: () => void };
+  onTrip: (park: string) => void;
 }) {
+  const parks = caseParks(c);
+  const home = parks[0];
   useEffect(() => {
     play("star");
   }, []);
@@ -444,7 +450,17 @@ function CaseClosed({
           Badge: {c.badge}
         </div>
       )}
+      {parks.length > 0 && (
+        <div style={{ fontSize: 13, color: "var(--text-muted)", maxWidth: 460 }}>
+          🎫 Passport stamp{parks.length > 1 ? "s" : ""}: {parks.map((p) => PARK_NAMES[p] ?? p).join(", ")}
+        </div>
+      )}
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center", marginTop: 6 }}>
+        {home && (
+          <button onClick={() => onTrip(home)} style={{ ...btn, background: "var(--pine)", color: "var(--on-pine)", border: "none" }}>
+            🗓 Plan a trip to {PARK_NAMES[home] ?? home} →
+          </button>
+        )}
         <button onClick={onAgain} style={{ ...btn, background: "var(--accent)", color: "var(--on-accent)", border: "none" }}>
           Play again
         </button>

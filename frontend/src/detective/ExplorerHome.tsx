@@ -1,4 +1,4 @@
-// Park Explorer for students and visitors: start from a question, see the top 3, a plot twist,
+// Park Explorer for explorers: start from a question, see the top 3, a plot twist,
 // a map and a ranked list. Every number comes from the NASA POWER trend atlas.
 import { useMemo, useState } from "react";
 import type { Atlas, AtlasCell } from "./model";

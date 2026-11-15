@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { loadAtlas, type Atlas } from "../atlas/model";
 import BestDaysStrip from "./BestDaysStrip";
 import LocationPicker from "./LocationPicker";
@@ -113,8 +113,16 @@ function Suggestion({
 }
 
 export default function Planner({
-  unit, setUnit, month,
-}: { unit: Unit; setUnit: (u: Unit) => void; month?: number | null }) {
+  unit, setUnit, month, park, science = false, onCase,
+}: {
+  unit: Unit;
+  setUnit: (u: Unit) => void;
+  month?: number | null;
+  /** NPS code from the URL (e.g. a case's "Plan a trip here"): adds that park. */
+  park?: string | null;
+  science?: boolean;
+  onCase?: (caseId: string) => void;
+}) {
   const validMonth = month != null && month >= 1 && month <= 12 ? month : null;
   const [prefs, setPrefs] = useState<Prefs>({
     month: validMonth ?? DEFAULT_MONTH,
@@ -190,6 +198,15 @@ export default function Planner({
       });
     return () => ctl.abort();
   }, [prefs, rankBy, topKey]);
+  // A park in the URL joins the compared parks once.
+  const addedPark = useRef<string | null>(null);
+  useEffect(() => {
+    if (!plan || !park || addedPark.current === park) return;
+    const hit = plan.parks.find((p) => p.park.code === park);
+    if (!hit) return;
+    addedPark.current = park;
+    setSelected((s) => (s.includes(hit.park.id) ? s : [hit.park.id, ...s]));
+  }, [plan, park]);
   const byId = useMemo(() => new Map(plan?.parks.map((p) => [p.park.id, p]) ?? []), [plan]);
   const chosen = selected.map((id) => byId.get(id)).filter((p): p is ParkPlan => p != null);
 
@@ -309,7 +326,7 @@ export default function Planner({
           ) : (
             <div className="card-grid">
               {chosen.map((p) => (
-                <ParkCard key={p.park.id} p={p} plan={plan} unit={unit} place={place} onRemove={() => toggle(p.park.id)} atlas={atlas} />
+                <ParkCard key={p.park.id} p={p} plan={plan} unit={unit} place={place} onRemove={() => toggle(p.park.id)} atlas={atlas} science={science} onCase={onCase} />
               ))}
             </div>
           )}
