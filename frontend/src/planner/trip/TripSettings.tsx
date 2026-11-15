@@ -99,7 +99,7 @@ function Feel({ state, set, unit }: Pick<Props, "state" | "set" | "unit">) {
           );
         })}
       </div>
-      {!state.custom && state.feels.length === 0 && <p className="tp-note">Any warmth. Pick one to rank parks by it.</p>}
+      {!state.custom && state.feels.length === 0 && <p className="tp-note">None picked: we rank for comfy highs, {temp(15, unit)} to {temp(30, unit)}.</p>}
       {state.custom && (
         <p className="tp-note">
           Custom: {temp(state.custom[0], unit)} to {temp(state.custom[1], unit)}.{" "}

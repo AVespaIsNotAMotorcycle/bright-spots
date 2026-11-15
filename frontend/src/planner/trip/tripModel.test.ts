@@ -45,7 +45,7 @@ describe("trip model", () => {
     expect(q.get("bands")).toBe("24:30,30:40");
     expect(q.get("want")).toBe("camping!");
     expect(q.get("avoid")).toBe("fire");
-    expect(bandsOf({ ...DEFAULT_STATE, feels: [] })).toEqual([[15, 27]]);
+    expect(bandsOf({ ...DEFAULT_STATE, feels: [] })).toEqual([[15, 24], [24, 30]]);
   });
 
   it("every mood only uses real chips", () => {

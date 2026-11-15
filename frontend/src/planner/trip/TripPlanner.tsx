@@ -17,8 +17,8 @@ import {
   DEFAULT_STATE,
   HORIZON_LABEL,
   clearCount,
+  isBrowse,
   clearFilters,
-  filterCount,
   searchParks,
   LABEL,
   MONTHS,
@@ -135,10 +135,10 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
   const shown = matches.slice(0, TOP + MORE);
   const found = useMemo(() => searchParks(trip?.parks ?? [], find), [trip, find]);
   const rankOf = useMemo(() => new Map((trip?.parks ?? []).map((p, i) => [p.park.id, i + 1])), [trip]);
-  const nFilters = filterCount(state);
   const nClear = clearCount(state);
   // No filters: nothing to rank by, so list every park A to Z with no rank or score.
-  const browse = !!trip && nFilters === 0;
+  const browse = !!trip && isBrowse(state);
+  const noWarmth = !state.custom && state.feels.length === 0;
   const az = useMemo(() => [...(trip?.parks ?? [])].sort((a, b) => a.park.short.localeCompare(b.park.short)), [trip]);
   const rest = (trip?.parks ?? []).filter((p) => !shown.includes(p));
 
@@ -255,7 +255,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
               {trip ? browse ? `All ${trip.parks.length} parks` : (matches.length ? `${matches.length} park${matches.length === 1 ? "" : "s"} fit your trip` : "No park fits every must") : "Finding parks…"}
               {loading && trip ? " · updating…" : ""}
             </p>
-            <span className="small muted">{browse ? "No filters, so no ranking. Pick a mood or a filter to rank them." : `${monthsText} · ranked for ${HORIZON_LABEL(state.horizon, trip)}`}</span>
+            <span className="small muted">{browse ? "No filters, so no ranking. Pick a mood or a filter to rank them." : `${monthsText} · ranked for ${HORIZON_LABEL(state.horizon, trip)}${noWarmth ? ` · comfy ${unit === "F" ? "59–86°F" : "15–30°C"} highs` : ""}`}</span>
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             {!browse && <div className="tp-seg" role="group" aria-label="Year">

@@ -160,10 +160,13 @@ export function applyMood(s: TripState, m: Mood): TripState {
 }
 
 /** Feel chips (or the custom range) as lo:hi bands in °C. */
+/** No warmth picked: rank for comfy highs, Mild + Warm (15–30 °C). */
+export const DEFAULT_BANDS: [number, number][] = [[15, 24], [24, 30]];
+
 export function bandsOf(s: TripState): [number, number][] {
   if (s.custom) return [s.custom];
   const b = FEELS.filter((f) => s.feels.includes(f.id)).map((f) => [f.lo, f.hi] as [number, number]);
-  return b.length ? b : [[15, 27]];
+  return b.length ? b : DEFAULT_BANDS;
 }
 
 const chipStr = (c: Record<string, Level>) =>
@@ -308,6 +311,9 @@ export function filterCount(s: TripState): number {
   const temp = s.custom != null || s.feels.length > 0 ? 1 : 0;
   return Object.keys(s.want).length + Object.keys(s.avoid).length + temp;
 }
+
+/** True when nothing is picked at all: no months, warmth or chips. Then the planner lists A to Z. */
+export const isBrowse = (s: TripState): boolean => s.months.length === 0 && filterCount(s) === 0;
 
 /** Filters plus picked months: the number shown on Clear all. */
 export const clearCount = (s: TripState): number => filterCount(s) + (s.months.length ? 1 : 0);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import fixture from "../../test/tripFixture.json";
-import { ALL_FEELS, DEFAULT_STATE, clearCount, clearFilters, decodeState, tripQuery, encodeState, filterCount, goldMonth, searchParks, type Trip } from "./tripModel";
+import { ALL_FEELS, DEFAULT_STATE, bandsOf, clearCount, isBrowse, clearFilters, decodeState, tripQuery, encodeState, filterCount, goldMonth, searchParks, type Trip } from "./tripModel";
 
 const parks = (fixture as unknown as Trip).parks;
 
@@ -22,10 +22,13 @@ describe("trip filters", () => {
     expect(s.custom).toBeNull();
   });
 
-  it("months count toward Clear all but not toward ranking", () => {
-    const s = { ...clearFilters(DEFAULT_STATE), months: [7] };
-    expect(filterCount(s)).toBe(0);
-    expect(clearCount(s)).toBe(1);
+  it("picking only a month ranks; picking nothing lists A to Z", () => {
+    const none = clearFilters(DEFAULT_STATE);
+    expect(isBrowse(none)).toBe(true);
+    const july = { ...none, months: [7] };
+    expect(isBrowse(july)).toBe(false);
+    expect(clearCount(july)).toBe(1);
+    expect(bandsOf(july)).toEqual([[15, 24], [24, 30]]); // comfy highs when no warmth is picked
   });
 
   it("Any time asks the API for all 12 months", () => {
