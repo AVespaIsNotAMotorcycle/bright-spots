@@ -1,7 +1,7 @@
 // Saved parks: the want-to-go list, each with its best month for the user's own trip settings.
 import { useEffect, useMemo, useState } from "react";
 import PageHead from "../brand/PageHead";
-import { PARK_NAMES } from "./parkNames";
+import { SAVED_NAMES, parkKey, trendCode } from "./parkKey";
 import { photoOf } from "./photos";
 import { useWishlist } from "./wishlist";
 import { DEFAULT_STATE, MONTHS, decodeState, fetchTrip, type Trip } from "../planner/trip/tripModel";
@@ -44,10 +44,10 @@ export default function SavedPage({ onPlan, onExplore }: { onPlan: (code: string
   const [wish, toggle] = useWishlist();
   const [find, setFind] = useState("");
   const trip = useYearTrip();
-  const byCode = useMemo(() => new Map((trip?.parks ?? []).map((p) => [p.park.code ?? p.park.id, p])), [trip]);
+  const byCode = useMemo(() => new Map((trip?.parks ?? []).map((p) => [parkKey(p.park), p])), [trip]);
   const t = find.trim().toLowerCase();
   const hits = t
-    ? Object.keys(PARK_NAMES).filter((c) => PARK_NAMES[c].toLowerCase().includes(t)).sort((a, b) => PARK_NAMES[a].localeCompare(PARK_NAMES[b])).slice(0, 12)
+    ? Object.keys(SAVED_NAMES).filter((c) => SAVED_NAMES[c].toLowerCase().includes(t)).sort((a, b) => SAVED_NAMES[a].localeCompare(SAVED_NAMES[b])).slice(0, 12)
     : [];
 
   return (
@@ -67,7 +67,7 @@ export default function SavedPage({ onPlan, onExplore }: { onPlan: (code: string
             {hits.length === 0 && <span className="small muted">No park matches.</span>}
             {hits.map((c) => (
               <button key={c} className="chip chip-sm" aria-pressed={wish.includes(c)} onClick={() => toggle(c)}>
-                {wish.includes(c) ? "♥" : "♡"} {PARK_NAMES[c]}
+                {wish.includes(c) ? "♥" : "♡"} {SAVED_NAMES[c]}
               </button>
             ))}
           </div>
@@ -85,7 +85,7 @@ export default function SavedPage({ onPlan, onExplore }: { onPlan: (code: string
               <article key={c} className="sv-card">
                 {photo ? <img src={photo.file} alt="" loading="lazy" /> : <div style={{ height: 130, background: "var(--surface-2)" }} />}
                 <div className="sv-body">
-                  <h3 className="sv-name">{PARK_NAMES[c] ?? c}</h3>
+                  <h3 className="sv-name">{SAVED_NAMES[c] ?? c}</h3>
                   {p && <span className="micro muted">{p.park.states.join(", ")}</span>}
                   <span className="sv-best">
                     {!trip ? "…" : !p ? "No trip data" : p.ok
@@ -93,9 +93,9 @@ export default function SavedPage({ onPlan, onExplore }: { onPlan: (code: string
                       : "Misses one of your musts all year"}
                   </span>
                   <div className="sv-acts">
-                    <button className="sv-btn" onClick={() => onPlan(c, p?.ok ? p.best_month : undefined)}>Plan</button>
-                    <button className="sv-btn" onClick={() => onExplore(c)}>Trends</button>
-                    <button className="sv-btn sv-x" onClick={() => toggle(c)} aria-label={`Remove ${PARK_NAMES[c] ?? c}`}>✕</button>
+                    <button className="sv-btn" onClick={() => onPlan(c === "kica" ? "kings-canyon" : c, p?.ok ? p.best_month : undefined)}>Plan</button>
+                    <button className="sv-btn" onClick={() => onExplore(trendCode(c))}>Trends</button>
+                    <button className="sv-btn sv-x" onClick={() => toggle(c)} aria-label={`Remove ${SAVED_NAMES[c] ?? c}`}>✕</button>
                   </div>
                 </div>
               </article>

@@ -216,6 +216,18 @@ describe("App", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
+  it("Saved tab keeps Sequoia and Kings Canyon as two parks", async () => {
+    localStorage.setItem("profile", JSON.stringify({ name: "", research: false }));
+    localStorage.setItem("wishlist", JSON.stringify(["seki", "kica"]));
+    history.replaceState(null, "", "#tab=saved");
+    render(<App />);
+    expect(await screen.findByRole("heading", { name: "Sequoia" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Kings Canyon" })).toBeTruthy();
+    expect(screen.getByText("2 parks you want to see")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Remove Kings Canyon" }));
+    expect(JSON.parse(localStorage.getItem("wishlist")!)).toEqual(["seki"]);
+  });
+
   it("Explorer always sees plain words: no factor scores, simple Park Explorer", async () => {
     localStorage.setItem("profile", JSON.stringify({ name: "", research: false }));
     history.replaceState(null, "", "#tab=planner&month=10");

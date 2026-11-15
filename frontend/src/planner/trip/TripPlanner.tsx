@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Case } from "../../detective/cases";
 import { loadProgress } from "../../detective/games";
+import { parkKey } from "../../detective/parkKey";
 import { photoOf } from "../../detective/photos";
 import { caseForPark, casesByPark } from "../../detective/stamps";
 import { useWishlist } from "../../detective/wishlist";
@@ -188,14 +189,14 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
 
   const caseOf = (p: TripPark): Case | undefined => (p.park.code ? caseForPark(p.park.code, progress) : undefined);
   const code = (p: TripPark) => p.park.id;
-  // The map is keyed by NPS code (Sequoia and Kings Canyon share one); take the better-ranked park.
-  const byMapId = (c: string) => trip?.parks.find((p) => (p.park.code ?? p.park.id) === c);
+  // The map and the saved list use parkKey: the NPS code, with Kings Canyon told apart from Sequoia.
+  const byMapId = (c: string) => trip?.parks.find((p) => parkKey(p.park) === c);
   const changed = (p: TripPark) => whatChanged(atlas, p.park.id, p.best_month, unit === "F");
   const trendOf = (p: TripPark) => trendTag(atlas, p.park.id, p.best_month, unit === "F");
 
   const actions = (p: TripPark) => {
     const c = code(p);
-    const w = p.park.code ?? p.park.id;
+    const w = parkKey(p.park);
     const inCmp = compare.includes(c);
     return (
       <>
@@ -212,7 +213,7 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
   };
 
   const heart = (p: TripPark) => {
-    const w = p.park.code ?? p.park.id;
+    const w = parkKey(p.park);
     return <Heart on={wish.includes(w)} name={p.park.short} onToggle={() => toggleWish(w)} />;
   };
 
@@ -387,14 +388,14 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
         {trip && view === "map" && (
           <section className="card">
             <ParkMap
-              parks={[...new Map(trip.parks.map((p) => [p.park.code ?? p.park.id, p])).values()].map((p) => ({
-                id: p.park.code ?? p.park.id, name: p.park.short, state: p.park.states.join(", "), lat: p.park.lat, lon: p.park.lon,
+              parks={[...new Map(trip.parks.map((p) => [parkKey(p.park), p])).values()].map((p) => ({
+                id: parkKey(p.park), name: p.park.short, state: p.park.states.join(", "), lat: p.park.lat, lon: p.park.lon,
               }))}
               colorOf={(c) => {
                 const p = byMapId(c);
                 return browse ? "#3d6b3a" : !p || !p.ok ? "#b9ae97" : scoreColor(p.score);
               }}
-              radius={(c) => (browse ? 6 : shown.some((p) => (p.park.code ?? p.park.id) === c) ? 8 : 4)}
+              radius={(c) => (browse ? 6 : shown.some((p) => parkKey(p.park) === c) ? 8 : 4)}
               tip={(c) => {
                 const p = byMapId(c);
                 if (!p || browse) return "";

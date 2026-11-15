@@ -4,7 +4,7 @@ Source : NPS boundary service (public, no key)
          https://services1.arcgis.com/fBc8EJBxQRMcHlei/arcgis/rest/services/
          NPS_Land_Resources_Division_Boundary_and_Tract_Data_Service/FeatureServer/2
 Writes : ../frontend/public/park-shapes.json   {park_id: [[ring, ring, ...], ...]}  (lon/lat, 3 decimals)
-Sequoia and Kings Canyon share one id ("seki"), so their shapes are merged.
+Sequoia ("seki") and Kings Canyon ("kica") are drawn as two shapes.
 Boundaries are simplified to about 400 m; they are for drawing, not measuring.
 """
 import json
@@ -21,7 +21,8 @@ DATA = ROOT / "data" / "trends" / "parks"
 OUT = ROOT.parent / "frontend" / "public" / "park-shapes.json"
 BASE = ("https://services1.arcgis.com/fBc8EJBxQRMcHlei/arcgis/rest/services/"
         "NPS_Land_Resources_Division_Boundary_and_Tract_Data_Service/FeatureServer/2/query")
-ALIASES = {"SEKI": ["SEQU", "KICA"]}
+ALIASES = {"SEKI": ["SEQU"]}  # the trend file "seki" is one NASA point; the map draws Sequoia alone
+EXTRA = {"kica": ["KICA"]}  # Kings Canyon gets its own shape and id
 
 
 def fetch(code: str):
@@ -39,21 +40,21 @@ def fetch(code: str):
 
 def main():
     shapes, missing = {}, []
-    for f in sorted(DATA.glob("*.json")):
-        d = json.loads(f.read_text())
-        code = d["park"]["unit_code"].upper()
+    todo = [(f.stem, ALIASES.get(c := json.loads(f.read_text())["park"]["unit_code"].upper(), [c]))
+            for f in sorted(DATA.glob("*.json"))] + list(EXTRA.items())
+    for key, codes in todo:
         feats = []
-        for c in ALIASES.get(code, [code]):
+        for c in codes:
             feats += fetch(c)
         geoms = [shape(x["geometry"]) for x in feats if x.get("geometry")]
         if not geoms:
-            missing.append(f.stem)
+            missing.append(key)
             continue
         g = unary_union(geoms).simplify(0.003, preserve_topology=True)
         polys = list(g.geoms) if g.geom_type == "MultiPolygon" else [g]
-        shapes[f.stem] = [[[[round(x, 3), round(y, 3)] for x, y in ring.coords]
-                           for ring in [p.exterior, *p.interiors]] for p in polys if p.area > 1e-6]
-        print(f.stem, len(polys))
+        shapes[key] = [[[[round(x, 3), round(y, 3)] for x, y in ring.coords]
+                        for ring in [p.exterior, *p.interiors]] for p in polys if p.area > 1e-6]
+        print(key, len(polys))
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(json.dumps(shapes, separators=(",", ":")))
     print("missing:", missing, "size KB:", OUT.stat().st_size // 1024)
