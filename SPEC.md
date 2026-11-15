@@ -84,12 +84,14 @@ All falloffs and thresholds above are provisional choices, not from a source.
 
 **API.** `GET /api/parks`, `GET /api/parks/plan?month&t_lo&t_hi[&rh_max&rain_max&avoid_bugs&stars&snowmelt&scenario]`.
 
-**Front end.** One page, top to bottom:
+**Front end** (updated 15 Nov 2026). No sign-in wall: a first visit is a guest and opens on Plan. Signing up or logging in is offered from the profile menu; logging out returns to the guest, whose data is kept apart from any account's. Tabs: Plan, Mysteries, Saved, Passport, and a Research menu when research tools are on. There is no Home page; the logo, an empty URL and old `#tab=home` links all open Plan.
 
-1. A preferences panel: travel month (12-month grid), ideal daytime high as a two-thumb slider (°F or °C), optional humidity and monthly-rain limits as sliders, avoid bugs, and interests (stargazing, snowmelt season).
-2. Pick parks: the five parks nearest the user (browser geolocation after the user clicks, or a place search through `/api/geocode`, OpenStreetMap Nominatim) and the five most visited in 2025 (excluding any already in the near list), each with its three scores and a checkbox.
-3. Your parks: a detailed card for each selected park (three horizon scores with ranges, the values, the factor scores and the notes on each horizon), plus the 2050 scenario switch.
-4. All parks, ranked: collapsed by default; ranks by any horizon and doubles as a picker.
+Plan is two steps, each its own URL (`#tab=planner` and `#tab=planner&step=1`), so the back button moves between them:
+
+1. Preferences: trip moods, then months, how warm, what you're into and what to avoid, with a live count of parks that fit and a "Show my parks" button.
+2. Parks: every park on the left, ranked for next year's trend (A to Z with no ranks when no filter is set), each with a checkbox; a card per ticked park on the right. The top 3 matches start ticked; changing preferences resets the ticks to the new top 3. Each card shows this year (measured so far) and next year (trend) side by side: match score, daytime high, humidity, rain, cloud cover, and bugs when picked. There is no horizon toggle. "Details" opens the full park drawer. A link with a park (a mystery's or a saved park's "Plan") opens step 2 with that park ticked and first.
+
+Saved uses the same card with a third column for 2050.
 
 Place, selected parks and units are kept in the browser's localStorage as a convenience only.
 

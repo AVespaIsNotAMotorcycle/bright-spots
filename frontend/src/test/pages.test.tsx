@@ -17,22 +17,42 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
+/** Guest → profile menu → the sign-in form. */
+async function openSignIn() {
+  fireEvent.click(await screen.findByRole("button", { name: "?" }, { timeout: 3000 }));
+  fireEvent.click(screen.getByRole("menuitem", { name: "Sign up or log in" }));
+  await screen.findByRole("tab", { name: "Sign up" });
+}
+
 const researchMenu = () =>
   screen.getAllByRole("button", { name: /^Research/ }).find((b) => b.getAttribute("aria-haspopup") === "menu")!;
 
 describe("App", () => {
-  it("shows the Canopy sign-up with a research switch that is off by default", async () => {
+  it("a first visit is a guest on Plan's preferences, with no sign-in screen", async () => {
     render(<App />);
-    expect(await screen.findByText("Go when the park is at its best.")).toBeTruthy();
-    const sw = screen.getByRole("switch", { name: /research tools too/i });
+    expect(await screen.findByRole("heading", { name: "Your preferences" }, { timeout: 3000 })).toBeTruthy();
+    expect(screen.queryByRole("tab", { name: "Sign up" })).toBeNull();
+    expect(JSON.parse(localStorage.getItem("profile")!)).toEqual({ name: "", research: false });
+    expect(location.hash).toContain("tab=planner");
+    const nav = screen.getByRole("navigation", { name: "Main" });
+    expect(within(nav).getByRole("button", { name: "Plan" }).getAttribute("aria-current")).toBe("page");
+  });
+
+  it("the sign-up form keeps a research switch that is off by default", async () => {
+    render(<App />);
+    await screen.findByRole("navigation", { name: "Main" });
+    fireEvent.click(screen.getByRole("button", { name: "?" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Sign up or log in" }));
+    const sw = await screen.findByRole("switch", { name: /research tools too/i });
     expect(sw.getAttribute("aria-checked")).toBe("false");
     fireEvent.click(sw);
     fireEvent.click(screen.getByRole("button", { name: "Continue as a guest" }));
     expect(JSON.parse(localStorage.getItem("profile")!)).toEqual({ name: "", research: true });
   });
 
-  it("signs up, logs out, and logs back in with the same password", async () => {
+  it("signs up, logs out to the guest, and logs back in with the same password", async () => {
     render(<App />);
+    await openSignIn();
     fireEvent.change(await screen.findByLabelText("Name"), { target: { value: "Ana" } });
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "Ana@Example.com" } });
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "short" } });
@@ -47,10 +67,11 @@ describe("App", () => {
     localStorage.setItem("wishlist", JSON.stringify(["zion"]));
     fireEvent.click(screen.getByRole("button", { name: "A" }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Log out" }));
-    // Logged out: back on the sign-in page, and Ana's saved parks are put away.
-    expect(await screen.findByRole("button", { name: "Continue as a guest" })).toBeTruthy();
-    expect(localStorage.getItem("profile")).toBeNull();
+    // Logged out: the site carries on as the guest, and Ana's saved parks are put away.
+    await screen.findByRole("button", { name: "?" });
+    expect(JSON.parse(localStorage.getItem("profile")!)).toEqual({ name: "", research: false });
     expect(localStorage.getItem("wishlist")).toBeNull();
+    await openSignIn();
     fireEvent.click(await screen.findByRole("tab", { name: "Log in" }));
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "ana@example.com" } });
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "wrong-pass" } });
@@ -59,7 +80,7 @@ describe("App", () => {
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "parks-2026" } });
     fireEvent.click(screen.getByRole("button", { name: "Log in" }));
     await screen.findByRole("navigation", { name: "Main" }, { timeout: 3000 });
-    expect(await screen.findByText("Welcome, Ana", undefined, { timeout: 3000 })).toBeTruthy();
+    expect(await screen.findByRole("button", { name: "A" })).toBeTruthy();
     expect(JSON.parse(localStorage.getItem("wishlist")!)).toEqual(["zion"]);
   });
 
@@ -80,6 +101,7 @@ describe("App", () => {
   it("a new account starts empty, even after another user on this device", async () => {
     localStorage.setItem("detective.progress", JSON.stringify({ "crater-lake-warming": { pts: 5, max: 5, stars: 3 } }));
     render(<App />);
+    await openSignIn();
     fireEvent.change(await screen.findByLabelText("Name"), { target: { value: "Bo" } });
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "bo@example.com" } });
     fireEvent.change(screen.getByLabelText("Password"), { target: { value: "parks-2026" } });
@@ -88,11 +110,11 @@ describe("App", () => {
     expect(localStorage.getItem("detective.progress")).toBeNull();
   });
 
-  it("with research on, the nav has the five tabs and a Research menu with every research tool", async () => {
+  it("with research on, the nav has the four tabs and a Research menu with every research tool", async () => {
     researcher();
     render(<App />);
     const nav = await screen.findByRole("navigation", { name: "Main" });
-    expect([...nav.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["Home", "Plan", "Mysteries", "Saved", "Passport"]);
+    expect([...nav.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["Plan", "Mysteries", "Saved", "Passport"]);
     fireEvent.click(researchMenu());
     const items = screen.getAllByRole("menuitem").map((b) => b.textContent);
     expect(items).toEqual(["Trend Atlas", "Topo Map", "Analog Sites", "Park Families", "Odd One Out", "Season Shifts", "Head-to-Head", "Robustness", "Campfire"]);
@@ -106,7 +128,7 @@ describe("App", () => {
     expect(location.hash).toContain("tab=map");
   });
 
-  it("with research off, there is no Research menu and a research URL falls back to Home with a hint", async () => {
+  it("with research off, there is no Research menu and a research URL falls back to Plan with a hint", async () => {
     localStorage.setItem("profile", JSON.stringify({ name: "Sam", research: false }));
     history.replaceState(null, "", "#tab=atlas");
     render(<App />);
@@ -128,12 +150,15 @@ describe("App", () => {
     expect(research.some((b) => b.getAttribute("aria-haspopup") === "menu")).toBe(true);
   });
 
-  it("opens the researcher field station with real data", async () => {
+  it("there is no Home page: the old link and the logo both open Plan", async () => {
     researcher();
+    history.replaceState(null, "", "#tab=home");
     render(<App />);
-    expect(await screen.findByText("Welcome, Purva")).toBeTruthy();
-    expect(screen.getByText("Go when the park is at its best.")).toBeTruthy();
-    expect(screen.getByText("Trend atlas, maps, comparisons and methods.")).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: "Your preferences" }, { timeout: 3000 })).toBeTruthy();
+    expect(location.hash).toContain("tab=planner");
+    fireEvent.click(within(screen.getByRole("navigation", { name: "Main" })).getByRole("button", { name: "Saved" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Canopy/ }));
+    expect(location.hash).toContain("tab=planner");
   });
 
   it("arrow keys move between research tools", async () => {
@@ -164,11 +189,11 @@ describe("App", () => {
     expect(screen.getByText(/Show all 63 parks/)).toBeTruthy();
   });
 
-  it("an old student profile opens Explorer home with the twin game", async () => {
+  it("an old student profile opens Plan, without the research tools", async () => {
     localStorage.setItem("profile", JSON.stringify({ name: "", persona: "student" }));
     render(<App />);
-    expect(await screen.findByText("Play today", undefined, { timeout: 3000 })).toBeTruthy();
-    expect(screen.queryByText("Trend atlas, maps, comparisons and methods.")).toBeNull();
+    expect(await screen.findByRole("heading", { name: "Your preferences" }, { timeout: 3000 })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /^Research/ })).toBeNull();
   });
 
   it("an old visitor profile gets the merged Explorer tabs and passport", async () => {
@@ -179,25 +204,21 @@ describe("App", () => {
     expect(screen.queryByRole("button", { name: /^Research/ })).toBeNull();
   });
 
-  it("a mystery's planner link opens that park", async () => {
-    localStorage.setItem("profile", JSON.stringify({ name: "", research: false }));
+  it("a mystery's planner link goes straight to the parks, with that park ticked and first", async () => {
     history.replaceState(null, "", "#tab=planner&month=10&park=zion");
     render(<App />);
-    const d = await screen.findByRole("dialog", undefined, { timeout: 3000 });
-    expect(d.textContent).toMatch(/Zion/);
-    // The year view fills the drawer even with nothing picked.
-    expect(await within(d).findByText("Things to do")).toBeTruthy();
-    expect(within(d).getByText("Watch out for")).toBeTruthy();
-    expect(within(d).getByText("Jun–Aug")).toBeTruthy();
+    const zion = await screen.findByRole("checkbox", { name: /^Zion/ }, { timeout: 3000 });
+    expect((zion as HTMLInputElement).checked).toBe(true);
+    expect(screen.getAllByRole("heading", { level: 3 })[0]).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 3, name: "Zion" })).toBeTruthy();
   });
 
-  it("the trip planner shows only the best matches, with why #1, chips and the drawer", async () => {
-    localStorage.setItem("profile", JSON.stringify({ name: "", research: false }));
+  it("Plan is two steps: preferences, then a ranked list with a card per ticked park", async () => {
     history.replaceState(null, "", "#tab=planner&month=10");
     render(<App />);
-    expect(await screen.findByText(/Why #1\?/, undefined, { timeout: 3000 })).toBeTruthy();
-    expect(screen.getByText(/parks? fit your trip/)).toBeTruthy();
-    expect(screen.getAllByRole("button", { name: /score \d+\. Open details/ })).toHaveLength(3);
+    // Step 1: preferences only, no park cards yet.
+    expect(await screen.findByRole("heading", { name: "Your preferences" }, { timeout: 3000 })).toBeTruthy();
+    expect(screen.queryByRole("checkbox")).toBeNull();
     // Seasons pick 3 months; a chip goes nice -> must.
     fireEvent.click(screen.getByRole("button", { name: /Autumn/ }));
     const stars = screen.getByRole("button", { name: /^Stargazing:/ });
@@ -205,15 +226,51 @@ describe("App", () => {
     expect(stars.getAttribute("aria-label")).toContain("nice to have");
     fireEvent.click(stars);
     expect(stars.getAttribute("aria-label")).toContain("must have");
+    fireEvent.click(stars);
     expect(location.hash).toContain("trip=");
-    // Open the top park, save it, and close.
-    fireEvent.click(screen.getAllByRole("button", { name: /Open details/ })[0]);
+    await screen.findByText(/parks? fit your trip/, undefined, { timeout: 3000 });
+
+    // Step 2: every park listed, the top 3 ticked, one card each.
+    fireEvent.click(screen.getByRole("button", { name: "Show my parks" }));
+    expect(location.hash).toContain("step=1");
+    expect(screen.queryByRole("heading", { name: "Your preferences" })).toBeNull();
+    const boxes = (await screen.findAllByRole("checkbox")) as HTMLInputElement[];
+    expect(boxes).toHaveLength(10); // the trip fixture's parks
+    expect(boxes.filter((b) => b.checked)).toHaveLength(3);
+    expect(boxes.slice(0, 3).every((b) => b.checked)).toBe(true);
+    const cards = screen.getAllByRole("article");
+    expect(cards).toHaveLength(3);
+
+    // Each card shows this year and next year together, with no year toggle anywhere.
+    const year = new Date().getFullYear();
+    for (const c of cards) {
+      expect(within(c).getByText(`${year} so far`)).toBeTruthy();
+      expect(within(c).getByText(`${year + 1} trend`)).toBeTruthy();
+      expect(within(c).queryByText("2050 model")).toBeNull();
+    }
+    expect(screen.queryByRole("group", { name: "Year" })).toBeNull();
+
+    // Tick a fourth park, untick one from its card.
+    fireEvent.click(boxes[5]);
+    expect(screen.getAllByRole("article")).toHaveLength(4);
+    const first = within(cards[0]).getByRole("heading", { level: 3 }).textContent!;
+    fireEvent.click(screen.getByRole("button", { name: `Untick ${first}` }));
+    expect(screen.getAllByRole("article")).toHaveLength(3);
+    expect(boxes[0].checked).toBe(false);
+
+    // Details opens the drawer; save from the card.
+    fireEvent.click(screen.getAllByRole("button", { name: "Details" })[0]);
     expect(await screen.findByRole("dialog")).toBeTruthy();
     expect(screen.getByText(/Then, now and 2050/)).toBeTruthy();
-    fireEvent.click(screen.getAllByRole("button", { name: /Want to go/ })[0]);
-    expect(JSON.parse(localStorage.getItem("wishlist")!)).toHaveLength(1);
     fireEvent.keyDown(window, { key: "Escape" });
     expect(screen.queryByRole("dialog")).toBeNull();
+    fireEvent.click(screen.getAllByRole("button", { name: /Want to go/ })[0]);
+    expect(JSON.parse(localStorage.getItem("wishlist")!)).toHaveLength(1);
+
+    // Back to preferences.
+    fireEvent.click(screen.getByRole("button", { name: "Edit preferences" }));
+    expect(await screen.findByRole("heading", { name: "Your preferences" })).toBeTruthy();
+    expect(location.hash).not.toContain("step=1");
   });
 
   it("Saved tab keeps Sequoia and Kings Canyon as two parks", async () => {
@@ -235,29 +292,28 @@ describe("App", () => {
   });
 
   it("Explorer always sees plain words: no factor scores, simple Park Explorer", async () => {
-    localStorage.setItem("profile", JSON.stringify({ name: "", research: false }));
-    history.replaceState(null, "", "#tab=planner&month=10");
+    history.replaceState(null, "", "#tab=planner&month=10&step=1");
     render(<App />);
-    await screen.findByText(/Why #1\?/, undefined, { timeout: 3000 });
+    await screen.findAllByRole("article", undefined, { timeout: 3000 });
     expect(screen.queryAllByText(/\/100 ×/)).toHaveLength(0);
-    fireEvent.click(screen.getByRole("button", { name: "Home" }));
     history.pushState(null, "", "#tab=explore");
     fireEvent(window, new HashChangeEvent("hashchange"));
     expect(await screen.findByText("Pick a question", undefined, { timeout: 3000 })).toBeTruthy();
   });
 
-  it("Clear all lists every park A to Z with no ranks or scores", async () => {
-    localStorage.setItem("profile", JSON.stringify({ name: "", research: false }));
+  it("Clear all lists every park A to Z with no ranks, scores or ticks", async () => {
     history.replaceState(null, "", "#tab=planner&month=10");
     render(<App />);
-    await screen.findByText(/Why #1\?/, undefined, { timeout: 3000 });
-    fireEvent.click(screen.getByRole("button", { name: /Clear all filters/ }));
+    await screen.findByText(/parks? fit your trip/, undefined, { timeout: 3000 });
+    fireEvent.click(screen.getByRole("button", { name: "Clear all" }));
     expect(await screen.findByText(/^All \d+ parks$/, undefined, { timeout: 3000 })).toBeTruthy();
-    expect(screen.queryByText(/Why #1\?/)).toBeNull();
-    expect(screen.queryByRole("button", { name: /Clear all filters/ })).toBeNull();
-    const names = screen.getAllByRole("button", { name: /\. Open details$/ }).map((b) => b.getAttribute("aria-label")!);
+    fireEvent.click(screen.getByRole("button", { name: "Show my parks" }));
+    const boxes = (await screen.findAllByRole("checkbox")) as HTMLInputElement[];
+    const names = boxes.map((b) => b.closest("label")!.querySelector("b")!.textContent!);
     expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)));
-    expect(names.some((n) => /score/.test(n))).toBe(false);
+    expect(boxes.some((b) => b.checked)).toBe(false);
+    expect(screen.queryByRole("img", { name: /^Score/ })).toBeNull();
+    expect(screen.getByText(/Tick a park on the left/)).toBeTruthy();
   });
 
   it("a mood sets the chips", async () => {

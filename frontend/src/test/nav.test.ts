@@ -7,8 +7,8 @@ import { parseHash, toHash, type NavState } from "../useNav";
 beforeEach(() => history.replaceState(null, "", "/"));
 
 describe("tabs", () => {
-  it("Explorer sees five tabs, with Park Explorer routable but not a tab", () => {
-    expect(EXPLORER_TABS.map((t) => TAB_LABEL[t])).toEqual(["Home", "Plan", "Mysteries", "Saved", "Passport"]);
+  it("Explorer sees four tabs, Plan first and no Home, with Park Explorer routable but not a tab", () => {
+    expect(EXPLORER_TABS.map((t) => TAB_LABEL[t])).toEqual(["Plan", "Mysteries", "Saved", "Passport"]);
     expect(allowedTabs(false)).toContain("explore");
     for (const t of RESEARCH_TABS) expect(allowedTabs(false)).not.toContain(t);
   });

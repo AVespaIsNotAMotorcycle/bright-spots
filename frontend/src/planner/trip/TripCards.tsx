@@ -1,8 +1,7 @@
-// Result pieces: score ring, 12-month strip, badges, the top-3 cards and the compact rows.
-import { photoOf } from "../../detective/photos";
+// Result pieces: score ring, 12-month strip, badges, factor scores and the trend tag.
 import type { Case } from "../../detective/cases";
 import type { TrendTag } from "../whatChanged";
-import { LABEL, MONTHS, goldMonth, reasonText, scoreColor, seasonOf, type Reason, type TripPark, type Unit } from "./tripModel";
+import { MONTHS, goldMonth, scoreColor, seasonOf, type Reason, type TripPark } from "./tripModel";
 
 export function ScoreRing({ score, size = 62, light = true }: { score: number | null; size?: number; light?: boolean }) {
   const r = size / 2 - 5;
@@ -69,102 +68,5 @@ export function Trend({ t, small = false }: { t?: TrendTag | null; small?: boole
     <span className={`tp-trend tp-trend-${t.kind}${small ? " sm" : ""}`} title={t.title}>
       <span aria-hidden>{t.arrow}</span> {t.text}
     </span>
-  );
-}
-
-export function TopCard({ p, i, onOpen, heart, dates, why, trend }: {
-  p: TripPark; i: number; onOpen: () => void; heart: React.ReactNode;
-  /** The best month's daytime-high trend. */
-  trend?: TrendTag | null;
-  /** Best 5 days in the park's best month, e.g. "Dec 3–7". */
-  dates?: string;
-  /** One short reason, e.g. "20°C highs, 2 rainy days". */
-  why?: string;
-}) {
-  const photo = photoOf(p.park.code);
-  return (
-    <article className="tp-card" tabIndex={0} role="button" aria-label={`${p.park.short}, score ${Math.round(p.score ?? 0)}. Open details`}
-      onClick={onOpen} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onOpen())}>
-      <div className="tp-photo" style={{ backgroundImage: photo ? `url("${photo.file}")` : undefined }}
-        title={photo ? `Photo: ${photo.credit} (${photo.license}), Wikimedia Commons` : undefined}>
-        <span className="tp-medal" aria-hidden>#{i + 1}</span>
-        <div className="tp-name">{p.park.short}<small>{p.park.states.join(", ")} · best in {MONTHS[p.best_month - 1]}</small></div>
-        <div className="tp-ring"><ScoreRing score={p.score} /></div>
-      </div>
-      <div className="tp-body tp-simple">
-        <span>
-          {dates && <p className="tp-card-dates"><b>{dates}</b></p>}
-          {why && <p className="small muted" style={{ margin: "2px 0 0" }}>{why}</p>}
-          {trend && <p style={{ margin: "6px 0 0" }}><Trend t={trend} /></p>}
-        </span>
-        {heart}
-      </div>
-    </article>
-  );
-}
-
-/** Round ♡ toggle for the want-to-go list. Stops the click from opening the park. */
-export function Heart({ on, name, onToggle }: { on: boolean; name: string; onToggle: () => void }) {
-  return (
-    <button className="tp-heart" aria-pressed={on} aria-label={on ? `Remove ${name} from Saved` : `Save ${name}`}
-      title={on ? "Saved" : "Save"} onClick={(e) => { e.stopPropagation(); onToggle(); }}
-      onKeyDown={(e) => e.stopPropagation()}>
-      {on ? "♥" : "♡"}
-    </button>
-  );
-}
-
-/** No filters: one photo tile per park, name and state, no rank or score. */
-export function Tile({ p, onOpen, heart }: { p: TripPark; onOpen: () => void; heart: React.ReactNode }) {
-  const photo = photoOf(p.park.code);
-  return (
-    <div className="tp-tile" role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onOpen())}
-      aria-label={`${p.park.short}. Open details`}>
-      {photo ? <img src={photo.file} alt="" loading="lazy" /> : <div className="ph" />}
-      {heart}
-      <span className="t"><b>{p.park.short}</b><small>{p.park.states.join(", ")}</small></span>
-    </div>
-  );
-}
-
-export function Row({ p, rank, unit, onOpen, actions, plain = false, trend }: {
-  p: TripPark; rank: number; unit: Unit; onOpen: () => void; actions: React.ReactNode;
-  /** The best month's daytime-high trend. */
-  trend?: TrendTag | null;
-  /** No filters: just the park, no rank, score or best month. */
-  plain?: boolean;
-}) {
-  const photo = photoOf(p.park.code);
-  const best = p.reasons.filter((r) => r.score != null && r.score >= 0.75).slice(0, 2);
-  if (plain) {
-    return (
-      <div className="tp-row plain" role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onOpen())}
-        aria-label={`${p.park.short}. Open details`}>
-        {photo ? <img src={photo.file} alt="" loading="lazy" /> : <span style={{ width: 56 }} />}
-        <span style={{ minWidth: 0 }}>
-          <b>{p.park.short}</b>
-          <div className="small muted">{p.park.states.join(", ")}</div>
-        </span>
-        <span className="hide-sm" onClick={(e) => e.stopPropagation()} style={{ display: "flex", gap: 6 }}>{actions}</span>
-      </div>
-    );
-  }
-  return (
-    <div className={`tp-row${p.ok ? "" : " off"}`} role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), onOpen())}
-      aria-label={`${rank}. ${p.park.short}, ${p.ok ? `score ${Math.round(p.score ?? 0)}` : "misses one of your musts"}`}>
-      <span className="muted small" style={{ textAlign: "right" }}>{rank}</span>
-      {photo ? <img src={photo.file} alt="" loading="lazy" /> : <span style={{ width: 56 }} />}
-      <span style={{ minWidth: 0 }}>
-        <b>{p.park.short}</b> <span className="micro muted">{p.park.states.join(", ")} · {MONTHS[p.best_month - 1]}</span>
-        <div className="small muted" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-          {p.ok
-            ? best.map((r) => reasonText(r, unit)).join(" · ")
-            : `Misses: ${p.failed.map((k) => LABEL(k)).join(", ")}`}
-        </div>
-        <Trend t={trend} small />
-      </span>
-      <span className="hide-sm" onClick={(e) => e.stopPropagation()} style={{ display: "flex", gap: 6 }}>{actions}</span>
-      <ScoreRing score={p.score} size={46} light={false} />
-    </div>
   );
 }

@@ -11,14 +11,14 @@ Detective". `SPEC.md` is the research spec.
 
 | Tab | What it does |
 |---|---|
-| Home | Pick a month and see parks that are good right now |
-| Plan | Trip planner: choose months, moods and must-haves; parks are ranked by real data, with best dates |
+| Plan | The first page. Step 1: choose months, moods and must-haves. Step 2: every park ranked by real data on the left; tick parks to see a card for each, with this year and next year side by side |
 | Cases | Short trend-detective quizzes about one park; ends with "Plan a trip" to that park |
 | Saved | Parks you hearted |
 | Passport | Stamps for the cases you solved |
 | Research (optional) | Atlas, map, analogs, families, opposites, seasons, compare, robust trends, community notes |
 
-Research tabs show only if you turn on "research tools" at sign-in.
+No sign-in needed: you start as a guest. Research tabs show only if you turn on
+"research tools" (profile menu, or when signing up).
 
 ## Data
 

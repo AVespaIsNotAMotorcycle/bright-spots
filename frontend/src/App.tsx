@@ -1,13 +1,12 @@
 import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import ErrorBoundary from "./ErrorBoundary";
 import Landing from "./Landing";
-import { logOutAccount, updateAccount } from "./auth";
+import { enterGuest, logOutAccount, updateAccount } from "./auth";
 import type { Atlas } from "./detective/model";
 import type { Unit } from "./planner/PrefsPanel";
 import { StationStrip } from "./research/station";
 
 // Each tab is its own chunk, loaded the first time it is opened.
-const Home = lazy(() => import("./Home"));
 const Detective = lazy(() => import("./detective/Detective"));
 const StudentDetective = lazy(() => import("./detective/StudentDetective"));
 const TripPlanner = lazy(() => import("./planner/trip/TripPlanner"));
@@ -24,7 +23,7 @@ const SavedPage = lazy(() => import("./detective/SavedPage"));
 import { PARK_NAMES } from "./detective/parkNames";
 import Logo from "./brand/Logo";
 import { EXPLORER_TABS, RESEARCH_TABS, TAB_LABEL, allowedTabs, loadProfile, saveProfile, type Profile, type Tab } from "./profile";
-import { useNav, type NavState } from "./useNav";
+import { parseHash, useNav, type NavState } from "./useNav";
 
 /** A small dropdown: closes on outside click, Escape and Tab; arrows move between items. */
 function Menu({
@@ -103,10 +102,23 @@ function loadUnit(): Unit {
   }
 }
 
+const GUEST: Profile = { name: "", research: false };
+
+/** The saved profile, or a fresh guest: nobody has to sign in to use the site. */
+function startProfile(): Profile {
+  const saved = loadProfile();
+  if (saved) return saved;
+  enterGuest();
+  saveProfile(GUEST);
+  return GUEST;
+}
+
 export default function App() {
   const { nav, navigate, replace } = useNav();
-  const [profile, setProfile] = useState<Profile | null>(loadProfile);
-  const [editing, setEditing] = useState(false);
+  const [profile, setProfile] = useState<Profile>(startProfile);
+  /** The sign-in form (from the profile menu) or the edit-profile form, over the app. */
+  const [screen, setScreen] = useState<"signin" | "edit" | null>(null);
+  const editing = screen !== null;
   const [atlas, setAtlas] = useState<Atlas | null>(null);
   const [unit, setUnit] = useState<Unit>(loadUnit);
   useEffect(() => {
@@ -117,19 +129,20 @@ export default function App() {
     }
   }, [unit]);
 
-  // Research tabs only exist when research tools are on; any other tab in the URL falls back to Home.
-  const research = profile?.research ?? false;
-  const allowed = useMemo(() => (profile ? allowedTabs(research) : ["home" as Tab]), [profile, research]);
-  const tab: Tab = nav.tab && allowed.includes(nav.tab) ? nav.tab : "home";
+  // Research tabs only exist when research tools are on; any other tab in the URL falls back to Plan.
+  const research = profile.research;
+  const allowed = useMemo(() => allowedTabs(research), [research]);
+  const tab: Tab = nav.tab && allowed.includes(nav.tab) ? nav.tab : "planner";
   const hiddenResearchTab = !!nav.tab && !allowed.includes(nav.tab) && RESEARCH_TABS.includes(nav.tab);
 
   useEffect(() => {
-    if (!nav.tab) replace({ tab: "home" });
+    // Read the hash again: Plan may already have put its settings there.
+    if (!nav.tab) replace({ ...parseHash(), tab: "planner" });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // An unknown tab in the URL (#tab=foo) shows Home, so fix the URL to match.
+  // An unknown tab in the URL (#tab=foo, or the old #tab=home) shows Plan, so fix the URL to match.
   useEffect(() => {
-    if (nav.tab && !allowedTabs(true).includes(nav.tab)) replace({ tab: "home" });
+    if (nav.tab && !allowedTabs(true).includes(nav.tab)) replace({ tab: "planner" });
   }, [nav.tab, replace]);
 
   // Research tools on: ← and → move between the research tools, unless typing or using a control.
@@ -148,10 +161,11 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [research, editing, tab, navigate]);
 
-  // Back/forward while the profile form is open closes the form and shows that page.
+  // Back/forward while a profile form is open closes the form and shows that page.
   useEffect(() => {
-    setEditing(false);
-  }, [nav]);
+    if (screen === "signin") backToGuest();
+    setScreen(null);
+  }, [nav]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (atlas) return;
@@ -165,40 +179,52 @@ export default function App() {
     setProfile(p);
     saveProfile(p);
     updateAccount(p);
-    // Logging in swaps in that user's saved data; read their unit back into state.
-    if (!editing) setUnit(loadUnit());
-    setEditing(false);
-    // Keep a deep link (e.g. a shared trip) and an edit in place; otherwise go Home.
-    if (!editing && !nav.tab) navigate({ tab: "home" });
+    // Logging in (or back in as a guest) swaps in that user's saved data; read their unit back into state.
+    if (screen === "signin") setUnit(loadUnit());
+    setScreen(null);
+  }
+
+  /** Become the guest again, with whatever the guest did last time on this device. */
+  function backToGuest() {
+    enterGuest();
+    setProfile(GUEST);
+    saveProfile(GUEST);
+    setUnit(loadUnit());
+  }
+
+  /** Put the current user's data away and show the sign-in form. */
+  function openSignIn() {
+    logOutAccount(profile);
+    saveProfile(null);
+    setUnit(loadUnit());
+    setScreen("signin");
   }
 
   function setResearch(on: boolean) {
-    if (!profile) return;
     const p = { ...profile, research: on };
     setProfile(p);
     saveProfile(p);
     updateAccount(p);
-    // Turning research off while on a research page would leave a blank tab: go Home.
-    if (!on && RESEARCH_TABS.includes(tab)) navigate({ tab: "home" });
+    // Turning research off while on a research page would leave a blank tab: go to Plan.
+    if (!on && RESEARCH_TABS.includes(tab)) navigate({ tab: "planner" });
   }
 
+  /** Log out of an account: the site carries on as the guest. */
   function logOut() {
     logOutAccount(profile);
-    setUnit(loadUnit()); // the stored unit was just put away with the account
-    setProfile(null);
-    saveProfile(null);
-    navigate({ tab: "home" });
+    backToGuest();
+    navigate({ tab: "planner" });
   }
 
   const go = (t: Tab, extra: Partial<NavState> = {}) => navigate({ tab: t, ...extra });
 
-  if (!profile || editing) {
+  if (screen) {
     return (
       <div className="app">
         <Landing
-          initial={profile}
+          initial={screen === "edit" ? profile : null}
           onSubmit={submitProfile}
-          onCancel={profile ? () => setEditing(false) : undefined}
+          onCancel={screen === "edit" ? () => setScreen(null) : undefined}
         />
       </div>
     );
@@ -209,7 +235,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <button type="button" className="brand" onClick={() => go("home")} aria-label="Canopy home">
+        <button type="button" className="brand" onClick={() => go("planner")} aria-label="Canopy: plan a visit">
           <Logo size={28} />
         </button>
         <nav className="nav-tabs" aria-label="Main">
@@ -238,10 +264,10 @@ export default function App() {
                 <button type="button" role="menuitemcheckbox" aria-checked={research} onClick={() => setResearch(!research)}>
                   Research tools: {research ? "on" : "off"}
                 </button>
-                <button type="button" role="menuitem" onClick={() => { close(); setEditing(true); }}>
+                <button type="button" role="menuitem" onClick={() => { close(); setScreen("edit"); }}>
                   Edit profile
                 </button>
-                <button type="button" role="menuitem" onClick={() => { close(); logOut(); }}>
+                <button type="button" role="menuitem" onClick={() => { close(); if (profile.email) logOut(); else openSignIn(); }}>
                   {profile.email ? "Log out" : "Sign up or log in"}
                 </button>
               </>
@@ -250,14 +276,14 @@ export default function App() {
         </div>
       </header>
       <main>
-        <ErrorBoundary key={tab} what="This page">
-        <Suspense fallback={<p className="muted">Loading…</p>}>
         {hiddenResearchTab && (
           <p className="notice">
             That page is part of the research tools.{" "}
             <button type="button" className="link-btn" onClick={() => setResearch(true)}>Turn them on</button>
           </p>
         )}
+        <ErrorBoundary key={tab} what="This page">
+        <Suspense fallback={<p className="muted">Loading…</p>}>
         {research && RESEARCH_TABS.includes(tab) && (
           <StationStrip
             title={TAB_LABEL[tab]}
@@ -267,9 +293,6 @@ export default function App() {
             onShare={tab === "community" ? undefined : () =>
               go("community", { park: nav.park ?? undefined, v: nav.v ?? undefined, per: nav.per ?? undefined })}
           />
-        )}
-        {tab === "home" && (
-          <Home name={profile.name} research={research} atlas={atlas} onGo={(t, extra) => go(t as Tab, extra as Partial<NavState>)} />
         )}
         {tab === "analogs" && (
           <Analogs
@@ -367,7 +390,10 @@ export default function App() {
             month={nav.month}
             park={nav.park}
             q={nav.q}
-            onState={(q) => replace({ tab: "planner", q, park: nav.park })}
+            stage={nav.step === 1 || nav.park ? "parks" : "prefs"}
+            // Only while Plan is the page in the URL: a research link it stands in for must stay as typed.
+            onState={(q) => (!nav.tab || nav.tab === "planner") && replace({ tab: "planner", q, park: nav.park, step: nav.step })}
+            onStage={(s) => navigate({ tab: "planner", q: nav.q ?? undefined, step: s === "parks" ? 1 : undefined })}
             onCase={(caseId) => go("student", { caseId, step: 0 })}
           />
         )}

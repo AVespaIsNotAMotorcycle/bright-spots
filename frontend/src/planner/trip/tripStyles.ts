@@ -253,4 +253,37 @@ export const TRIP_CSS = `
 .tp-skel{border-radius:var(--radius)}
 .tp-drawer{box-shadow:none;border-left:1px solid var(--stone)}
 .tp-tray{background:var(--paper);color:var(--bark);border:1px solid var(--stone);border-radius:var(--radius);box-shadow:none}
+/* Step 1: preferences, one centred column. */
+.tp-prefs{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.tp-prefs-card{background:var(--paper);border:1px solid var(--stone);border-radius:var(--radius);padding:18px 20px;display:flex;flex-direction:column;gap:18px}
+.tp-prefs-head{display:flex;justify-content:space-between;align-items:center}
+.tp-prefs-head h2{margin:0;font-family:var(--font-display);color:var(--pine);font-size:22px}
+.tp-go{position:sticky;bottom:10px;z-index:20;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  background:var(--paper);border:1px solid var(--stone);border-radius:var(--radius);padding:10px 14px}
+.tp-go-count{font-weight:600;color:var(--pine)}
+.tp-go-btn{background:var(--clay)}
+
+/* Step 2: ranked list on the left, a card per ticked park on the right. */
+.tp-list{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;display:flex;flex-direction:column;gap:12px;
+  background:var(--paper);border:1px solid var(--stone);border-radius:var(--radius);padding:14px}
+.tp-list-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.tp-list .tp-count{font-size:20px}
+.tp-list .tp-search{min-width:0}
+.tp-picks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.tp-pick{display:grid;grid-template-columns:auto auto 40px 1fr auto;gap:8px;align-items:center;padding:6px 8px;border-radius:10px;
+  border:1px solid transparent;cursor:pointer}
+.tp-pick:hover{border-color:var(--stone)}
+.tp-pick.on{background:var(--surface-2);border-color:var(--moss)}
+.tp-pick.off{opacity:.62}
+.tp-pick input{width:16px;height:16px;margin:0;accent-color:var(--moss)}
+.tp-pick-rank{min-width:18px;text-align:right;font-size:12px;color:var(--text-muted)}
+.tp-pick img,.tp-pick-ph{width:40px;height:40px;border-radius:8px;object-fit:cover;background:var(--surface-2)}
+.tp-pick-name{min-width:0;display:flex;flex-direction:column}
+.tp-pick-name b{font-weight:600}
+.tp-pick-name small{font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tp-cards{display:flex;flex-direction:column;gap:16px;min-width:0}
+.tp-empty{border:2px dashed var(--stone);border-radius:var(--radius);padding:28px;text-align:center;color:var(--text-muted);margin:0}
+@media (max-width:900px){
+  .tp-list{position:static;max-height:50vh}
+}
 `;

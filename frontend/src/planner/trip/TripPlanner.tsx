@@ -1,4 +1,7 @@
-// Trip planner: moods and settings on the left, only the best-matched parks on the right.
+// Trip planner, in two steps.
+//   1. Preferences: when, how warm, what you're into and what to avoid.
+//   2. Parks: every park ranked on the left (tick to pick), and a card per picked park on the
+//      right showing this year and next year side by side.
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Case } from "../../detective/cases";
 import { loadProgress } from "../../detective/games";
@@ -7,12 +10,10 @@ import { photoOf } from "../../detective/photos";
 import { caseForPark, casesByPark } from "../../detective/stamps";
 import { useWishlist } from "../../detective/wishlist";
 import { play } from "../../detective/sound";
-import ParkMap from "../../research/ParkMap";
-import CompareTray, { MAX_COMPARE } from "./CompareTray";
+import Postcard from "../../saved/Postcard";
 import ParkDrawer from "./ParkDrawer";
-import { Heart, Row, Tile, TopCard } from "./TripCards";
+import { ScoreRing } from "./TripCards";
 import TripSettings from "./TripSettings";
-import { shareTripCard } from "./tripCard";
 import { TRIP_CSS } from "./tripStyles";
 import {
   DEFAULT_STATE,
@@ -28,22 +29,22 @@ import {
   decodeState,
   encodeState,
   fetchTrip,
-  scoreColor,
-  shortWhy,
-  whySentence,
   type HorizonKey,
   type Trip,
   type TripPark,
   type TripState,
   type Unit,
 } from "./tripModel";
-import { trendTag, whatChanged } from "../whatChanged";
-import { fetchDates, fmtWindow, type DatesByMonth } from "./bestDates";
+import { trendTag } from "../whatChanged";
 import { loadAtlas, type Atlas } from "../../atlas/model";
 
-const TOP = 3;
-const MORE = 5;
+/** How many of the best matches start ticked. */
+export const DEFAULT_PICKS = 3;
+/** The card columns: always both, never a toggle. */
+export const CARD_HORIZONS: HorizonKey[] = ["this_year", "next_year"];
 const KEY = "trip.state";
+
+export type Stage = "prefs" | "parks";
 
 function initial(q: string | null | undefined, month: number | null | undefined): TripState {
   let s = decodeState(q);
@@ -55,20 +56,32 @@ function initial(q: string | null | undefined, month: number | null | undefined)
     }
   }
   s = s ?? DEFAULT_STATE;
+  // Cards show this year and next year together, so the list is always ranked for next year.
+  s = { ...s, horizon: "next_year" };
   return month && month >= 1 && month <= 12 ? { ...s, months: [month] } : s;
 }
 
-export default function TripPlanner({ unit, setUnit, month, park, q, science = false, onState, onCase }: {
+/** The ticked parks: the user's own picks, or else the top matches (plus a park a link asked for). */
+export function defaultPicks(order: TripPark[], browse: boolean, wanted: string | null): string[] {
+  const top = browse ? [] : order.filter((p) => p.ok).slice(0, DEFAULT_PICKS).map((p) => p.park.id);
+  if (!wanted) return top;
+  return [wanted, ...top.filter((id) => id !== wanted)].slice(0, Math.max(DEFAULT_PICKS, 1));
+}
+
+export default function TripPlanner({ unit, setUnit, month, park, q, stage, science = false, onState, onStage, onCase }: {
   unit: Unit;
   setUnit: (u: Unit) => void;
   month?: number | null;
-  /** NPS code from a case's "Plan a trip here": opens that park. */
+  /** Park id or NPS code from a case's or a saved park's "Plan": opens step 2 with that park picked. */
   park?: string | null;
   /** Encoded settings from the URL, so a trip can be shared. */
   q?: string | null;
+  /** Which step to show. */
+  stage: Stage;
   /** Explorer science switch: adds p and q to "What changed?". */
   science?: boolean;
   onState?: (encoded: string) => void;
+  onStage: (s: Stage) => void;
   onCase?: (caseId: string) => void;
 }) {
   const [state, setState] = useState<TripState>(() => initial(q, month));
@@ -82,32 +95,26 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
     } catch {
       /* storage unavailable */
     }
-    const enc = encodeState(d);
+    const enc = encodeState({ ...d, horizon: "next_year" });
     return enc === saved ? null : enc;
   });
   const linkEnc = useRef<string | null>(fromLink);
   const [trip, setTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [open, setOpen] = useState<string | null>(null); // park code in the drawer
-  const [view, setView] = useState<"list" | "map">("list");
-  const [compare, setCompare] = useState<string[]>([]);
-  const [sheet, setSheet] = useState(false);
+  const [open, setOpen] = useState<string | null>(null); // park id in the drawer
   const [mood, setMood] = useState<string | null>(null);
   const [wish, toggleWish] = useWishlist();
   const [atlas, setAtlas] = useState<Atlas | null>(null);
   const [find, setFind] = useState("");
-  const [showAll, setShowAll] = useState(false);
-  const opened = useRef<string | null>(null);
-  // Saving state rewrites the URL and drops ?park before parks load, so hold on to it.
-  const wanted = useRef<string | null>(null);
-  if (park) wanted.current = park;
+  /** The user's own ticks; null until they tick or untick something (then the top matches show). */
+  const [picked, setPicked] = useState<string[] | null>(null);
 
   useEffect(() => {
     loadAtlas().then(setAtlas).catch(() => undefined);
   }, []);
 
-  // A month from Home or a case picks that month.
+  // A month from a case or a saved park picks that month.
   useEffect(() => {
     if (month && month >= 1 && month <= 12) setState((s) => (s.months.length === 1 && s.months[0] === month ? s : { ...s, months: [month] }));
   }, [month]);
@@ -118,8 +125,10 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
     [progress],
   );
 
+  // New preferences mean a new ranking, so the ticks go back to the new top matches.
   const set = (patch: Partial<TripState>) => {
     setMood(null);
+    setPicked(null);
     setState((s) => ({ ...s, ...patch }));
   };
 
@@ -151,117 +160,64 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
     };
   }, [state]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const byId = useMemo(() => new Map((trip?.parks ?? []).map((p) => [p.park.id, p])), [trip]);
-  const matches = useMemo(() => (trip?.parks ?? []).filter((p) => p.ok), [trip]);
-  const shown = matches.slice(0, TOP + MORE);
-  const found = useMemo(() => searchParks(trip?.parks ?? [], find), [trip, find]);
-  const rankOf = useMemo(() => new Map((trip?.parks ?? []).map((p, i) => [p.park.id, i + 1])), [trip]);
-  const nClear = clearCount(state);
-  // No filters: nothing to rank by, so list every park A to Z with no rank or score.
   const browse = !!trip && isBrowse(state);
-  const noWarmth = !state.custom && state.feels.length === 0;
-  const az = useMemo(() => [...(trip?.parks ?? [])].sort((a, b) => a.park.short.localeCompare(b.park.short)), [trip]);
-  const rest = (trip?.parks ?? []).filter((p) => !shown.includes(p));
+  const matches = useMemo(() => (trip?.parks ?? []).filter((p) => p.ok), [trip]);
+  // No filters: nothing to rank by, so list every park A to Z with no rank or score.
+  const order = useMemo(
+    () => (browse ? [...(trip?.parks ?? [])].sort((a, b) => a.park.short.localeCompare(b.park.short)) : trip?.parks ?? []),
+    [trip, browse],
+  );
+  const rankOf = useMemo(() => new Map((trip?.parks ?? []).map((p, i) => [p.park.id, i + 1])), [trip]);
+  const byId = useMemo(() => new Map((trip?.parks ?? []).map((p) => [p.park.id, p])), [trip]);
+  const listed = find.trim() ? searchParks(order, find) : order;
 
-  // Best dates for the top 3, across every picked month.
-  const [dates, setDates] = useState<DatesByMonth>({});
-  const topIds = shown.slice(0, TOP).map((p) => p.park.id).join(",");
-  useEffect(() => {
-    if (!trip || !topIds || browse) return;
-    const ctl = new AbortController();
-    // Each card shows dates in its own best month, so ask for those months only.
-    const ms = [...new Set(shown.slice(0, TOP).map((p) => p.best_month))];
-    fetchDates(state, ms, topIds.split(","), ctl.signal).then(setDates).catch(() => undefined);
-    return () => ctl.abort();
-  }, [trip, topIds]); // eslint-disable-line react-hooks/exhaustive-deps
-  const datesOf = (p: TripPark) => fmtWindow(dates[p.best_month]?.[p.park.id]) ?? undefined;
-
-  // Open the park a case sent us to, once.
-  useEffect(() => {
-    const want = wanted.current;
-    // Park id first (Sequoia and Kings Canyon share code seki), then NPS code from case links.
-    const hit = want && trip ? (trip.parks.find((p) => p.park.id === want) ?? trip.parks.find((p) => p.park.code === want)) : undefined;
-    if (want && hit && opened.current !== want) {
-      opened.current = want;
-      setOpen(hit.park.id);
-    }
+  // A park from a link: park id first (Sequoia and Kings Canyon share code seki), then NPS code.
+  const wantedId = useMemo(() => {
+    if (!park || !trip) return null;
+    return (trip.parks.find((p) => p.park.id === park) ?? trip.parks.find((p) => p.park.code === park))?.park.id ?? null;
   }, [park, trip]);
 
+  const ticks = picked ?? defaultPicks(order, browse, wantedId);
+  // Cards follow the list order, so the best match is always first.
+  const cards = order.filter((p) => ticks.includes(p.park.id));
+  const toggle = (id: string) => {
+    setPicked(ticks.includes(id) ? ticks.filter((x) => x !== id) : [...ticks, id]);
+    play("tick");
+  };
+
   const caseOf = (p: TripPark): Case | undefined => (p.park.code ? caseForPark(p.park.code, progress) : undefined);
-  const code = (p: TripPark) => p.park.id;
-  // The map and the saved list use parkKey: the NPS code, with Kings Canyon told apart from Sequoia.
-  const byMapId = (c: string) => trip?.parks.find((p) => parkKey(p.park) === c);
-  const changed = (p: TripPark) => whatChanged(atlas, p.park.id, p.best_month, unit === "F");
-  const trendOf = (p: TripPark) => trendTag(atlas, p.park.id, p.best_month, unit === "F");
-
-  const actions = (p: TripPark) => {
-    const c = code(p);
-    const w = parkKey(p.park);
-    const inCmp = compare.includes(c);
-    return (
-      <>
-        <button className="tp-act" aria-pressed={wish.includes(w)} onClick={() => toggleWish(w)} title="Save to your Saved tab">
-          {wish.includes(w) ? "♥ Saved" : "♡ Want to go"}
-        </button>
-        <button className="tp-act" aria-pressed={inCmp} disabled={!inCmp && compare.length >= MAX_COMPARE}
-          onClick={() => setCompare((x) => (inCmp ? x.filter((y) => y !== c) : [...x, c]))}>
-          {inCmp ? "✓ Comparing" : "Compare"}
-        </button>
-        <button className="tp-act" onClick={() => shareTripCard(p, unit, changed(p))} title="Download or share a picture of this trip">Trip card</button>
-      </>
-    );
-  };
-
-  const heart = (p: TripPark) => {
-    const w = parkKey(p.park);
-    return <Heart on={wish.includes(w)} name={p.park.short} onToggle={() => toggleWish(w)} />;
-  };
-
-  const surprise = () => {
-    const pool = matches.filter((p) => (p.score ?? 0) >= 70);
-    const pick = (pool.length ? pool : matches)[Math.floor(Math.random() * Math.max(1, (pool.length ? pool : matches).length))];
-    if (pick) {
-      play("flip");
-      setOpen(code(pick));
-    }
-  };
-
   const relaxTo = (key: string) => {
     if (state.want[key] === "must") set({ want: { ...state.want, [key]: "nice" } });
     if (state.avoid[key] === "must") set({ avoid: { ...state.avoid, [key]: "nice" } });
   };
 
-  const goBefore = matches.filter((p) => p.change_2050 != null && p.change_2050 <= -10).sort((a, b) => a.change_2050! - b.change_2050!).slice(0, 3);
-  const heroPhoto = shown[0] ? photoOf(shown[0].park.code) : undefined;
-  const drawerPark = open ? byId.get(open) : undefined;
+  const nClear = clearCount(state);
+  const noWarmth = !state.custom && state.feels.length === 0;
   const monthsText = state.months.length === 0 ? "Any time" : state.months.length > 3 ? `${state.months.length} months` : state.months.map((m) => MONTHS[m - 1]).join(", ");
+  const countText = trip
+    ? browse
+      ? `All ${trip.parks.length} parks`
+      : matches.length
+        ? `${matches.length} park${matches.length === 1 ? "" : "s"} fit your trip`
+        : "No park fits every must"
+    : "Finding parks…";
+  const drawerPark = open ? byId.get(open) : undefined;
 
-  return (
-    <div className="tp">
-      <style>{TRIP_CSS}</style>
-      <aside className={`tp-side${sheet ? " open" : ""}`} aria-label="Your trip">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2 style={{ margin: 0, fontFamily: "var(--font-display)", color: "var(--pine)", fontSize: 22 }}>Your trip</h2>
-          <span style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            {nClear > 0 && <button className="tp-clear" onClick={() => set(clearFilters(state))}>Clear all</button>}
-            <button className="tp-act tp-edit" onClick={() => setSheet(false)}>Done</button>
-          </span>
-        </div>
-        <TripSettings state={state} set={set} unit={unit} setUnit={setUnit} />
-      </aside>
-
-      <div className="tp-main">
-        <button className="btn tp-edit" onClick={() => setSheet(true)}>Edit trip · {monthsText}</button>
-
+  if (stage === "prefs") {
+    const heroPhoto = matches[0] ? photoOf(matches[0].park.code) : undefined;
+    return (
+      <div className="tp-prefs">
+        <style>{TRIP_CSS}</style>
         <section className="tp-hero" style={heroPhoto ? ({ "--tp-hero": `url("${heroPhoto.file}")` } as React.CSSProperties) : undefined}>
           <h1>Where should you go?</h1>
-          <p>Pick a mood, or build your own trip on the left. Every score comes from NASA climate data.</p>
+          <p>Tell us what you like, then see the parks that fit. Every score comes from NASA climate data.</p>
           <div className="tp-moods" role="group" aria-label="Trip moods">
             {MOODS.map((m) => (
               <button key={m.id} className="tp-mood" aria-pressed={mood === m.id}
                 onClick={() => {
                   setState((s) => applyMood(s, m));
                   setMood(m.id);
+                  setPicked(null);
                   play("tick");
                 }}>
                 {m.label}
@@ -270,55 +226,43 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
           </div>
         </section>
 
-        <div className="tp-bar">
-          <div>
-            <p className="tp-count" aria-live="polite">
-              {trip ? browse ? `All ${trip.parks.length} parks` : (matches.length ? `${matches.length} park${matches.length === 1 ? "" : "s"} fit your trip` : "No park fits every must") : "Finding parks…"}
-              {loading && trip ? " · updating…" : ""}
-            </p>
-            <span className="small muted">{browse ? "No filters, so no ranking. Pick a mood or a filter to rank them." : `${monthsText} · ranked for ${HORIZON_LABEL(state.horizon, trip)}${noWarmth ? ` · comfy ${unit === "F" ? "59–86°F" : "15–30°C"} highs` : ""}`}</span>
+        <section className="tp-prefs-card" aria-label="Your preferences">
+          <div className="tp-prefs-head">
+            <h2>Your preferences</h2>
+            {nClear > 0 && <button className="tp-clear" onClick={() => set(clearFilters(state))}>Clear all</button>}
           </div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            {!browse && <div className="tp-seg" role="group" aria-label="Year">
-              {(["this_year", "next_year", "y2050"] as HorizonKey[]).map((h) => (
-                <button key={h} aria-pressed={state.horizon === h} onClick={() => set({ horizon: h })}>{HORIZON_LABEL(h, trip)}</button>
-              ))}
-            </div>}
-            <div className="tp-seg" role="group" aria-label="View">
-              <button aria-pressed={view === "list"} onClick={() => setView("list")}>List</button>
-              <button aria-pressed={view === "map"} onClick={() => setView("map")}>Map</button>
-            </div>
-            <button className="tp-act" onClick={surprise} disabled={!matches.length}>Surprise me</button>
-          </div>
-        </div>
+          <TripSettings state={state} set={set} unit={unit} setUnit={setUnit} />
+        </section>
 
-        <div className="tp-find">
-          <input type="search" className="tp-search" placeholder="Search a park or state" aria-label="Search a park or state"
-            value={find} onChange={(e) => setFind(e.target.value)} />
-          {nClear > 0 && (
-            <button className="tp-clear" onClick={() => { set(clearFilters(state)); play("tick"); }}>
-              Clear all filters ({nClear})
-            </button>
-          )}
+        <div className="tp-go">
+          <span className="tp-go-count" aria-live="polite">{countText}{loading && trip ? " · updating…" : ""}</span>
+          <button className="btn tp-go-btn" onClick={() => onStage("parks")}>Show my parks</button>
         </div>
-
         {error && <p className="error">Could not load parks: {error}</p>}
+      </div>
+    );
+  }
 
-        {trip && find.trim() && (
-          <section aria-live="polite">
-            <div className="tp-h">
-              {found.length ? `${found.length} park${found.length === 1 ? "" : "s"} match “${find.trim()}”` : `No park matches “${find.trim()}”`}
-              <button className="tp-clear" onClick={() => setFind("")}>Clear search</button>
-            </div>
-            <div className="tp-rows">
-              {found.map((p) => (
-                <Row key={p.park.id} p={p} rank={rankOf.get(p.park.id) ?? 0} plain={browse} unit={unit} onOpen={() => setOpen(code(p))} actions={heart(p)} trend={browse ? null : trendOf(p)} />
-              ))}
-            </div>
-          </section>
-        )}
+  return (
+    <div className="tp tp-step2">
+      <style>{TRIP_CSS}</style>
+      <aside className="tp-list" aria-label="Parks">
+        <div className="tp-list-head">
+          <div>
+            <p className="tp-count" aria-live="polite">{countText}{loading && trip ? " · updating…" : ""}</p>
+            <span className="small muted">
+              {browse
+                ? "No filters, so no ranking. Tick parks to compare them."
+                : `${monthsText} · ranked for ${HORIZON_LABEL("next_year", trip)}${noWarmth ? ` · comfy ${unit === "F" ? "59–86°F" : "15–30°C"} highs` : ""}`}
+            </span>
+          </div>
+          <button className="tp-act" onClick={() => onStage("prefs")}>Edit preferences</button>
+        </div>
 
-        {trip && !browse && trip.relax.length > 0 && matches.length < TOP && (
+        <input type="search" className="tp-search" placeholder="Search a park or state" aria-label="Search a park or state"
+          value={find} onChange={(e) => setFind(e.target.value)} />
+
+        {trip && !browse && trip.relax.length > 0 && matches.length < DEFAULT_PICKS && (
           <section className="tp-relax">
             <b>Too strict? Relax one thing:</b>
             <div className="tp-chips" style={{ marginTop: 8 }}>
@@ -331,114 +275,80 @@ export default function TripPlanner({ unit, setUnit, month, park, q, science = f
           </section>
         )}
 
-        {!trip && !error && (
-          <div className="tp-top3">{[0, 1, 2].map((i) => <div key={i} className="tp-skel" aria-hidden />)}</div>
-        )}
+        {error && <p className="error">Could not load parks: {error}</p>}
+        {!trip && !error && <div className="tp-skel" aria-hidden />}
+        {trip && find.trim() && !listed.length && <p className="small muted">No park matches “{find.trim()}”.</p>}
 
-        {trip && !browse && shown[0] && view === "list" && !find.trim() && (
-          <>
-            <div className="tp-why"><b>Why #1?</b> {whySentence(shown[0], unit)}</div>
-            <div className="tp-top3">
-              {shown.slice(0, TOP).map((p, i) => (
-                <TopCard key={p.park.id} p={p} i={i} dates={datesOf(p)} why={shortWhy(p, unit)} trend={trendOf(p)} heart={heart(p)}
-                  onOpen={() => setOpen(code(p))} />
-              ))}
-            </div>
-            {shown.length > TOP && (
-              <section>
-                <div className="tp-h">{shown.length - TOP} more good fits</div>
-                <div className="tp-rows">
-                  {shown.slice(TOP).map((p, i) => (
-                    <Row key={p.park.id} p={p} rank={i + TOP + 1} unit={unit} onOpen={() => setOpen(code(p))} actions={heart(p)} trend={browse ? null : trendOf(p)} />
-                  ))}
-                </div>
-              </section>
-            )}
-          </>
+        {trip && (
+          <ul className="tp-picks" aria-label="Tick parks to see their cards">
+            {listed.map((p) => {
+              const on = ticks.includes(p.park.id);
+              const photo = photoOf(p.park.code);
+              return (
+                <li key={p.park.id}>
+                  <label className={`tp-pick${on ? " on" : ""}${!browse && !p.ok ? " off" : ""}`}>
+                    <input type="checkbox" checked={on} onChange={() => toggle(p.park.id)} />
+                    {!browse && <span className="tp-pick-rank" aria-hidden>{rankOf.get(p.park.id)}</span>}
+                    {photo ? <img src={photo.file} alt="" loading="lazy" /> : <span className="tp-pick-ph" />}
+                    <span className="tp-pick-name">
+                      <b>{p.park.short}</b>
+                      <small>
+                        {p.park.states.join(", ")}
+                        {!browse && (p.ok ? ` · best in ${MONTHS[p.best_month - 1]}` : ` · misses ${p.failed.map((k) => LABEL(k)).join(", ")}`)}
+                      </small>
+                    </span>
+                    {!browse && <ScoreRing score={p.score} size={38} light={false} />}
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
         )}
+      </aside>
 
-        {trip && !browse && view === "list" && !find.trim() && rest.length > 0 && (
-          showAll ? (
-            <section>
-              <div className="tp-h">
-                All other parks ({rest.length})
-                <button className="tp-clear" onClick={() => setShowAll(false)}>Hide</button>
-              </div>
-              <div className="tp-rows">
-                {rest.map((p) => (
-                  <Row key={p.park.id} p={p} rank={rankOf.get(p.park.id) ?? 0} plain={browse} unit={unit} onOpen={() => setOpen(code(p))} actions={heart(p)} trend={browse ? null : trendOf(p)} />
-                ))}
-              </div>
-            </section>
-          ) : (
-            <button className="btn-ghost tp-more" onClick={() => setShowAll(true)}>
-              See all {trip.parks.length} parks
-            </button>
-          )
+      <div className="tp-cards" aria-live="polite">
+        {trip && cards.length === 0 && (
+          <p className="tp-empty">Tick a park on the left to see how it looks this year and next year.</p>
         )}
-
-        {trip && browse && view === "list" && !find.trim() && (
-          <div className="tp-browse">
-            {az.map((p) => (
-              <Tile key={p.park.id} p={p} onOpen={() => setOpen(code(p))} heart={heart(p)} />
-            ))}
-          </div>
-        )}
-
-        {trip && view === "map" && (
-          <section className="card">
-            <ParkMap
-              parks={[...new Map(trip.parks.map((p) => [parkKey(p.park), p])).values()].map((p) => ({
-                id: parkKey(p.park), name: p.park.short, state: p.park.states.join(", "), lat: p.park.lat, lon: p.park.lon,
-              }))}
-              colorOf={(c) => {
-                const p = byMapId(c);
-                return browse ? "#3d6b3a" : !p || !p.ok ? "#b9ae97" : scoreColor(p.score);
-              }}
-              radius={(c) => (browse ? 6 : shown.some((p) => parkKey(p.park) === c) ? 8 : 4)}
-              tip={(c) => {
-                const p = byMapId(c);
-                if (!p || browse) return "";
-                return p.ok ? `score ${Math.round(p.score ?? 0)}, best in ${MONTHS[p.best_month - 1]}` : "fails a must";
-              }}
-              onPick={(c) => {
-                const p = byMapId(c);
-                if (p) setOpen(p.park.id);
-              }}
+        {cards.map((p) => {
+          const w = parkKey(p.park);
+          return (
+            <Postcard
+              key={p.park.id}
+              name={p.park.short}
+              p={p}
+              trip={trip}
+              unit={unit}
+              horizons={CARD_HORIZONS}
+              trend={trendTag(atlas, p.park.id, p.best_month, unit === "F")}
+              npsCode={p.park.code}
+              onRemove={() => toggle(p.park.id)}
+              removeLabel={`Untick ${p.park.short}`}
+              actions={
+                <>
+                  <button className="tp-act" aria-pressed={wish.includes(w)} onClick={() => toggleWish(w)} title="Save to your Saved tab">
+                    {wish.includes(w) ? "♥ Saved" : "♡ Want to go"}
+                  </button>
+                  <button className="tp-act" onClick={() => setOpen(p.park.id)}>Details</button>
+                </>
+              }
             />
-            <p className="tp-note">
-              {browse ? "Every park. Pick a filter to colour them by fit." : `Big dots: your top ${shown.length}. Darker green = better fit. Grey = fails a must.`}
-            </p>
-          </section>
-        )}
-
-        {trip && !browse && goBefore.length > 0 && (
-          <section className="card">
-            <div className="tp-h">Go before it changes</div>
-            <p className="small" style={{ margin: "0 0 8px" }}>These good fits score lower for the same month in the 2050 climate model.</p>
-            <div className="tp-chips">
-              {goBefore.map((p) => (
-                <button key={p.park.id} className="tp-chip" onClick={() => setOpen(code(p))}>
-                  {p.park.short} · {MONTHS[p.best_month - 1]} <b style={{ color: "var(--clay)" }}>{Math.round(p.change_2050!)}</b>
-                </button>
-              ))}
-            </div>
-            <p className="tp-note">2050: WorldClim CMIP6, 6-model average. Only temperature and rain change in the model.</p>
-          </section>
-        )}
-
-        <CompareTray parks={compare.map((c) => byId.get(c)).filter((p): p is TripPark => !!p)} unit={unit}
-          onRemove={(c) => setCompare((x) => x.filter((y) => y !== c))} onClear={() => setCompare([])} />
-
+          );
+        })}
         <p className="tp-note">
-          Scores 0–100 mix your choices: NASA POWER climate (1991–2020 normals, 2005–2024 extras), NASA FIRMS fires (2015–2024),
-          the real trend for next year, and WorldClim CMIP6 for 2050. Not a weather forecast.
+          Scores 0–100 mix your choices: NASA POWER climate (1991–2020 normals, 2005–2024 extras), NASA FIRMS fires (2015–2024)
+          and the real trend for next year. Not a weather forecast.
         </p>
       </div>
 
       {drawerPark && trip && (
         <ParkDrawer p={drawerPark} trip={trip} state={state} unit={unit} science={science} plain={browse} caseFor={caseOf(drawerPark)}
-          onClose={() => setOpen(null)} onCase={onCase ? (c) => onCase(c.id) : undefined} actions={actions(drawerPark)} />
+          onClose={() => setOpen(null)} onCase={onCase ? (c) => onCase(c.id) : undefined}
+          actions={
+            <button className="tp-act" aria-pressed={wish.includes(parkKey(drawerPark.park))} onClick={() => toggleWish(parkKey(drawerPark.park))}>
+              {wish.includes(parkKey(drawerPark.park)) ? "♥ Saved" : "♡ Want to go"}
+            </button>
+          } />
       )}
     </div>
   );
