@@ -276,9 +276,9 @@ export function ParkOfTheDay({ atlas, onExplore }: { atlas: Atlas; onExplore: (p
     play(g === truth ? "right" : "wrong");
   };
   const verdictPill =
-    cell.verdict === "real" ? { t: "✅ Real, not luck", bg: "#dfe8cf", c: E.pine }
-    : cell.verdict === "possible" ? { t: "🤔 Maybe real", bg: "#f3e2c0", c: "#7a5a1c" }
-    : { t: "〰️ Just wiggles", bg: "#e7e0d0", c: E.bark };
+    cell.verdict === "real" ? { t: "Confirmed trend", tip: "The test says this change is real.", bg: "#dfe8cf", c: E.pine }
+    : cell.verdict === "possible" ? { t: "Possible trend", tip: "It might be real. We need more years to be sure.", bg: "#f3e2c0", c: "#7a5a1c" }
+    : { t: "No clear trend", tip: "The ups and downs look like normal weather.", bg: "#e7e0d0", c: E.bark };
 
   return (
     <section
@@ -346,7 +346,14 @@ export function ParkOfTheDay({ atlas, onExplore }: { atlas: Atlas; onExplore: (p
               </div>
               <div style={{ fontSize: 11, color: E.moss, fontWeight: 700 }}>every 10 years</div>
             </div>
-            <span style={{ background: verdictPill.bg, color: verdictPill.c, borderRadius: 999, padding: "6px 14px", fontWeight: 800, fontSize: 13 }}>
+            <span
+              title={verdictPill.tip}
+              style={{
+                background: verdictPill.bg, color: verdictPill.c, border: `1px solid ${verdictPill.c}33`,
+                borderRadius: 999, padding: "5px 12px", fontWeight: 700, fontSize: 12.5, display: "inline-flex", alignItems: "center", gap: 6,
+              }}
+            >
+              <span aria-hidden style={{ width: 7, height: 7, borderRadius: "50%", background: verdictPill.c }} />
               {verdictPill.t}
             </span>
           </div>
