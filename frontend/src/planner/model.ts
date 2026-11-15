@@ -125,6 +125,37 @@ export async function fetchPlan(p: Prefs, signal?: AbortSignal): Promise<Plan> {
   return resp.json();
 }
 
+export interface DayScore {
+  day: number;
+  score: number | null;
+  tmax: number | null; // °C
+  rh: number | null;
+  dewpoint: number | null;
+  precip: number | null; // mm/day
+}
+
+export interface BestDays {
+  horizon: HorizonKey;
+  month: number;
+  days: DayScore[] | null;
+  best_days: number[];
+  window: { start: number; end: number; mean: number } | null;
+  measured_days: number | null;
+  note: string;
+}
+
+export async function fetchBestDays(
+  p: Prefs,
+  parkIds: string[],
+  horizon: HorizonKey,
+  signal?: AbortSignal,
+): Promise<Record<string, BestDays>> {
+  const q = new URLSearchParams({ ...planQuery(p), park_ids: parkIds.join(","), horizon });
+  const resp = await fetch(`/api/parks/best-days?${q}`, { signal });
+  if (!resp.ok) throw new Error(`${resp.status}: ${resp.statusText}`);
+  return (await resp.json()).parks;
+}
+
 export interface Place {
   name: string;
   lat: number;

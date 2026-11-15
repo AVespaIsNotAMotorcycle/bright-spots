@@ -1256,3 +1256,32 @@ path.yc-series.tag-projected {
   display: flex;
   flex-direction: column;
 }
+
+/* Best-days strip and single-year score on the match lists */
+.suggestion-score { font-size: 17px; font-weight: 600; }
+.best-days { padding: 6px 14px 10px 42px; }
+.best-days-line { margin: 0 0 6px; }
+.best-days-note { margin: 4px 0 0; }
+.day-strip { display: flex; align-items: flex-end; gap: 2px; height: 30px; }
+.day-cell {
+  flex: 1 1 0;
+  min-width: 4px;
+  border-radius: 3px;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+.day-cell.in-window { outline: 2px solid var(--accent-2); outline-offset: 1px; }
+.day-dot { width: 5px; height: 5px; border-radius: 50%; background: #fff; margin-top: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3); }
+.day-axis { display: flex; justify-content: space-between; margin-top: 2px; }
+.best-list > li:has(.best-days) .suggestion { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.best-list > li .best-days {
+  border: 1px solid var(--border);
+  border-top: 0;
+  border-radius: 0 0 10px 10px;
+  background: var(--surface);
+  margin-top: -1px;
+  padding-top: 8px;
+}
+.best-list > li { margin-bottom: 8px; }

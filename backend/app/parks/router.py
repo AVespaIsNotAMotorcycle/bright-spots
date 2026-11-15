@@ -11,6 +11,7 @@ import httpx
 from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel
 
+from app.parks.bestdays import best_days
 from app.parks.city import CityNormals, city_normals
 from app.parks.daily import curves
 from app.parks.scoring import Prefs, Scored, score_park
@@ -165,6 +166,39 @@ def daily(
     return DailyCurves(
         park_id=park_id, year=d["year"], through=d["through"], scenario=scenario, **c
     )
+
+
+@router.get("/best-days")
+def best_days_route(
+    park_ids: Annotated[str, Query(description="comma-separated park ids, at most 10")],
+    month: Annotated[int, Query(ge=1, le=12)],
+    t_lo: Annotated[float, Query(ge=-40, le=50)],
+    t_hi: Annotated[float, Query(ge=-40, le=50)],
+    horizon: Literal["this_year", "next_year", "y2050"] = "next_year",
+    rh_max: Annotated[float | None, Query(ge=0, le=100)] = None,
+    dew_max: Annotated[float | None, Query(ge=-40, le=40)] = None,
+    rain_max: Annotated[float | None, Query(ge=0, le=1000)] = None,
+    avoid_bugs: bool = False,
+    stars: bool = False,
+    snowmelt: bool = False,
+    scenario: Literal["ssp245", "ssp585"] = "ssp245",
+) -> dict:
+    """Day-by-day scores for the chosen month and year, plus the best days and best stretch."""
+    if t_hi < t_lo:
+        raise HTTPException(422, "t_hi must be >= t_lo")
+    ids = [x for x in park_ids.split(",") if x][:10]
+    try:
+        _, climate = load()
+    except FileNotFoundError as e:
+        raise HTTPException(503, str(e)) from e
+    prefs = Prefs(month, t_lo, t_hi, rh_max, rain_max, avoid_bugs, stars, snowmelt, dew_max=dew_max)
+    out = {}
+    for pid in ids:
+        path = DATA_DIR / "daily" / f"{pid}.json"
+        if pid not in climate or not path.exists():
+            raise HTTPException(404, f"no daily data for park {pid!r}")
+        out[pid] = best_days(json.loads(path.read_text()), climate[pid], prefs, scenario, horizon)
+    return {"parks": out}
 
 
 @router.get("/city-normals")

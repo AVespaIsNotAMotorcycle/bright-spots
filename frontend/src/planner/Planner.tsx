@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { loadAtlas, type Atlas } from "../atlas/model";
+import BestDaysStrip from "./BestDaysStrip";
 import LocationPicker from "./LocationPicker";
 import TrendBadges from "./TrendBadges";
 import { HORIZONS, Meter, ParkCard, fmtDistance, horizonTitle } from "./ParkDetails";
@@ -8,10 +9,12 @@ import {
   MONTHS,
   distanceKm,
   fToC,
+  fetchBestDays,
   fetchPlan,
   nearestParks,
   popularParks,
   rankParks,
+  type BestDays,
   type HorizonKey,
   type ParkPlan,
   type Place,
@@ -20,7 +23,7 @@ import {
 } from "./model";
 
 const SUGGEST_N = 5;
-const BEST_N = 10; // SPEC: trip match shows the top 10 parks
+const BEST_N = 5; // trip match shows the top 5 parks
 
 // Per-viewer conveniences only; the app works without storage.
 function load<T>(key: string, fallback: T): T {
@@ -67,6 +70,8 @@ function Suggestion({
   onToggle,
   atlas,
   fahrenheit,
+  year,
+  extra,
 }: {
   p: ParkPlan;
   plan: Plan;
@@ -75,7 +80,11 @@ function Suggestion({
   onToggle: () => void;
   atlas: Atlas | null;
   fahrenheit: boolean;
+  year: HorizonKey;
+  extra?: ReactNode;
 }) {
+  const hz = HORIZONS.find((h) => h.key === year)!;
+  const h = p[year];
   return (
     <li>
       <label className={`suggestion ${selected ? "selected" : ""}`}>
@@ -89,13 +98,16 @@ function Suggestion({
           <TrendBadges atlas={atlas} parkId={p.park.id} month={plan.month} fahrenheit={fahrenheit} />
         </span>
         <span className="suggestion-scores num">
-          {HORIZONS.map((hz) => (
-            <span key={hz.key} title={`${horizonTitle(hz.key, plan)} ${hz.tag.toLowerCase()} score`}>
-              <span className="micro muted">{horizonTitle(hz.key, plan)}</span> {p[hz.key].score == null ? "–" : Math.round(p[hz.key].score!)}
-            </span>
-          ))}
+          <span title={`${horizonTitle(hz.key, plan)} ${hz.tag.toLowerCase()} score`}>
+            <span className="micro muted">{horizonTitle(hz.key, plan)}</span>{" "}
+            <span className="suggestion-score">{h.score == null ? "–" : Math.round(h.score)}</span>
+            {h.low != null && h.high != null && Math.round(h.low) !== Math.round(h.high) && (
+              <span className="micro muted"> {Math.round(h.low)}–{Math.round(h.high)}</span>
+            )}
+          </span>
         </span>
       </label>
+      {extra}
     </li>
   );
 }
@@ -119,6 +131,7 @@ export default function Planner({ unit, setUnit }: { unit: Unit; setUnit: (u: Un
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [atlas, setAtlas] = useState<Atlas | null>(null);
+  const [bestDays, setBestDays] = useState<Record<string, BestDays>>({});
   useEffect(() => {
     loadAtlas()
       .then(setAtlas)
@@ -157,6 +170,19 @@ export default function Planner({ unit, setUnit }: { unit: Unit; setUnit: (u: Un
     [plan, near],
   );
   const ranked = useMemo(() => (plan ? rankParks(plan.parks, rankBy) : []), [plan, rankBy]);
+  const topIds = useMemo(() => ranked.slice(0, BEST_N).map((p) => p.park.id), [ranked]);
+  const topKey = topIds.join(",");
+  useEffect(() => {
+    if (!topKey) return;
+    const ctl = new AbortController();
+    setBestDays({});
+    fetchBestDays(prefs, topKey.split(","), rankBy, ctl.signal)
+      .then(setBestDays)
+      .catch(() => {
+        /* the strip is optional */
+      });
+    return () => ctl.abort();
+  }, [prefs, rankBy, topKey]);
   const byId = useMemo(() => new Map(plan?.parks.map((p) => [p.park.id, p]) ?? []), [plan]);
   const chosen = selected.map((id) => byId.get(id)).filter((p): p is ParkPlan => p != null);
 
@@ -180,7 +206,7 @@ export default function Planner({ unit, setUnit }: { unit: Unit; setUnit: (u: Un
             <div className="row gap-16 wrap best-head">
               <h3 className="pref-title">Best matches for you</h3>
               <div className="row gap-8 wrap" role="group" aria-label="Rank best matches by">
-                <span className="micro muted">Rank by</span>
+                <span className="micro muted">Year</span>
                 {HORIZONS.map((hz) => (
                   <button
                     key={hz.key}
@@ -204,6 +230,8 @@ export default function Planner({ unit, setUnit }: { unit: Unit; setUnit: (u: Un
                   onToggle={() => toggle(p.park.id)}
                   atlas={atlas}
                   fahrenheit={unit === "F"}
+                  year={rankBy}
+                  extra={<BestDaysStrip bd={bestDays[p.park.id]} year={horizonTitle(rankBy, plan)} unit={unit} />}
                 />
               ))}
             </ol>
@@ -226,6 +254,7 @@ export default function Planner({ unit, setUnit }: { unit: Unit; setUnit: (u: Un
                       onToggle={() => toggle(p.park.id)}
                       atlas={atlas}
                       fahrenheit={unit === "F"}
+                      year={rankBy}
                     />
                   ))}
                 </ul>
@@ -246,6 +275,7 @@ export default function Planner({ unit, setUnit }: { unit: Unit; setUnit: (u: Un
                     onToggle={() => toggle(p.park.id)}
                     atlas={atlas}
                     fahrenheit={unit === "F"}
+                    year={rankBy}
                   />
                 ))}
               </ul>
