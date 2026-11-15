@@ -3,6 +3,7 @@ import { CASES, type Case } from "./detective/cases";
 import { PassportPreview } from "./detective/PassportPage";
 import { NextCase, ParkOfTheDay, RankBanner } from "./detective/StudentWidgets";
 import { GuessTheTwin } from "./detective/TwinGame";
+import SinceBorn from "./detective/SinceBorn";
 import type { Atlas } from "./detective/model";
 import { Safe } from "./ErrorBoundary";
 import { PERSONAS, type Persona, type Tab } from "./profile";
@@ -50,6 +51,7 @@ function ExplorerHome({ atlas, onGo, science }: Pick<Props, "atlas" | "onGo" | "
           We score every park for that month: this year, next year and 2050.
         </p>
       </section>
+      <Safe>{atlas && <SinceBorn atlas={atlas} science={science} onExplore={(park) => onGo("explore", { park })} />}</Safe>
       <Safe><NextCase onPlay={play} /></Safe>
       <Safe><PassportPreview onOpen={() => onGo("passport")} onCase={play} /></Safe>
       <Safe>{atlas && <ParkOfTheDay atlas={atlas} science={science} onExplore={(park) => onGo("explore", { park })} />}</Safe>
