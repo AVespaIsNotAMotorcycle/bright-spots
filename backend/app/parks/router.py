@@ -10,6 +10,7 @@ from typing import Annotated, Literal
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
+from app.parks.daily import curves
 from app.parks.scoring import Prefs, Scored, score_park
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "parks"
@@ -115,4 +116,37 @@ def plan(
         next_year=first["next_year"],
         scenario=scenario,
         parks=out,
+    )
+
+
+class DailyCurves(BaseModel):
+    """365-day curves (Feb 29 dropped) per horizon: tmax C, rh %, precip mm/day,
+    cloud %. this_year has None for days not yet measured; y2050 is None without
+    a projection for the park's cell."""
+
+    park_id: str
+    year: int
+    through: str
+    scenario: str
+    normal: dict[str, list[float | None]]
+    this_year: dict[str, list[float | None]]
+    next_year: dict[str, list[float | None]]
+    y2050: dict[str, list[float | None] | None]
+
+
+@router.get("/{park_id}/daily")
+def daily(
+    park_id: str, scenario: Literal["ssp245", "ssp585"] = "ssp245"
+) -> DailyCurves:
+    try:
+        _, climate = load()
+    except FileNotFoundError as e:
+        raise HTTPException(503, str(e)) from e
+    path = DATA_DIR / "daily" / f"{park_id}.json"
+    if park_id not in climate or not path.exists():
+        raise HTTPException(404, f"no daily data for park {park_id!r}")
+    d = json.loads(path.read_text())
+    c = curves(d, climate[park_id], scenario)
+    return DailyCurves(
+        park_id=park_id, year=d["year"], through=d["through"], scenario=scenario, **c
     )

@@ -18,6 +18,10 @@ Per park and calendar month, for each variable:
              its free tier allows ~1 park-sized request per minute (measured: one
              10-year, 5-variable, 7-model request used the full 600/min allowance).
 
+Daily curves (data/parks/daily/{id}.json, for the hover charts): NASA POWER daily
+daytime high, humidity, rain (mm/day) and cloud, 1991 to today; the 1991-2020
+day-of-year mean smoothed over 15 days, and this year's daily values so far.
+
 Variables: tmax (C, mean daily max), t2m (C), rh (%), precip (mm/month),
 cloud (%), snow (cm snow depth; POWER only, so no 2050 value).
 
@@ -53,6 +57,14 @@ WIKI = (
     "&page=List_of_national_parks_of_the_United_States&prop=wikitext"
 )
 POWER = "https://power.larc.nasa.gov/api/temporal/monthly/point"
+POWER_DAILY = "https://power.larc.nasa.gov/api/temporal/daily/point"
+DAILY_PARAMS = {
+    "T2M_MAX": "tmax",
+    "RH2M": "rh",
+    "PRECTOTCORR": "precip",
+    "CLOUD_AMT": "cloud",
+}
+DAILY_SMOOTH_DAYS = 15  # centred circular moving average of the day-of-year normal
 POWER_PARAMS = {"T2M_MAX": "tmax", "T2M": "t2m", "RH2M": "rh", "PRECTOTCORR": "precip",
                 "CLOUD_AMT": "cloud", "SNODP": "snow"}  # fmt: skip
 WC_FUTURE = "https://geodata.ucdavis.edu/cmip6/10m/{m}/{ssp}/wc2.1_10m_{v}_{m}_{ssp}_2041-2060.tif"
@@ -346,6 +358,47 @@ def horizons(park: dict, today: date, wc_files, wc_mask: np.ndarray) -> dict:
     }
 
 
+def power_daily(client: httpx.Client, park: dict, today: date) -> dict:
+    params = {"parameters": ",".join(DAILY_PARAMS), "community": "RE",
+              "latitude": park["lat"], "longitude": park["lon"],
+              "start": f"{NORMAL[0]}0101", "end": today.strftime("%Y%m%d"),
+              "format": "JSON"}  # fmt: skip
+    return cached_json(
+        RAW / f"{park['id']}_power_daily_{today.isoformat()}.json",
+        lambda: get(client, POWER_DAILY, params),
+    )
+
+
+def daily_curves(body: dict, this_year: int) -> dict:
+    """365-day curves (Feb 29 dropped): the 1991-2020 day-of-year mean, smoothed
+    with a centred circular moving average, and this year's daily values so far."""
+    params = body["properties"]["parameter"]
+    normal: dict[str, list[float | None]] = {}
+    current: dict[str, list[float | None]] = {}
+    for p, var in DAILY_PARAMS.items():
+        sums = np.zeros(365)
+        counts = np.zeros(365)
+        cur: list[float | None] = [None] * 365
+        for key, val in params[p].items():
+            d = date(int(key[:4]), int(key[4:6]), int(key[6:]))
+            if (d.month, d.day) == (2, 29) or val == -999:
+                continue
+            doy = date(2001, d.month, d.day).timetuple().tm_yday - 1  # non-leap index
+            if NORMAL[0] <= d.year <= NORMAL[1]:
+                sums[doy] += val
+                counts[doy] += 1
+            elif d.year == this_year:
+                cur[doy] = float(val)
+        mean = np.where(counts > 0, sums / np.maximum(counts, 1), np.nan)
+        k = DAILY_SMOOTH_DAYS // 2
+        padded = np.concatenate([mean[-k:], mean, mean[:k]])
+        win = np.lib.stride_tricks.sliding_window_view(padded, DAILY_SMOOTH_DAYS)
+        smooth = np.nanmean(win, axis=1)
+        normal[var] = [None if not np.isfinite(v) else float(v) for v in smooth]
+        current[var] = cur
+    return {"normal": normal, "this_year": current}
+
+
 def round_floats(o, nd: int = 2):
     if isinstance(o, float):
         return round(o, nd)
@@ -391,6 +444,21 @@ def main() -> None:
     for i, park in enumerate(todo, 1):
         t = time.monotonic()
         climate[park["id"]] = round_floats(horizons(park, today, wc_files, wc_mask))
+        with httpx.Client(timeout=120, headers=UA) as client:
+            curves = daily_curves(power_daily(client, park, today), today.year)
+        daily_dir = OUT / "daily"
+        daily_dir.mkdir(exist_ok=True)
+        (daily_dir / f"{park['id']}.json").write_text(
+            json.dumps(
+                {
+                    "year": today.year,
+                    "through": today.isoformat(),
+                    **round_floats(curves, 1),
+                },
+                separators=(",", ":"),
+            )
+            + "\n"
+        )
         out_path.write_text(json.dumps(climate, separators=(",", ":")) + "\n")
         print(
             f"[{i}/{len(todo)}] {park['id']}: {time.monotonic() - t:.1f}s",

@@ -6,6 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.parks import daily as dc
 from app.parks import router as parks_router
 from app.parks import scoring as sc
 
@@ -136,3 +137,54 @@ def test_plan_missing_data_is_503(tmp_path, monkeypatch):
         r = c.get("/api/parks/plan", params={"month": 7, "t_lo": 20, "t_hi": 26})
     parks_router.load.cache_clear()
     assert r.status_code == 503
+
+
+# ---------- daily curves ----------
+
+
+def test_interp_monthly_hits_mid_month_values_and_wraps():
+    vals = [float(m) for m in range(12)]  # 0 in Jan ... 11 in Dec
+    d = dc.interp_monthly(vals)
+    assert len(d) == 365
+    for m, mid in enumerate(dc.MID_MONTH):
+        if mid == int(mid):
+            assert d[int(mid)] == pytest.approx(vals[m])
+    # Between mid-Dec (11) and mid-Jan (0) the curve runs smoothly from 11 down to 0.
+    assert d[364] < 11 and d[0] > 0 and d[364] > d[0]
+    assert dc.interp_monthly([5.0] * 12) == [5.0] * 365
+
+
+def test_shifted_offset_ratio_and_bounds():
+    normal = [10.0] * 365
+    assert dc.shifted("tmax", normal, [0.0] * 12, [2.0] * 12) == [12.0] * 365
+    assert dc.shifted("precip", [2.0] * 365, [50.0] * 12, [75.0] * 12) == [3.0] * 365
+    assert set(dc.shifted("rh", [95.0] * 365, [50.0] * 12, [60.0] * 12)) == {100.0}
+    assert dc.shifted("tmax", [None] * 365, [0.0] * 12, [1.0] * 12) == [None] * 365
+
+
+def test_daily_endpoint(fake_parks, tmp_path):
+    (tmp_path / "daily").mkdir()
+    curves = {
+        "year": 2026,
+        "through": "2026-11-14",
+        "normal": {v: [10.0] * 365 for v in dc.DAILY_VARS},
+        "this_year": {v: [11.0] * 200 + [None] * 165 for v in dc.DAILY_VARS},
+    }
+    (tmp_path / "daily" / "test-park.json").write_text(json.dumps(curves))
+    with TestClient(app) as c:
+        r = c.get("/api/parks/test-park/daily")
+        other = c.get("/api/parks/test-park/daily", params={"scenario": "ssp585"})
+        missing = c.get("/api/parks/nope/daily")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["year"] == 2026 and len(body["normal"]["tmax"]) == 365
+    # Fixture: tmax normal 24, next year 25 (+1), 2050 SSP2-4.5 27 (+3).
+    assert body["next_year"]["tmax"][180] == pytest.approx(11.0)
+    assert body["y2050"]["tmax"][180] == pytest.approx(13.0)
+    assert body["y2050"]["rh"][180] == pytest.approx(10.0)  # not projected
+    assert (
+        body["this_year"]["tmax"][199] == 11.0
+        and body["this_year"]["tmax"][200] is None
+    )
+    assert other.json()["y2050"]["tmax"] is None  # fixture has no SSP5-8.5
+    assert missing.status_code == 404
