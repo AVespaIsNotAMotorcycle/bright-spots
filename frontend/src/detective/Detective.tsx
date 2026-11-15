@@ -5,6 +5,7 @@ import { PERIOD_LABEL, VERDICT_LABEL, fmtQ } from "./model";
 import ParkDetective from "./ParkDetective";
 import { useInsights } from "../research/lib";
 import { Tip } from "../research/glossary";
+import ExplorerHome from "./ExplorerHome";
 
 // Park name lookup (we get it from atlas cells' park metadata via per-park fetch,
 // but the atlas itself only has park_id). We'll keep a minimal static map for labels.
@@ -139,6 +140,9 @@ export default function Detective({
       />
     );
   }
+
+  // Students and visitors get the question-led explorer; researchers keep the full atlas below.
+  if (simple) return <ExplorerHome atlas={atlas} onOpen={(id) => selectPark(id)} />;
 
   const unit = atlas.variables[selVar]?.unit;
   const displayUnit = isTemp && useFahrenheit ? "°F" : unit;

@@ -49,6 +49,17 @@ describe("App", () => {
     expect(screen.queryByText(/Cite this/)).toBeNull();
   });
 
+  it("park explorer starts from questions, with a podium and a plot twist", async () => {
+    localStorage.setItem("profile", JSON.stringify({ name: "", persona: "student" }));
+    history.replaceState(null, "", "#tab=explore");
+    render(<App />);
+    expect(await screen.findByText("Pick a question", undefined, { timeout: 3000 })).toBeTruthy();
+    expect(screen.getByText("🥇")).toBeTruthy();
+    fireEvent.click(screen.getByText("Where is rain changing most?"));
+    expect(await screen.findByText(/Plot twist/)).toBeTruthy();
+    expect(screen.getByText(/Show all 63 parks/)).toBeTruthy();
+  });
+
   it("student home has the twin game", async () => {
     localStorage.setItem("profile", JSON.stringify({ name: "", persona: "student" }));
     render(<App />);
