@@ -1,192 +1,55 @@
 /* ═══════════════════════════════════════════════════════════════
    Postcard layer — PROPOSED, sandbox only (not imported by the app)
-   Every value defaults to an existing styles.css token so the
-   postcard reads as the same national-parks system.
+   One-sided card: park photo on the left, park info on the right,
+   on white card stock with square paper corners.
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  --pc-paper:     var(--surface);      /* card stock */
-  --pc-ink:       var(--text);
-  --pc-rule:      var(--border);       /* address lines, divider */
-  --pc-stamp:     var(--rust);
-  --pc-postmark:  var(--sky);
-  --pc-airmail-1: var(--rust);
-  --pc-airmail-2: var(--sky);
-  --pc-radius:    6px;                 /* real postcards are nearly square-cornered */
-  --pc-edge:      10px;                /* white border on photo fronts */
-  --pc-shadow:    var(--shadow-md);
-  --font-script:  'Playfair Display', Georgia, serif; /* set in italic */
+  --pc-paper:   #ffffff;             /* card stock */
+  --pc-ink:     var(--text);
+  --pc-rule:    var(--border);       /* hairlines between data points */
+  --pc-radius:  0;                   /* paper has sharp corners */
+  --pc-edge:    12px;                /* white border around the card */
+  --pc-shadow:  var(--shadow-md);
 }
 
-/* ── Postcard base: 3:2 card stock ── */
+/* ── Postcard: 3:2 card stock, photo | info ── */
 .postcard {
-  position: relative;
   aspect-ratio: 3 / 2;
   width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--pc-edge);
+  padding: var(--pc-edge);
   background: var(--pc-paper);
   color: var(--pc-ink);
   border-radius: var(--pc-radius);
   box-shadow: var(--pc-shadow);
   overflow: hidden;
-  container-type: inline-size; /* lets lettering scale with the card (cqw) */
-}
-.postcard.tilt-l { transform: rotate(-2.5deg); }
-.postcard.tilt-r { transform: rotate(2deg); }
-
-/* ── Front: picture with a paper edge ── */
-.postcard-front { padding: var(--pc-edge); }
-.pc-picture {
-  position: relative;
-  width: 100%; height: 100%;
-  border-radius: calc(var(--pc-radius) / 2);
-  overflow: hidden;
-}
-.pc-picture svg { display: block; width: 100%; height: 100%; }
-
-/* "Greetings from" large-letter lettering */
-.pc-greeting {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  text-align: center; pointer-events: none;
-}
-.pc-greeting-small {
-  font: italic 700 clamp(14px, 3.2cqw, 22px)/1 var(--font-script);
-  color: var(--on-pine);
-  text-shadow: 0 1px 2px rgba(38, 30, 20, 0.5);
-}
-.pc-greeting-big {
-  font: 800 clamp(28px, 11cqw, 76px)/0.95 var(--font-display);
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  color: var(--on-pine);
-  -webkit-text-stroke: 1.5px var(--rust);
-  text-shadow: 3px 3px 0 var(--rust), 5px 5px 0 rgba(38, 30, 20, 0.35);
 }
 
-.pc-caption {
-  position: absolute; left: calc(var(--pc-edge) + 10px); bottom: calc(var(--pc-edge) + 8px);
-  display: flex; gap: 6px; align-items: center;
-  padding: 3px 8px; border-radius: 999px;
-  background: rgba(250, 247, 242, 0.88);
-  font-size: 11px; color: var(--text-muted);
-}
+.pc-photo { min-height: 0; overflow: hidden; }
+.pc-photo svg, .pc-photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
-/* ── Back: message | address ── */
-.postcard-back {
-  display: grid;
-  grid-template-columns: 1fr 1px 1fr;
-  gap: 16px;
-  padding: 18px 20px;
-}
-.pc-divider { background: var(--pc-rule); }
-.pc-message {
-  font: italic 700 15px/1.6 var(--font-script);
-  color: var(--pc-ink);
-  overflow: hidden;
-}
-.pc-message p { margin: 0 0 8px; }
-.pc-message .pc-sign { text-align: right; }
-.pc-address { display: flex; flex-direction: column; position: relative; }
-.pc-address-lines { margin-top: auto; display: flex; flex-direction: column; gap: 4px; }
-.pc-line {
-  border-bottom: 1px solid var(--pc-rule);
-  padding: 4px 2px 2px;
-  min-height: 1.9em;
+.pc-info { display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 4px 4px 0 0; }
+.pc-info .park-card-title { font-size: 20px; }
+.pc-place { margin: 2px 0 0; }
+
+.pc-score { margin-top: 12px; }
+.pc-score .big-score { font-size: 34px; }
+.pc-score .meter-track { flex: none; width: 100%; } /* same override .park-card uses */
+
+.pc-facts { list-style: none; margin: auto 0 0; padding: 0; }
+.pc-facts li {
+  display: flex; justify-content: space-between; gap: 12px;
+  padding: 5px 0;
+  border-top: 1px solid var(--pc-rule);
   font-size: 13px;
 }
-.pc-corner {
-  position: absolute; left: 0; top: 0;
-  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-faint);
-}
+.pc-facts li span:first-child { color: var(--text-muted); }
 
-/* ── Stamp: perforated edge ──
-   Solid content-box + a row of holes centred on the outer edge (tile 2r, hole r, offset -r). */
-.pc-stamp {
-  --r: 4px;
-  position: relative;
-  width: 78px; height: 94px; flex: none;
-  padding: var(--r);
-  background: var(--pc-paper);
-  -webkit-mask:
-    conic-gradient(#000 0 0) content-box,
-    radial-gradient(farthest-side, #0000 97%, #000) calc(-1 * var(--r)) calc(-1 * var(--r)) / calc(2 * var(--r)) calc(2 * var(--r)) round padding-box;
-  mask:
-    conic-gradient(#000 0 0) content-box,
-    radial-gradient(farthest-side, #0000 97%, #000) calc(-1 * var(--r)) calc(-1 * var(--r)) / calc(2 * var(--r)) calc(2 * var(--r)) round padding-box;
-  filter: drop-shadow(0 1px 1px rgba(38, 30, 20, 0.25));
-}
-.pc-stamp-inner {
-  position: relative; height: calc(100% - 8px); margin: 4px;
-  border: 1.5px solid var(--pc-stamp);
-  overflow: hidden;
-}
-.pc-stamp-inner svg { display: block; width: 100%; height: 100%; }
-.pc-stamp-value {
-  position: absolute; right: 3px; top: 2px;
-  font: 800 14px/1 var(--font-display); color: var(--on-pine);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
-}
-.pc-stamp-label {
-  position: absolute; left: 0; right: 0; bottom: 0;
-  padding: 2px 0;
-  background: var(--pc-stamp); color: var(--on-rust);
-  font-size: 7px; font-weight: 700; letter-spacing: 0.12em; text-align: center;
-}
-.pc-stamp.pine .pc-stamp-inner { border-color: var(--pine); }
-.pc-stamp.pine .pc-stamp-label { background: var(--pine); }
-.pc-stamp.sky .pc-stamp-inner { border-color: var(--sky); }
-.pc-stamp.sky .pc-stamp-label { background: var(--sky); }
-
-/* ── Postmark: rings + wavy cancellation ── */
-.pc-postmark { color: var(--pc-postmark); opacity: 0.75; pointer-events: none; }
-.pc-postmark text {
-  font: 700 9px var(--font-body); letter-spacing: 0.16em; fill: currentColor;
-}
-.pc-postmark .pm-date { font: 800 13px var(--font-display); letter-spacing: 0; }
-
-.pc-stamp-area { position: relative; display: flex; justify-content: flex-end; }
-.pc-stamp-area .pc-postmark { position: absolute; right: 44px; top: 18px; transform: rotate(-12deg); }
-
-/* ── Airmail edge ── */
-.pc-airmail {
-  padding: 6px;
-  background: repeating-linear-gradient(
-    135deg,
-    var(--pc-airmail-1) 0 14px,
-    var(--pc-paper) 14px 22px,
-    var(--pc-airmail-2) 22px 36px,
-    var(--pc-paper) 36px 44px
-  );
-}
-.pc-airmail > .postcard-back { background: var(--pc-paper); height: 100%; border-radius: calc(var(--pc-radius) / 2); }
-
-/* ── Flip: front ↔ back ── */
-.pc-flip { perspective: 1400px; background: none; box-shadow: none; overflow: visible; cursor: pointer; }
-.pc-flip-inner {
-  position: relative; width: 100%; height: 100%;
-  transform-style: preserve-3d;
-  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-.pc-flip.flipped .pc-flip-inner { transform: rotateY(180deg); }
-.pc-flip-face {
-  position: absolute; inset: 0;
-  backface-visibility: hidden; -webkit-backface-visibility: hidden;
-}
-.pc-flip-face.back { transform: rotateY(180deg); }
-@media (prefers-reduced-motion: reduce) { .pc-flip-inner { transition: none; } }
-
-/* ── Data postcard: a park card written as a postcard back ── */
-.pc-data-scores { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; }
-.pc-data-scores .big-score { font-size: 22px; }
-.pc-data-scores .meter-track { flex: none; width: 100%; } /* same override .park-card uses */
-
-/* ── Postcard rack: overlapping, tilted stack ── */
-.pc-rack { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 24px; }
-.pc-rack .postcard { transition: transform 0.2s, box-shadow 0.2s; }
-.pc-rack .postcard:hover { transform: rotate(0) translateY(-4px); box-shadow: var(--shadow-lg); }
-
-@media (max-width: 640px) {
-  .postcard-back { grid-template-columns: 1fr; grid-template-rows: auto; aspect-ratio: auto; }
-  .postcard.postcard-back, .pc-airmail { aspect-ratio: auto; }
-  .pc-divider { height: 1px; }
+@media (max-width: 520px) {
+  .postcard { aspect-ratio: auto; grid-template-columns: 1fr; }
+  .pc-photo { aspect-ratio: 3 / 2; }
+  .pc-facts { margin-top: 12px; }
 }

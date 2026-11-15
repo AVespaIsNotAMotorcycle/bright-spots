@@ -198,11 +198,11 @@ const MOODS: Record<Mood, { skyTop: string; skyBottom: string; far: string; mid:
 };
 
 /** An illustrated park scene drawn only from palette tokens, so it re-themes with them. */
-function Scene({ mood = "dawn" }: { mood?: Mood }) {
+function Scene({ mood = "dawn", crop = "xMidYMid" }: { mood?: Mood; crop?: string }) {
   const id = useId();
   const m = MOODS[mood];
   return (
-    <svg viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <svg viewBox="0 0 300 200" preserveAspectRatio={`${crop} slice`} aria-hidden="true">
       <defs>
         <linearGradient id={`${id}-sky`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" style={{ stopColor: m.skyTop }} />
@@ -225,142 +225,32 @@ function Scene({ mood = "dawn" }: { mood?: Mood }) {
   );
 }
 
-function Stamp({ tone = "rust", value = "45¢", label = "NATIONAL PARKS", mood = "forest" }: {
-  tone?: "rust" | "pine" | "sky"; value?: string; label?: string; mood?: Mood;
+/** The one-sided postcard: park photo on the left, park info on the right. */
+function Postcard({ park, place, mood = "dawn", score, range, month, trend, facts }: {
+  park: string; place: string; mood?: Mood; score: number; range: [number, number]; month: string;
+  trend?: string; facts: [string, string][];
 }) {
+  const [lo, hi] = range;
   return (
-    <div className={`pc-stamp ${tone === "rust" ? "" : tone}`}>
-      <div className="pc-stamp-inner">
-        <Scene mood={mood} />
-        <span className="pc-stamp-value">{value}</span>
-        <span className="pc-stamp-label">{label}</span>
-      </div>
-    </div>
-  );
-}
-
-function Postmark({ place = "YOSEMITE · CA", date = "NOV 15 2026" }: { place?: string; date?: string }) {
-  const id = useId();
-  return (
-    <svg className="pc-postmark" width="150" height="76" viewBox="0 0 150 76" aria-hidden="true">
-      <defs>
-        <path id={`${id}-arc`} d="M14 38 a24 24 0 1 1 48 0 a24 24 0 1 1 -48 0" />
-      </defs>
-      <circle cx="38" cy="38" r="34" fill="none" stroke="currentColor" strokeWidth="1.6" />
-      <circle cx="38" cy="38" r="20" fill="none" stroke="currentColor" strokeWidth="1" />
-      <text><textPath href={`#${id}-arc`} startOffset="2%">{place}</textPath></text>
-      <text x="38" y="42" textAnchor="middle" className="pm-date">{date.split(" ")[1]}</text>
-      {[22, 32, 42, 52].map((y) => (
-        <path key={y} d={`M78 ${y} q9 -6 18 0 t18 0 t18 0 t18 0`} fill="none" stroke="currentColor" strokeWidth="1.6" />
-      ))}
-    </svg>
-  );
-}
-
-function PostcardFront({ park, mood, tilt, caption }: { park: string; mood?: Mood; tilt?: "l" | "r"; caption?: ReactNode }) {
-  return (
-    <div className={`postcard postcard-front${tilt ? ` tilt-${tilt}` : ""}`}>
-      <div className="pc-picture">
-        <Scene mood={mood} />
-        <div className="pc-greeting">
-          <span className="pc-greeting-small">Greetings from</span>
-          <span className="pc-greeting-big">{park}</span>
+    <article className="postcard">
+      <div className="pc-photo"><Scene mood={mood} crop="xMaxYMid" /></div>
+      <div className="pc-info">
+        <h3 className="park-card-title">{park}</h3>
+        <p className="micro muted pc-place">{place}</p>
+        <div className="pc-score">
+          <div className="micro muted">Match score · {month} <span className="tag tag-measured">Measured</span></div>
+          <div className="big-score num">{score} <span className="small muted">{lo}–{hi}</span></div>
+          <div className="meter-track">
+            <div className="meter-range" style={{ left: `${lo}%`, width: `${hi - lo}%` }} />
+            <div className="meter-dot" style={{ left: `${score}%` }} />
+          </div>
         </div>
+        {trend && <span className="trend-pill real" style={{ alignSelf: "flex-start", marginTop: 10 }}>{trend}</span>}
+        <ul className="pc-facts">
+          {facts.map(([k, v]) => <li key={k}><span>{k}</span><span className="num">{v}</span></li>)}
+        </ul>
       </div>
-      {caption && <div className="pc-caption">{caption}</div>}
-    </div>
-  );
-}
-
-function PostcardBack({ airmail, message, to }: { airmail?: boolean; message?: ReactNode; to?: string[] }) {
-  const back = (
-    <div className="postcard postcard-back" style={airmail ? { boxShadow: "none" } : undefined}>
-      <div className="pc-message">
-        {message ?? (
-          <>
-            <p>Made it to the valley by noon. Daytime high 68 °F, right at the 30-year normal for November.</p>
-            <p>The falls are thin this week; the gauge says snowmelt peaks earlier every decade.</p>
-            <p className="pc-sign">— A.</p>
-          </>
-        )}
-      </div>
-      <div className="pc-divider" />
-      <div className="pc-address">
-        <span className="pc-corner">Post card</span>
-        <div className="pc-stamp-area">
-          <Postmark />
-          <Stamp />
-        </div>
-        <div className="pc-address-lines">
-          {(to ?? ["Jordan Rivers", "1200 Trailhead Rd", "Boulder, CO 80302", ""]).map((l, i) => (
-            <div key={i} className="pc-line">{l}</div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-  return airmail ? <div className="postcard pc-airmail">{back}</div> : back;
-}
-
-function FlipPostcard() {
-  const [flipped, setFlipped] = useState(false);
-  return (
-    <button
-      type="button"
-      className={`postcard pc-flip${flipped ? " flipped" : ""}`}
-      onClick={() => setFlipped((f) => !f)}
-      aria-pressed={flipped}
-      aria-label={flipped ? "Show postcard front" : "Show postcard back"}
-      style={{ border: 0, padding: 0, font: "inherit", textAlign: "left" }}
-    >
-      <div className="pc-flip-inner">
-        <div className="pc-flip-face"><PostcardFront park="Zion" mood="dawn" /></div>
-        <div className="pc-flip-face back"><PostcardBack /></div>
-      </div>
-    </button>
-  );
-}
-
-/** How a planner park card's data could sit on a postcard back. */
-function DataPostcard() {
-  const scores = [
-    { title: "Nov 2026", tag: "Measured", cls: "tag-measured", v: 82, lo: 76, hi: 88 },
-    { title: "Nov 2027", tag: "Forecast", cls: "tag-forecast", v: 74, lo: 61, hi: 85 },
-    { title: "Nov 2050", tag: "Projected", cls: "tag-projected", v: 69, lo: 50, hi: 83 },
-  ];
-  return (
-    <div className="postcard postcard-back">
-      <div className="pc-message" style={{ font: "inherit" }}>
-        <h3 className="park-card-title" style={{ fontSize: 18 }}>Joshua Tree</h3>
-        <p className="micro muted" style={{ margin: "2px 0 6px" }}>California · 312 km from Los Angeles</p>
-        <span className="trend-pill real">Warming +0.48°F/decade</span>
-        <div className="pc-data-scores">
-          {scores.map((s) => (
-            <div key={s.title} className="park-card-score">
-              <div className="micro muted">{s.title} <span className={`tag ${s.cls}`}>{s.tag}</span></div>
-              <div className="big-score num">{s.v}</div>
-              <div className="meter-track">
-                <div className="meter-range" style={{ left: `${s.lo}%`, width: `${s.hi - s.lo}%` }} />
-                <div className="meter-dot" style={{ left: `${s.v}%` }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="pc-divider" />
-      <div className="pc-address">
-        <span className="pc-corner">Trip plan</span>
-        <div className="pc-stamp-area">
-          <Postmark place="JOSHUA TREE · CA" />
-          <Stamp tone="pine" value="82" label="MATCH SCORE" mood="dawn" />
-        </div>
-        <div className="pc-address-lines">
-          <div className="pc-line small">Daytime high · 71 °F</div>
-          <div className="pc-line small">Humidity · 24 %</div>
-          <div className="pc-line small">Rain days · 1</div>
-        </div>
-      </div>
-    </div>
+    </article>
   );
 }
 
@@ -388,7 +278,6 @@ const TYPE_SCALE: { label: string; spec: string; el: ReactNode }[] = [
   { label: ".section-title", spec: "600 11 caps · 0.12em · rust", el: <span className="section-title">Your parks</span> },
   { label: ".tag", spec: "600 10 caps · 0.06em", el: <span className="tag tag-measured">Measured</span> },
   { label: ".num", spec: "tabular-nums", el: <span className="num">1,234 · 98.6 · 0.07</span> },
-  { label: "Postcard script (proposed)", spec: "display italic 700 · --font-script", el: <span style={{ font: "italic 700 22px/1.2 var(--font-script)" }}>Greetings from the canyon</span> },
 ];
 
 export default function Sandbox() {
@@ -756,40 +645,12 @@ export default function Sandbox() {
 
           {/* ── Postcard ── */}
           <Section id="postcard" kicker="Aesthetic" title="Postcard" proposed
-            intro="A vintage park-postcard layer: 3:2 card stock, large-letter fronts, a message/address back, perforated stamps, postmarks and an airmail edge. Every colour defaults to an existing token; edit the --pc-* tokens in the panel.">
-            <Specimen label=".postcard.postcard-front · moods: dawn / forest / night">
-              <div className="ds-grid" style={{ width: "100%" }}>
-                <PostcardFront park="Zion" mood="dawn" caption={<><span className="tag tag-measured">Measured</span>No. 12 · Utah</>} />
-                <PostcardFront park="Olympic" mood="forest" />
-                <PostcardFront park="Arches" mood="night" />
-              </div>
-            </Specimen>
-            <Specimen label=".postcard.postcard-back · message | address">
-              <div style={{ width: "min(100%, 620px)" }}><PostcardBack /></div>
-            </Specimen>
-            <Specimen label=".pc-airmail · striped edge">
-              <div style={{ width: "min(100%, 620px)" }}><PostcardBack airmail /></div>
-            </Specimen>
-            <Specimen label=".pc-flip · click to turn over">
-              <div style={{ width: "min(100%, 520px)" }}><FlipPostcard /></div>
-            </Specimen>
-            <Specimen label="Data postcard: park-card content on a postcard back">
-              <div style={{ width: "min(100%, 620px)" }}><DataPostcard /></div>
-            </Specimen>
-            <Specimen label=".pc-stamp · rust / pine / sky">
-              <Stamp />
-              <Stamp tone="pine" value="82" label="MATCH SCORE" mood="dawn" />
-              <Stamp tone="sky" value="2050" label="PROJECTED" mood="night" />
-            </Specimen>
-            <Specimen label=".pc-postmark">
-              <Postmark />
-              <Postmark place="GRAND CANYON · AZ" date="JUL 04 2027" />
-            </Specimen>
-            <Specimen label=".pc-rack · tilted collection (hover to lift)">
-              <div className="pc-rack" style={{ width: "100%" }}>
-                <PostcardFront park="Acadia" mood="forest" tilt="l" />
-                <PostcardFront park="Denali" mood="night" tilt="r" />
-                <PostcardFront park="Saguaro" mood="dawn" tilt="l" />
+            intro="A one-sided park postcard: photo on the left, score and key data points on the right, on white card stock with square paper corners. The illustration is a placeholder until park photos land; edit the --pc-* tokens in the panel.">
+            <Specimen label=".postcard · photo | info">
+              <div style={{ width: "min(100%, 620px)" }}>
+                <Postcard park="Joshua Tree" place="California · 312 km from Los Angeles" mood="dawn"
+                  score={82} range={[76, 88]} month="Nov 2026" trend="Warming +0.48°F/decade"
+                  facts={[["Daytime high", "71 °F"], ["Humidity", "24 %"], ["Rain days", "1"]]} />
               </div>
             </Specimen>
           </Section>
