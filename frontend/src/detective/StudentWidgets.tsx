@@ -185,7 +185,6 @@ export function NextCase({ onPlay }: { onPlay: (c: Case) => void }) {
         <span style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <span style={chip(E.pine, E.cream)}>{n.replay ? "⭐ Go for 3 stars" : "🧭 Next trail"}</span>
           <span style={chip("rgba(247,241,227,.85)", d.c)}>● {d.t}</span>
-          <span style={chip("rgba(247,241,227,.85)", E.bark)}>⏱ 5 s a question</span>
         </span>
         <span style={{ fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 30, lineHeight: 1.15, color: E.pine }}>{n.c.title}</span>
         <span style={{ fontSize: 15, lineHeight: 1.5 }}>{n.c.subtitle}</span>
