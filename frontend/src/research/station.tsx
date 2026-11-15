@@ -224,12 +224,14 @@ function ctxDetail(ctx: CiteContext, atlas: Atlas | null): string {
 
 /** Thin bar above each research tool: where you are, data freshness, save, share and cite. */
 export function StationStrip({
-  title, ctx, atlas, onShare,
+  title, ctx, atlas, onShare, cite = true,
 }: {
   title: string;
   ctx: CiteContext;
   atlas: Atlas | null;
   onShare?: () => void;
+  /** Off for pages that are not data (the Campfire holds opinions, which are not citable data). */
+  cite?: boolean;
 }) {
   const hash = typeof location !== "undefined" ? location.hash : "";
   const [saved, setSaved] = useState(() => loadSaved().some((s) => s.hash === hash));
@@ -250,7 +252,7 @@ export function StationStrip({
         <Tag>Field station</Tag>
         <b style={{ fontFamily: "var(--font-display)", color: E.pine, fontSize: 17 }}>{title}</b>
         {detail && <span className="small" style={{ color: E.bark }}>{detail}</span>}
-        {fresh && (
+        {fresh && cite && (
           <span className="micro" style={{ color: E.moss, border: `1px solid ${E.sage}`, borderRadius: 10, padding: "1px 8px" }}>
             🛰️ NASA data up to {fresh}<Tip term="grid" />
           </span>
@@ -259,7 +261,7 @@ export function StationStrip({
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
         <button className={`st-btn${saved ? "" : " ghost"}`} onClick={toggle} aria-pressed={saved}>{saved ? "★ Saved" : "☆ Save view"}</button>
         {onShare && <button className="st-btn ghost" onClick={onShare}>🔥 Share to Campfire</button>}
-        <CiteThis ctx={{ ...ctx, tool: title }} atlas={atlas} />
+        {cite && <CiteThis ctx={{ ...ctx, tool: title }} atlas={atlas} />}
       </div>
     </div>
   );

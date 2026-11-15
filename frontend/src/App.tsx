@@ -199,6 +199,7 @@ export default function App() {
             title={TAB_LABEL[tab].replace(/^\S+\s/, "")}
             atlas={atlas}
             ctx={{ park: nav.park, parkName: nav.park ? PARK_NAMES[nav.park] : null, variable: nav.v, period: nav.per }}
+            cite={tab !== "community"}
             onShare={tab === "community" ? undefined : () =>
               go("community", { park: nav.park ?? undefined, v: nav.v ?? undefined, per: nav.per ?? undefined })}
           />
