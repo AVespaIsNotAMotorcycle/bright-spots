@@ -235,17 +235,27 @@ export default function Families({
           ))}
         </div>
         {(() => {
-          const L = 64, R = 740, T = 14, B = 340;
-          const px = (v: number) => L + 16 + ((v - x0) / (x1 - x0 || 1)) * (R - L - 32);
-          const py = (v: number) => B - 16 - ((v - y0) / (y1 - y0 || 1)) * (B - T - 32);
+          const L = 14, R = 746, T = 14, B = 330;
+          const px = (v: number) => L + 18 + ((v - x0) / (x1 - x0 || 1)) * (R - L - 36);
+          const py = (v: number) => B - 18 - ((v - y0) / (y1 - y0 || 1)) * (B - T - 36);
           const [ax, ay] = fam.axes ?? [];
-          const centroids = fam.families.filter((f) => f.size > 3).map((f) => {
-            const m = f.parks.map((id) => fam.parks[id]).filter(Boolean);
-            return { f, x: px(m.reduce((a, p) => a + p.x, 0) / m.length), y: py(m.reduce((a, p) => a + p.y, 0) / m.length) };
-          });
           const halo: React.CSSProperties = { paintOrder: "stroke", stroke: "#fff", strokeWidth: 3, strokeLinejoin: "round" };
+          const sizeOf = (id: number) => fam.families.find((x) => x.id === id)?.size ?? 99;
+          // Labels only for outlier parks. Push each one down until it no longer touches another label.
+          const dots = data.parks.map((p) => ({ p, f: fam.parks[p.id] })).filter((d) => d.f);
+          const labels: { id: string; name: string; x: number; y: number; right: boolean }[] = [];
+          dots
+            .filter((d) => sizeOf(d.f.family) <= 3)
+            .sort((u, v) => py(u.f.y) - py(v.f.y))
+            .forEach((d) => {
+              const cx = px(d.f.x);
+              let y = py(d.f.y) + 4;
+              const right = cx < 560;
+              while (labels.some((l) => Math.abs(l.y - y) < 14 && Math.abs(l.x - cx) < 150)) y += 14;
+              labels.push({ id: d.p.id, name: d.p.name, x: cx, y, right });
+            });
           return (
-            <svg viewBox="0 0 760 420" style={{ width: "100%", height: "auto" }} role="img" aria-label="Park fingerprint map">
+            <svg viewBox="0 0 760 344" style={{ width: "100%", height: "auto" }} role="img" aria-label="Park fingerprint map">
               <rect x={L} y={T} width={R - L} height={B - T} fill="var(--surface-2)" rx={8} />
               {[0.25, 0.5, 0.75].map((t) => (
                 <g key={t} stroke="var(--grid)" strokeDasharray="3 4">
@@ -253,49 +263,36 @@ export default function Families({
                   <line x1={L} x2={R} y1={T + t * (B - T)} y2={T + t * (B - T)} />
                 </g>
               ))}
-              {data.parks.map((p) => {
-                const f = fam.parks[p.id];
-                if (!f) return null;
-                const cx = px(f.x), cy = py(f.y);
-                const size = fam.families.find((x) => x.id === f.family)?.size ?? 99;
+              {dots.map(({ p, f }) => {
+                const big = sizeOf(f.family) <= 3;
                 return (
-                  <g key={p.id} style={{ cursor: "pointer" }} onClick={() => onOpenPark(p.id)}>
-                    <circle cx={cx} cy={cy} r={size <= 3 ? 8 : 6} fill={colorFor(f.family)} stroke="#fff" strokeWidth={1.5}>
-                      <title>{p.name}</title>
-                    </circle>
-                    {size <= 3 && (
-                      <text x={cx > 560 ? cx - 12 : cx + 12} y={cy + 4} fontSize={12} fontWeight={700} fill="var(--text)"
-                        textAnchor={cx > 560 ? "end" : "start"} style={halo}>{p.name}</text>
-                    )}
-                  </g>
+                  <circle key={p.id} cx={px(f.x)} cy={py(f.y)} r={big ? 7 : 5} fill={colorFor(f.family)} fillOpacity={0.92}
+                    stroke="#fff" strokeWidth={1.5} style={{ cursor: "pointer" }} onClick={() => onOpenPark(p.id)}>
+                    <title>{p.name}</title>
+                  </circle>
                 );
               })}
-              {centroids.map(({ f, x, y }) => (
-                <text key={f.id} x={x} y={y - 16} fontSize={13} fontWeight={800} textAnchor="middle" fill={colorFor(f.id)} style={halo}>
-                  {f.title}
-                </text>
+              {labels.map((l) => (
+                <text key={l.id} x={l.right ? l.x + 12 : l.x - 12} y={l.y} fontSize={11} fontWeight={700} fill="var(--text)"
+                  textAnchor={l.right ? "start" : "end"} style={{ ...halo, pointerEvents: "none" }}>{l.name}</text>
               ))}
-              {ax && (
-                <>
-                  <text x={L} y={B + 22} fontSize={12} fill="var(--text)" textAnchor="start">← {ax.low}</text>
-                  <text x={R} y={B + 22} fontSize={12} fill="var(--text)" textAnchor="end">{ax.high} →</text>
-                  <text x={(L + R) / 2} y={B + 42} fontSize={11} fill="var(--text-muted)" textAnchor="middle">
-                    Left to right: {Math.round(ax.variance * 100)}% of the differences between parks
-                  </text>
-                </>
-              )}
-              {ay && (
-                <>
-                  <text transform={`rotate(-90 20 ${B})`} x={20} y={B} fontSize={12} fill="var(--text)" textAnchor="start">← {ay.low}</text>
-                  <text transform={`rotate(-90 20 ${T})`} x={20} y={T} fontSize={12} fill="var(--text)" textAnchor="end">{ay.high} →</text>
-                  <text transform={`rotate(-90 40 ${(T + B) / 2})`} x={40} y={(T + B) / 2} fontSize={11} fill="var(--text-muted)" textAnchor="middle">
-                    Bottom to top: {Math.round(ay.variance * 100)}%
-                  </text>
-                </>
-              )}
             </svg>
           );
         })()}
+        {fam.axes && fam.axes.length === 2 && (
+          <div className="small" style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "4px 10px", margin: "8px 0 0" }}>
+            <b>Left to right</b>
+            <span>
+              <span className="muted">{fam.axes[0].low}</span> ← → <span>{fam.axes[0].high}</span>
+              <span className="muted"> ({Math.round(fam.axes[0].variance * 100)}% of the differences)</span>
+            </span>
+            <b>Bottom to top</b>
+            <span>
+              <span className="muted">{fam.axes[1].low}</span> ↓ ↑ <span>{fam.axes[1].high}</span>
+              <span className="muted"> ({Math.round(fam.axes[1].variance * 100)}%)</span>
+            </span>
+          </div>
+        )}
         <p className="micro muted" style={{ margin: "6px 0 0" }}>
           Click a dot to open that park. Overlap between colours means those parks are borderline between families. Distances
           are approximate, because 10 numbers cannot be shown faithfully in 2.
