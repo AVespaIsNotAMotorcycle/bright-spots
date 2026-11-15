@@ -27,6 +27,7 @@ Research tabs show only if you turn on "research tools" at sign-in.
 | NASA POWER (daily, per park) | Temperature, humidity, rain, clouds, this year so far |
 | Daymet V4 (NASA ORNL DAAC, via Earth Engine) | 1 km monthly climate since 1980, trends |
 | NASA GRACE / GRACE-FO | Water storage trends |
+| NASA FIRMS | Fire and smoke season |
 | MODIS / ESA CCI land cover | Land cover change |
 | NOAA GHCN-Daily | Checks our NASA temperature trends against weather stations |
 | WorldClim CMIP6 | 2050 projections |

@@ -247,7 +247,7 @@ export default function App() {
           />
         )}
         {tab === "home" && (
-          <Home name={profile.name} research={research} atlas={atlas} onGo={(t, extra) => go(t, extra)} />
+          <Home name={profile.name} research={research} atlas={atlas} onGo={(t, extra) => go(t as Tab, extra as Partial<NavState>)} />
         )}
         {tab === "analogs" && (
           <Analogs

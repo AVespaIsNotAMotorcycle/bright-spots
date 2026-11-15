@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // Render tests: the real pages, fed by the real bundled NASA data through a fake fetch.
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import App from "../App";
 import ErrorBoundary from "../ErrorBoundary";
@@ -64,15 +64,16 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: "S" }));
     fireEvent.click(screen.getByRole("menuitemcheckbox"));
     expect(JSON.parse(localStorage.getItem("profile")!)).toEqual({ name: "Sam", research: true });
-    expect(screen.getByRole("button", { name: /^Research/ })).toBeTruthy();
+    const research = screen.getAllByRole("button", { name: /^Research/ });
+    expect(research.some((b) => b.getAttribute("aria-haspopup") === "menu")).toBe(true);
   });
 
   it("opens the researcher field station with real data", async () => {
     researcher();
     render(<App />);
-    expect(await screen.findByText("Welcome back, Purva")).toBeTruthy();
-    expect(await screen.findByText(/Anomaly of the week/)).toBeTruthy();
-    expect(screen.getAllByText(/NASA data up to Oct 2026/).length).toBeGreaterThan(0);
+    expect(await screen.findByText("Welcome, Purva")).toBeTruthy();
+    expect(screen.getByText("Go when the park is at its best.")).toBeTruthy();
+    expect(screen.getByText("Trend atlas, maps, comparisons and methods.")).toBeTruthy();
   });
 
   it("arrow keys move between research tools", async () => {
@@ -106,14 +107,15 @@ describe("App", () => {
   it("an old student profile opens Explorer home with the twin game", async () => {
     localStorage.setItem("profile", JSON.stringify({ name: "", persona: "student" }));
     render(<App />);
-    expect(await screen.findByText(/Who changes most like/, undefined, { timeout: 3000 })).toBeTruthy();
+    expect(await screen.findByText("When do you want to go?", undefined, { timeout: 3000 })).toBeTruthy();
+    expect(screen.queryByText("Trend atlas, maps, comparisons and methods.")).toBeNull();
   });
 
   it("an old visitor profile gets the merged Explorer tabs and passport", async () => {
     localStorage.setItem("profile", JSON.stringify({ name: "Sam", persona: "visitor" }));
     render(<App />);
-    expect(await screen.findByText(/0 of \d+ parks stamped/, undefined, { timeout: 3000 })).toBeTruthy();
-    for (const t of ["Plan", "Saved", "Cases", "Passport"]) expect(screen.getByText(t)).toBeTruthy();
+    const nav = await screen.findByRole("navigation", { name: "Main" }, { timeout: 3000 });
+    for (const t of ["Plan", "Saved", "Cases", "Passport"]) expect(within(nav).getAllByText(t).length).toBeGreaterThan(0);
     expect(screen.queryByRole("button", { name: /^Research/ })).toBeNull();
   });
 
