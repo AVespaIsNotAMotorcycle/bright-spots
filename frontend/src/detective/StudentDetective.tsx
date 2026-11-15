@@ -54,7 +54,6 @@ export function CaseList({ onSelect }: { onSelect: (c: Case) => void }) {
               e.currentTarget.style.boxShadow = "none";
             }}
           >
-            <div style={{ fontSize: 32 }}>{c.emoji}</div>
             <div>
               <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{c.title}</div>
               <div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.5 }}>{c.subtitle}</div>
@@ -305,7 +304,7 @@ function DataStep({
               fontSize: 14,
             }}
           >
-            🗓 {step.plannerLink.label}
+            {step.plannerLink.label}
           </button>
         )}
         {isLast && (
@@ -437,7 +436,7 @@ export default function StudentDetective({
         </button>
         <div>
           <div style={{ fontWeight: 700, fontSize: 16 }}>
-            {activeCase.emoji} {activeCase.title}
+            {activeCase.title}
           </div>
         </div>
       </div>
@@ -468,10 +467,10 @@ export default function StudentDetective({
             }}
           >
             {step.kind === "intro" && "Scene"}
-            {step.kind === "predict" && "🔮 Your prediction"}
-            {step.kind === "examine" && "🔍 Examine the data"}
-            {step.kind === "analyze" && "📊 Statistical analysis"}
-            {step.kind === "interpret" && "💡 What it means"}
+            {step.kind === "predict" && "Your prediction"}
+            {step.kind === "examine" && "Examine the data"}
+            {step.kind === "analyze" && "Statistical analysis"}
+            {step.kind === "interpret" && "What it means"}
           </div>
           <h3 style={{ margin: "0 0 4px", fontSize: 18, fontWeight: 700 }}>
             {step.heading}

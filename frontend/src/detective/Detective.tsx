@@ -476,7 +476,7 @@ export default function Detective({
             whiteSpace: "nowrap",
           }}
         >
-          ⬇ Download atlas.json
+          Download atlas.json
         </a>
       </div>
         </>

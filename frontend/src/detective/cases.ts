@@ -26,7 +26,6 @@ export interface Case {
   id: string;
   title: string;
   subtitle: string;
-  emoji: string;
   difficulty: "easy" | "medium" | "hard";
   steps: Step[];
 }
@@ -36,7 +35,6 @@ export const CASES: Case[] = [
     id: "crater-lake-warming",
     title: "Is Crater Lake warming?",
     subtitle: "The challenge author stood here. Let's find out what the data says.",
-    emoji: "🌋",
     difficulty: "easy",
     steps: [
       {
@@ -120,7 +118,6 @@ export const CASES: Case[] = [
     id: "opposite-snow",
     title: "Same driver, opposite answers",
     subtitle: "Precipitation is falling in one park and rising in another. Why?",
-    emoji: "🌨️",
     difficulty: "medium",
     steps: [
       {
@@ -230,7 +227,6 @@ export const CASES: Case[] = [
     id: "hottest-park",
     title: "Which park is heating up fastest?",
     subtitle: "Find the park with the most rapidly rising summer hot days.",
-    emoji: "🌡️",
     difficulty: "hard",
     steps: [
       {

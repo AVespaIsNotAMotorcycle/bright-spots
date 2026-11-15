@@ -66,7 +66,7 @@ export default function App() {
         <div>
           <h1 className="title">Park Trend Detective</h1>
           <p className="small muted">
-            {info.emoji} {profile.name ? `${profile.name} · ` : ""}{info.label} mode
+            {info.label} mode
           </p>
         </div>
         <nav style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
@@ -79,27 +79,18 @@ export default function App() {
               {TAB_LABEL[t]}
             </button>
           ))}
-          <button
-            onClick={() => setEditing(true)}
-            style={{
-              marginLeft: 8,
-              padding: "7px 12px",
-              borderRadius: "var(--radius)",
-              border: "1px solid var(--border)",
-              background: "none",
-              color: "var(--text-muted)",
-              cursor: "pointer",
-              fontSize: 12,
-            }}
-            title="Edit profile"
-          >
-            ⚙ Profile
+          <button type="button" className="btn-ghost profile-btn" onClick={() => setEditing(true)}>
+            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+              <circle cx="8" cy="5" r="3" fill="currentColor" />
+              <path d="M2 15c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5Z" fill="currentColor" />
+            </svg>
+            Profile
           </button>
         </nav>
       </header>
       <main>
         {tab === "home" && (
-          <Home persona={profile.persona} name={profile.name} atlas={atlas} onGo={go} />
+          <Home persona={profile.persona} atlas={atlas} onGo={go} />
         )}
         {tab === "student" && (
           <StudentDetective

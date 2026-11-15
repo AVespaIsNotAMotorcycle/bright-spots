@@ -1,4 +1,4 @@
-// Sign-up screen: name (optional) + a toggle for the persona. The choice sets the Home screen.
+// Sign-up screen: a toggle for the persona. The choice sets the Home screen.
 import { useState } from "react";
 import { PERSONAS, type Persona, type Profile } from "./profile";
 
@@ -15,7 +15,6 @@ export default function Landing({
   onSubmit: (p: Profile) => void;
   onCancel?: () => void;
 }) {
-  const [name, setName] = useState(initial?.name ?? "");
   const [persona, setPersona] = useState<Persona>(initial?.persona ?? "visitor");
   const info = PERSONAS[persona];
 
@@ -24,13 +23,12 @@ export default function Landing({
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          onSubmit({ name: name.trim(), persona });
+          onSubmit({ persona });
         }}
         className="card"
         style={{ width: "100%", maxWidth: 560, display: "flex", flexDirection: "column", gap: "var(--space-2)", padding: "var(--space-2)", boxShadow: "var(--shadow-md)" }}
       >
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 40 }}>⛰</div>
           <h1 className="title" style={{ fontSize: 32, margin: "var(--space-0-25) 0 0" }}>
             Park Trend Detective
           </h1>
@@ -38,17 +36,6 @@ export default function Landing({
             {initial ? "Edit your profile" : "Create your profile"} · 64 US national parks · 45 years of NASA data
           </p>
         </div>
-
-        <label className="field" style={{ fontSize: 12 }}>
-          What should we call you? (optional)
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Your name"
-            maxLength={40}
-            style={{ width: "100%" }}
-          />
-        </label>
 
         <div>
           <div className="section-title" style={{ marginBottom: "var(--space-0-5)" }}>I am a…</div>
@@ -77,7 +64,7 @@ export default function Landing({
 
         <div style={{ display: "flex", gap: "var(--space-0-5)" }}>
           <button type="submit" className="btn" style={{ flex: 1 }}>
-            {initial ? "Save and go home" : "Create profile"} →
+            {initial ? "Continue" : "Create profile"} →
           </button>
           {onCancel && <button type="button" className="btn-ghost" onClick={onCancel}>Cancel</button>}
         </div>

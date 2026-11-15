@@ -10,7 +10,6 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 
 interface Props {
   persona: Persona;
-  name: string;
   atlas: Atlas | null;
   onGo: (tab: Tab, extra?: Partial<NavState>) => void;
 }
@@ -39,13 +38,13 @@ function verdictTotals(atlas: Atlas | null) {
 
 const f = (c: number) => `${c > 0 ? "+" : ""}${(c * 1.8).toFixed(2)}°F`;
 
-function Hero({ persona, name }: { persona: Persona; name: string }) {
+function Hero({ persona }: { persona: Persona }) {
   const info = PERSONAS[persona];
   return (
     <div style={{ borderBottom: "2px solid var(--pine)", paddingBottom: 14 }}>
-      <div className="section-title">{info.emoji} {info.label} home</div>
+      <div className="section-title">{info.label} home</div>
       <h2 style={{ fontFamily: "var(--font-display)", fontSize: 30, color: "var(--pine)", margin: "4px 0" }}>
-        {name ? `Welcome, ${name}` : "Welcome"}
+        Welcome
       </h2>
       <p className="muted" style={{ margin: 0 }}>{info.tagline}.</p>
     </div>
@@ -108,7 +107,6 @@ function StudentHome({ atlas, onGo }: Pick<Props, "atlas" | "onGo">) {
               onClick={() => onGo("student", { caseId: c.id, step: 0 })}
               style={{ textAlign: "left", cursor: "pointer", display: "flex", flexDirection: "column", gap: 6 }}
             >
-              <span style={{ fontSize: 28 }}>{c.emoji}</span>
               <strong>{c.title}</strong>
               <span className="small muted">{c.subtitle}</span>
               <span className="micro" style={{ color: "var(--rising)", fontWeight: 600 }}>
@@ -174,11 +172,11 @@ function ResearcherHome({ atlas, onGo }: Pick<Props, "atlas" | "onGo">) {
         <div className="section-title">Research tools</div>
         <div className="card-grid" style={{ marginTop: 8 }}>
           {([
-            ["map", "🗺 National map", "Every park coloured by its trend for any variable and period."],
-            ["families", "🧬 Park families", "Parks grouped by how they change, with bootstrap stability."],
-            ["opposites", "↔ Opposite trends", "Where the same variable rises in one park and falls in another, with driver data."],
-            ["compare", "⚖ Compare parks", "Two parks on one chart, with their statistics side by side."],
-            ["robust", "🧪 Robustness", "Start-year test, signal-to-noise, methods, BibTeX, Python and R code."],
+            ["map", "National map", "Every park coloured by its trend for any variable and period."],
+            ["families", "Park families", "Parks grouped by how they change, with bootstrap stability."],
+            ["opposites", "Opposite trends", "Where the same variable rises in one park and falls in another, with driver data."],
+            ["compare", "Compare parks", "Two parks on one chart, with their statistics side by side."],
+            ["robust", "Robustness", "Start-year test, signal-to-noise, methods, BibTeX, Python and R code."],
           ] as const).map(([t, title, text]) => (
             <button key={t} className="card" style={{ textAlign: "left", cursor: "pointer" }} onClick={() => onGo(t)}>
               <b>{title}</b>
@@ -190,7 +188,7 @@ function ResearcherHome({ atlas, onGo }: Pick<Props, "atlas" | "onGo">) {
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
         <button className="btn" onClick={() => onGo("atlas")}>Open the full atlas →</button>
         <a className="btn-ghost" href="/api/trends/atlas" download="park-trends-atlas.json" style={{ textDecoration: "none" }}>
-          ⬇ Download atlas.json
+          Download atlas.json
         </a>
       </div>
       <p className="micro muted" style={{ margin: 0 }}>
@@ -200,10 +198,10 @@ function ResearcherHome({ atlas, onGo }: Pick<Props, "atlas" | "onGo">) {
   );
 }
 
-export default function Home({ persona, name, atlas, onGo }: Props) {
+export default function Home({ persona, atlas, onGo }: Props) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-      <Hero persona={persona} name={name} />
+      <Hero persona={persona} />
       {!atlas && <p className="muted">Loading trend data…</p>}
       {persona === "visitor" && <VisitorHome atlas={atlas} onGo={onGo} />}
       {persona === "student" && <StudentHome atlas={atlas} onGo={onGo} />}
