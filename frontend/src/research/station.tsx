@@ -2,10 +2,10 @@
 // Same earth palette as Student mode, calmer motion.
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { E, RIDGE, TOPO } from "../detective/StudentWidgets";
+import { E, RIDGE, TOPO } from "../detective/theme";
 import { PERIOD_LABEL } from "../detective/model";
 import type { Atlas } from "../detective/model";
-import { BIB } from "./Robust";
+import { BIB } from "./bib";
 
 export { E, RIDGE, TOPO };
 
@@ -36,6 +36,11 @@ export const STATION_CSS = `
 .st-tip { position: relative; display: inline-block; margin-left: 4px; cursor: help; color: ${E.moss}; font-size: .9em; font-weight: 600;
   text-transform: none; letter-spacing: 0; outline: none }
 
+.st-page .card { border-radius: 14px; border: 1px solid ${E.sage}; color: ${E.bark};
+  background: ${TOPO}, linear-gradient(180deg, ${E.cream}, #f3ead6); background-size: 220px, auto; box-shadow: 0 2px 10px rgba(74,55,38,.10) }
+.st-page .card h2, .st-page .card h3 { font-family: var(--font-display); color: ${E.pine} }
+.st-page .card h2.section-title { font-size: 22px; letter-spacing: 0; text-transform: none }
+.st-page .card h4 { color: ${E.bark} }
 .st-grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px }
 @media (max-width: 760px) { .st-grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
 .st-badge { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; font-size: 21px; line-height: 1;

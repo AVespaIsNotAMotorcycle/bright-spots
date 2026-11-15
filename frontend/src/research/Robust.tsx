@@ -7,34 +7,10 @@ import { fmtQ } from "../detective/model";
 import { ParkSelect, Pickers } from "./Compare";
 import { findRow, pettitt, robustness, slopeText, startYearScan, useInsights, usePark } from "./lib";
 import Validation from "./Validation";
+import { Source, StationStyle, Tip } from "./station";
 
-export const BIB = `@article{gonzalez2018,
-  author  = {Gonzalez, Patrick and Wang, Fushan and Notaro, Michael and Vimont, Daniel J. and Williams, John W.},
-  title   = {Disproportionate magnitude of climate change in United States national parks},
-  journal = {Environmental Research Letters},
-  volume  = {13}, number = {10}, pages = {104001}, year = {2018},
-  doi     = {10.1088/1748-9326/aade09}
-}
-@misc{nasapower,
-  title  = {NASA Prediction Of Worldwide Energy Resources (POWER) Project, daily data},
-  author = {{NASA Langley Research Center}},
-  url    = {https://power.larc.nasa.gov/}
-}
-@article{hamed1998,
-  author = {Hamed, Khaled H. and Rao, A. Ramachandra},
-  title  = {A modified Mann-Kendall trend test for autocorrelated data},
-  journal = {Journal of Hydrology}, volume = {204}, pages = {182--196}, year = {1998}
-}
-@article{benjamini1995,
-  author = {Benjamini, Yoav and Hochberg, Yosef},
-  title  = {Controlling the false discovery rate},
-  journal = {Journal of the Royal Statistical Society B}, volume = {57}, pages = {289--300}, year = {1995}
-}
-@article{sen1968,
-  author = {Sen, Pranab Kumar},
-  title  = {Estimates of the regression coefficient based on Kendall's tau},
-  journal = {Journal of the American Statistical Association}, volume = {63}, pages = {1379--1389}, year = {1968}
-}`;
+export { BIB } from "./bib";
+import { BIB } from "./bib";
 
 function snippet(lang: "python" | "r", d: ParkTrends, v: string, per: string): string {
   const s = d.series[v]?.[per];
@@ -111,9 +87,10 @@ export default function Robust({
   };
 
   return (
-    <div className="panel-stack">
+    <div className="panel-stack st-page">
+      <StationStyle />
       <div className="card">
-        <h2 className="section-title">Does the trend survive a different start year?</h2>
+        <h2 className="section-title">🧪 Does the trend survive a different start year?<Tip text="We re-run Sen's slope and Mann-Kendall starting at every year that leaves at least 15 years. A robust trend keeps its direction and stays significant for most start years." /></h2>
         <p className="panel-intro">
           A trend can come from picking a convenient start year. This re-runs the test for every start year that leaves at
           least 15 years of data. A robust trend keeps its direction and stays significant across most of them.
@@ -156,7 +133,7 @@ export default function Robust({
 
       {cp && series && (
         <div className="card">
-          <h3 style={{ marginTop: 0 }}>Is it a steady trend or a step?</h3>
+          <h3 style={{ marginTop: 0 }}>Is it a steady trend or a step?<Tip text="Pettitt test: finds the single most likely year where the average jumped. A small p means a step change may explain the series better than a steady trend." /></h3>
           <p className="small" style={{ margin: "0 0 6px" }}>
             {cp.p < 0.05 ? (
               <>
@@ -188,7 +165,7 @@ export default function Robust({
 
       {row && (
         <div className="card">
-          <h3 style={{ marginTop: 0 }}>Quality of this result</h3>
+          <h3 style={{ marginTop: 0 }}>Quality of this result<Tip term="sn" /></h3>
           <div className="kv-grid">
             <div className="stat"><div className="stat-value">{slopeText(row.sen_per_decade, v, atlas)}</div><div className="small muted">Sen's slope</div></div>
             <div className="stat"><div className="stat-value">{row.signal_to_noise?.toFixed(2) ?? "–"}</div>
@@ -241,6 +218,7 @@ export default function Robust({
         </div>
         <pre style={{ background: "var(--surface-2)", padding: 12, borderRadius: 8, overflowX: "auto", fontSize: 11, maxHeight: 200 }}>{BIB}</pre>
       </div>
+      <Source atlas={atlas} />
     </div>
   );
 }

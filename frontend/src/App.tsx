@@ -1,23 +1,25 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import ErrorBoundary from "./ErrorBoundary";
-import Home from "./Home";
 import Landing from "./Landing";
-import Detective from "./detective/Detective";
-import StudentDetective from "./detective/StudentDetective";
 import type { Atlas } from "./detective/model";
-import Planner from "./planner/Planner";
-import PlannerShadow from "./planner/PlannerShadow";
 import type { Unit } from "./planner/PrefsPanel";
-import Compare from "./research/Compare";
-import Families from "./research/Families";
-import MapView from "./research/MapView";
-import Opposites from "./research/Opposites";
-import Robust from "./research/Robust";
-import Seasons from "./research/Seasons";
-import Community from "./research/Community";
-import Analogs from "./research/Analogs";
 import { StationStrip, StationStyle } from "./research/station";
-import { PARK_NAMES } from "./detective/Detective";
+
+// Each tab is its own chunk, loaded the first time it is opened.
+const Home = lazy(() => import("./Home"));
+const Detective = lazy(() => import("./detective/Detective"));
+const StudentDetective = lazy(() => import("./detective/StudentDetective"));
+const Planner = lazy(() => import("./planner/Planner"));
+const PlannerShadow = lazy(() => import("./planner/PlannerShadow"));
+const Compare = lazy(() => import("./research/Compare"));
+const Families = lazy(() => import("./research/Families"));
+const MapView = lazy(() => import("./research/MapView"));
+const Opposites = lazy(() => import("./research/Opposites"));
+const Robust = lazy(() => import("./research/Robust"));
+const Seasons = lazy(() => import("./research/Seasons"));
+const Community = lazy(() => import("./research/Community"));
+const Analogs = lazy(() => import("./research/Analogs"));
+import { PARK_NAMES } from "./detective/parkNames";
 import { PERSONAS, TAB_LABEL, loadProfile, saveProfile, type Profile, type Tab } from "./profile";
 import { useNav, type NavState } from "./useNav";
 
@@ -100,7 +102,7 @@ export default function App() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
       if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
-      const el = e.target as HTMLElement | null;
+      const el = e.target instanceof Element ? e.target : null; // can be window or document
       if (el?.closest("input, textarea, select, [contenteditable=true], [role=menu], [role=dialog]")) return;
       const i = allowedTabs.indexOf(tab);
       const next = allowedTabs[(i + (e.key === "ArrowRight" ? 1 : -1) + allowedTabs.length) % allowedTabs.length];
@@ -196,6 +198,7 @@ export default function App() {
       </header>
       <main>
         <ErrorBoundary key={tab} what="This page">
+        <Suspense fallback={<p className="muted">Loading…</p>}>
         {profile.persona === "researcher" && tab !== "home" && (
           <StationStrip
             title={TAB_LABEL[tab].replace(/^\S+\s/, "")}
@@ -289,6 +292,7 @@ export default function App() {
             <Planner unit={unit} setUnit={setUnit} month={nav.month} />
           </PlannerShadow>
         )}
+        </Suspense>
         </ErrorBoundary>
       </main>
     </div>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Atlas, AtlasCell, ParkTrends } from "./model";
 import { PERIOD_LABEL } from "./model";
-import { PARK_NAMES } from "./Detective";
+import { PARK_NAMES } from "./parkNames";
 import type { Side, Step } from "./cases";
 
 // ── Data helpers ───────────────────────────────────────────────────────────

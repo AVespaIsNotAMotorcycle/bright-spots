@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { CASES } from "./detective/cases";
 import { NextCase, ParkOfTheDay, RankBanner } from "./detective/StudentWidgets";
 import { GuessTheTwin } from "./detective/TwinGame";
-import { PARK_NAMES } from "./detective/Detective";
+import { PARK_NAMES } from "./detective/parkNames";
 import type { Atlas, AtlasCell } from "./detective/model";
 import { Safe } from "./ErrorBoundary";
 import { PERSONAS, type Persona, type Tab } from "./profile";

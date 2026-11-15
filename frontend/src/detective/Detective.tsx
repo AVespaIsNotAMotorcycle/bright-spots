@@ -8,28 +8,8 @@ import { Tip } from "../research/glossary";
 
 // Park name lookup (we get it from atlas cells' park metadata via per-park fetch,
 // but the atlas itself only has park_id). We'll keep a minimal static map for labels.
-export const PARK_NAMES: Record<string, string> = {
-  acad: "Acadia", arch: "Arches", badl: "Badlands", bibe: "Big Bend",
-  bisc: "Biscayne", blca: "Black Canyon", brca: "Bryce Canyon", cany: "Canyonlands",
-  care: "Capitol Reef", cave: "Carlsbad Caverns", chis: "Channel Islands",
-  chir: "Chiricahua",
-  cong: "Congaree", crla: "Crater Lake", cuva: "Cuyahoga Valley",
-  dena: "Denali", deva: "Death Valley", drto: "Dry Tortugas", ever: "Everglades",
-  gaar: "Gates of the Arctic", jeff: "Gateway Arch", glac: "Glacier",
-  glba: "Glacier Bay", grca: "Grand Canyon", grte: "Grand Teton",
-  grba: "Great Basin", grsa: "Great Sand Dunes", grsm: "Great Smoky Mtns",
-  gumo: "Guadalupe Mtns", hale: "Haleakalā", havo: "Hawaiʻi Volcanoes",
-  hosp: "Hot Springs", indu: "Indiana Dunes", isro: "Isle Royale",
-  jotr: "Joshua Tree", katm: "Katmai", kefj: "Kenai Fjords",
-  kova: "Kobuk Valley", lacl: "Lake Clark", lavo: "Lassen Volcanic",
-  maca: "Mammoth Cave", meve: "Mesa Verde", mora: "Mt Rainier",
-  neri: "New River Gorge", noca: "North Cascades", npsa: "American Samoa",
-  olym: "Olympic", pefo: "Petrified Forest", pinn: "Pinnacles", redw: "Redwood",
-  romo: "Rocky Mountain", sagu: "Saguaro", seki: "Sequoia/Kings Canyon",
-  shen: "Shenandoah", thro: "Theodore Roosevelt", viis: "Virgin Islands",
-  voya: "Voyageurs", whsa: "White Sands", wica: "Wind Cave",
-  wrst: "Wrangell–St. Elias", yell: "Yellowstone", yose: "Yosemite", zion: "Zion",
-};
+export { PARK_NAMES } from "./parkNames";
+import { PARK_NAMES } from "./parkNames";
 
 export default function Detective({
   initialParkId,

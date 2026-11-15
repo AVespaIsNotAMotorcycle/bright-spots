@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { Atlas } from "../detective/model";
 import { FAMILY_COLORS, useInsights, type FamilyInfo, type Insights, type ParkMeta } from "./lib";
 import MiniMap from "./MiniMap";
+import { Source, StationStyle, Tip } from "./station";
 import ParkMap from "./ParkMap";
 
 const FEATURE_LABEL: Record<string, string> = {
@@ -147,9 +148,10 @@ export default function Families({
   const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
 
   return (
-    <div className="panel-stack">
+    <div className="panel-stack st-page">
+      <StationStyle />
       <div className="card">
-        <h2 className="section-title">Parks that change together</h2>
+        <h2 className="section-title">🧬 Parks that change together</h2>
         <p className="panel-intro">
           Each park gets a change fingerprint: for {fam.features.length} variable and season pairs, the trend divided by
           the park's year-to-year scatter. Parks with similar fingerprints share a family (average-linkage clustering).
@@ -190,7 +192,7 @@ export default function Families({
 
       {eco && (
         <div className="card">
-          <h3 style={{ marginTop: 0 }}>Do families follow ecoregions?</h3>
+          <h3 style={{ marginTop: 0 }}>Do families follow ecoregions?<Tip text="EPA Level I and III ecoregions at each park's centre point. EPA covers the lower 48 only. ARI (adjusted Rand index) measures agreement between two groupings: 0 = chance, 1 = identical." /></h3>
           <p className="small">
             Partly. Matching families to EPA Level I ecoregions over {eco.n_with_ecoregion} parks and {eco.n_ecoregions}{" "}
             ecoregions gives an adjusted Rand index of <b>{eco.ari}</b> (0 is chance, 1 is identical groups). Shuffling the
@@ -355,6 +357,7 @@ export default function Families({
           line are getting drier.
         </p>
       </div>
+      <Source atlas={atlas} extra="Families: average-linkage clustering of standardised signal-to-noise trends, re-run 300 times on resampled columns to test how often parks stay together." />
     </div>
   );
 }

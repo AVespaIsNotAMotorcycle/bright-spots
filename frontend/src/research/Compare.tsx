@@ -160,14 +160,14 @@ export default function Compare({
               <Tag>⚖ Head-to-head</Tag>
               <button className="st-btn ghost" onClick={() => set(pb, pa, v, per)}>⇄ Swap</button>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 10, margin: "12px 0" }}>
+            <div className="ph-score" style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 10, margin: "12px 0" }}>
               <b style={{ fontFamily: "var(--font-display)", fontSize: 19, color: E.pine, textAlign: "right" }}>{nameA}</b>
               <span className="st-num" style={{ fontSize: 30 }}>{h.a} – {h.b}</span>
               <b style={{ fontFamily: "var(--font-display)", fontSize: 19, color: E.rust }}>{nameB}</b>
             </div>
             <div style={{ display: "grid", gap: 6 }}>
               {h.rounds.map((r) => (
-                <div key={r.name} style={{ display: "grid", gridTemplateColumns: "1fr 150px 1fr", gap: 8, alignItems: "center" }}>
+                <div key={r.name} className="ph-round" style={{ display: "grid", gridTemplateColumns: "1fr 150px 1fr", gap: 8, alignItems: "center" }}>
                   <span className="small" style={{ ...side(r.winner, "a"), textAlign: "right", padding: "4px 10px", borderRadius: 8 }}>{r.a}</span>
                   <span className="micro" style={{ textAlign: "center", color: E.moss }}>
                     {r.name}<Tip term={ROUND_TIP[r.name]} />{r.winner === "tie" ? " · tie" : ""}

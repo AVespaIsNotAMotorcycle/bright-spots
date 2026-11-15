@@ -1,7 +1,7 @@
 // Researcher Home pieces: station hero, anomaly of the week, tool tiles, mini map, leaderboard,
 // saved views and the campfire preview.
 import { useEffect, useMemo, useState } from "react";
-import { PARK_NAMES } from "../detective/Detective";
+import { PARK_NAMES } from "../detective/parkNames";
 import type { Atlas, AtlasCell } from "../detective/model";
 import { PERIOD_LABEL, fmtQ } from "../detective/model";
 import { anomalyOfWeek, findTwins, weekNumber } from "./insights";
@@ -211,7 +211,7 @@ export function Leaderboard({ atlas, onOpen }: { atlas: Atlas; onOpen: (park: st
       </p>
       <div style={{ display: "grid", gap: 8 }}>
         {top.map((c, i) => (
-          <button key={c.park_id} onClick={() => onOpen(c.park_id)}
+          <button key={c.park_id} className="ph-lead" onClick={() => onOpen(c.park_id)}
             style={{ display: "grid", gridTemplateColumns: "32px minmax(120px, 190px) 1fr auto", gap: 10, alignItems: "center",
               border: 0, background: "none", cursor: "pointer", padding: 0, color: E.bark, textAlign: "left" }}>
             <span style={{ fontSize: i < 3 ? 20 : 13, textAlign: "center", fontWeight: 700 }}>{medal[i]}</span>

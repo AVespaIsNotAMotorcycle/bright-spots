@@ -668,3 +668,26 @@ path.yc-series.tag-projected { stroke: var(--sky); stroke-dasharray: 2 2; }
   line-height: 1.55;
 }
 
+
+/* ═══════════════════════════════════════════════════════
+   Phones (≤ 640px): one column, nav scrolls sideways, nothing wider than the screen
+   ═══════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .app { padding: 0 10px 48px; }
+  .topbar { padding: 12px 0 10px; margin-bottom: 16px; gap: 10px; }
+  .title { font-size: 21px; }
+  .topbar nav { flex-wrap: nowrap !important; overflow-x: auto; width: 100%; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+  .topbar nav > * { flex-shrink: 0; }
+  .st-menu-list { position: fixed; left: 10px; right: 10px; top: auto; }
+  .st-hero { padding: 16px 14px 48px !important; }
+  .st-hero h2 { font-size: 24px !important; }
+  .st-num { font-size: 21px; }
+  .ph-lead { grid-template-columns: 26px 1fr !important; row-gap: 4px !important; }
+  .ph-lead > :nth-child(3), .ph-lead > :nth-child(4) { grid-column: 2; }
+  .ph-score b { font-size: 15px !important; }
+  .ph-round { grid-template-columns: 1fr 90px 1fr !important; }
+  table { font-size: 12px; }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  section, .card { max-width: 100%; }
+  img, svg { max-width: 100%; }
+}
