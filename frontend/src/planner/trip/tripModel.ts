@@ -34,6 +34,7 @@ export interface TripPark {
   best_2050: number | null;
   change_2050: number | null;
   day_length: number;
+  night_glow?: { glow: number; level: "low" | "medium" | "high"; why: string } | null;
   fire_source: string | null;
 }
 
@@ -91,7 +92,7 @@ export interface Chip {
 }
 
 export const WANTS: Chip[] = [
-  { key: "stars", emoji: "🌌", label: "Stargazing", hint: "Clear skies and long nights. New moon dates shown.", source: "maths" },
+  { key: "stars", emoji: "🌌", label: "Stargazing", hint: "Clear skies, long nights and low light pollution (estimated from NASA Black Marble imagery). New moon dates shown.", source: "maths" },
   { key: "waterfalls", emoji: "💦", label: "Roaring waterfalls", hint: "The month the snow melts, plus heavy rain.", source: "nasa" },
   { key: "wildflowers", emoji: "🌸", label: "Wildflower bloom", hint: "A month after snowmelt, or warm spring rain.", source: "estimate" },
   { key: "fall", emoji: "🍁", label: "Fall colours", hint: "First cold nights in leafy forest parks.", source: "estimate" },

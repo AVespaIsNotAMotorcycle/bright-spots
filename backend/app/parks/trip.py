@@ -7,6 +7,7 @@ Every factor is a score in [0, 1] (1 = good for the traveller) built from bundle
   extras         data/parks/trip_extras.json (NASA POWER 2005-2024 night lows, wind, UV,
                  sunlight, rainy/heat/freeze/hazy days; NASA FIRMS fires) from step10
   trends         data/trends/atlas.json (Sen's slope + FDR verdict per park and month)
+  night glow     data/parks/night_lights.json (NASA GIBS VIIRS city lights, step11; stargazing)
   ecoregions     data/trends/ecoregions.json (EPA level I, for fall colours)
   maths          day length and new-moon dates
 
@@ -101,6 +102,22 @@ def ecoregions() -> dict[str, dict]:
     return json.loads(p.read_text()) if p.exists() else {}
 
 
+@lru_cache(maxsize=1)
+def night_lights() -> dict:
+    """Park id -> {glow, ...} from step11 (NASA GIBS VIIRS city lights); {} when the file is missing."""
+    p = ROOT / "parks" / "night_lights.json"
+    return json.loads(p.read_text()) if p.exists() else {}
+
+
+GLOW_FULL = 0.4  # mean image brightness at which a park counts as fully lit (darkness 0); PROVISIONAL
+W_DARK = 0.3  # share of the stargazing score taken by darkness when glow data exists; PROVISIONAL
+GLOW_LEVELS = ((0.1, "low"), (0.25, "medium"))  # upper bounds; above the last is "high"
+
+
+def glow_level(glow: float) -> str:
+    return next((name for hi, name in GLOW_LEVELS if glow < hi), "high")
+
+
 def day_length(lat: float, month: int) -> float:
     """Hours of daylight on the 15th of the month (standard declination formula)."""
     doy = dt.date(2021, month, 15).timetuple().tm_yday
@@ -158,7 +175,12 @@ def f_stars(c: Ctx) -> Result:
     if cloud is None:
         return None
     night = 24 - day_length(c.park["lat"], c.month)
-    return 0.65 * clamp01(1 - cloud / 100) + 0.35 * clamp01((night - 8) / 6), cloud
+    sky = 0.65 * clamp01(1 - cloud / 100) + 0.35 * clamp01((night - 8) / 6)
+    glow = (night_lights().get(c.park.get("id") or "") or {}).get("glow")
+    if glow is not None:
+        # Blend in darkness = 1 - glow / GLOW_FULL. Why: glow is estimated from NASA Black Marble imagery.
+        sky = (1 - W_DARK) * sky + W_DARK * clamp01(1 - glow / GLOW_FULL)
+    return sky, cloud
 
 
 def f_waterfalls(c: Ctx) -> Result:
@@ -385,6 +407,14 @@ def _year_best(evs: list[dict | None]) -> int | None:
     return max(sc)[1] if sc else None
 
 
+def _glow_row(park: dict) -> dict | None:
+    """Night glow for the drawer: level plus a note that it is an estimate from NASA imagery."""
+    g = (night_lights().get(park["id"]) or {}).get("glow")
+    if g is None:
+        return None
+    return {"glow": g, "level": glow_level(g), "why": "estimated from NASA Black Marble imagery"}
+
+
 def plan_trip(parks: list, climate: dict[str, dict], tp: TripPrefs) -> dict:
     ex = extras()
     lo, hi = min(b[0] for b in tp.bands), max(b[1] for b in tp.bands)
@@ -439,6 +469,7 @@ def plan_trip(parks: list, climate: dict[str, dict], tp: TripPrefs) -> dict:
             "best_2050": _year_best(evals["y2050"]),
             "change_2050": delta,
             "day_length": day_length(park["lat"], best),
+            "night_glow": _glow_row(park),
             "fire_source": (ex.get(park["id"]) or {}).get("fire_source"),
         })
     rows.sort(key=lambda r: (not r["ok"], -(r["score"] or -1)))

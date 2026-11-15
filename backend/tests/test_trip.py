@@ -4,7 +4,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.parks.trip import AVOIDS, WANTS, day_length, new_moons, parse_chips, tri
+from app.parks import trip as trip_mod
+from app.parks.trip import AVOIDS, WANTS, Ctx, day_length, f_stars, new_moons, parse_chips, tri
 
 client = TestClient(app)
 
@@ -128,3 +129,26 @@ def test_best_days_are_not_all_tied():
     days = r["parks"]["big-bend"]["days"]
     scores = {round(d["score"]) for d in days if d["score"] is not None}
     assert len(scores) > 3  # day scores move with the daily weather, not one flat 100
+
+
+def _stars_ctx(park_id: str) -> Ctx:
+    park = {"id": park_id, "lat": 40.0}
+    return Ctx(park, 10, {"cloud": 20.0}, {}, {}, None, set())
+
+
+def test_stars_blend_in_night_glow_and_fall_back_without_it(monkeypatch):
+    monkeypatch.setattr(trip_mod, "night_lights", lambda: {"dark": {"glow": 0.0}, "city": {"glow": 0.8}})
+    base = f_stars(_stars_ctx("nodata"))
+    dark, city = f_stars(_stars_ctx("dark")), f_stars(_stars_ctx("city"))
+    assert dark[0] > base[0] > city[0]  # no glow data keeps the old score
+    assert dark[1] == base[1] == city[1] == 20.0
+    for r in (base, dark, city):
+        assert 0.0 <= r[0] <= 1.0
+
+
+def test_trip_api_reports_night_glow_as_estimate():
+    parks = get(months="10", feels="mild")["parks"]
+    glows = [p["night_glow"] for p in parks if p["night_glow"]]
+    assert glows
+    assert all(0 <= g["glow"] <= 1 and g["level"] in ("low", "medium", "high") for g in glows)
+    assert all("NASA Black Marble" in g["why"] for g in glows)

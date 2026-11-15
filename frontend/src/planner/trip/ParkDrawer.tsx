@@ -205,6 +205,7 @@ export default function ParkDrawer({ p, trip, state, unit, science = false, plai
               {moons.length ? `${MONTHS_LONG[p.best_month - 1]} ${moons.join(" and ")}: the darkest nights are a few days either side.` : "No new moon this month."}{" "}
               Night is {(24 - p.day_length).toFixed(1)} hours long here.
             </p>
+            {p.night_glow && <p className="small" style={{ margin: "4px 0 0" }}>Night glow: {p.night_glow.level} ({p.night_glow.why})</p>}
             <p className="tp-note">Moon dates from the average lunar cycle; they can be off by a day.</p>
           </div>
         )}
